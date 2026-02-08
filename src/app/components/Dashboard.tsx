@@ -1,18 +1,42 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiPlus, FiMoreVertical, FiSearch, FiBell } from 'react-icons/fi';
 import { FaBook } from 'react-icons/fa';
 import Card from './Card';
 import AddBookModal from './AddBookModal';
+import { collection, addDoc, getDocs } from "firebase/firestore";
+import { db } from '../firebase';
+
+interface Book {
+  id: string;
+  name: string;
+}
 
 const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [books, setBooks] = useState<string[]>(['Daily Expenses', 'Home Renovation', 'Vacation Fund']);
+  const [books, setBooks] = useState<Book[]>([]);
 
-  const handleAddBook = (bookName: string) => {
-    setBooks([...books, bookName]);
-    setIsModalOpen(false);
+  useEffect(() => {
+    const fetchBooks = async () => {
+      const querySnapshot = await getDocs(collection(db, "books"));
+      const booksData = querySnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+      setBooks(booksData);
+    };
+
+    fetchBooks();
+  }, []);
+
+  const handleAddBook = async (bookName: string) => {
+    try {
+      const docRef = await addDoc(collection(db, "books"), {
+        name: bookName,
+      });
+      setBooks([...books, { id: docRef.id, name: bookName }]);
+      setIsModalOpen(false);
+    } catch (e) {
+      console.error("Error adding document: ", e);
+    }
   };
 
   return (
@@ -51,14 +75,14 @@ const Dashboard = () => {
           </div>
 
           <div className="space-y-4">
-            {books.map((book, idx) => (
-              <div key={idx} className="bg-white p-5 rounded-2xl shadow-sm hover:shadow-lg transition-shadow flex items-center justify-between group border border-gray-100">
+            {books.map((book) => (
+              <div key={book.id} className="bg-white p-5 rounded-2xl shadow-sm hover:shadow-lg transition-shadow flex items-center justify-between group border border-gray-100">
                 <div className="flex items-center">
                   <div className={`w-16 h-16 bg-indigo-50 text-indigo-500 rounded-2xl mr-5 flex items-center justify-center text-3xl`}>
                     <FaBook />
                   </div>
                   <div>
-                    <div className="font-bold text-gray-800 text-lg">{book}</div>
+                    <div className="font-bold text-gray-800 text-lg">{book.name}</div>
                     <div className="text-gray-400 text-sm">Updated just now</div>
                   </div>
                 </div>
