@@ -1,15 +1,9 @@
 'use client';
 
 import React from 'react';
-import { FiGrid, FiBarChart2, FiBookOpen, FiSettings, FiLogOut } from 'react-icons/fi';
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase';
+import { FiGrid, FiBarChart2, FiBookOpen, FiSettings } from 'react-icons/fi';
 
 const Sidebar = () => {
-  const handleLogout = () => {
-    signOut(auth);
-  };
-
   const menuItems = [
     { icon: FiGrid, name: 'Dashboard', active: true },
     { icon: FiBarChart2, name: 'Analytics', active: false },
@@ -32,9 +26,6 @@ const Sidebar = () => {
           ))}
         </ul>
       </nav>
-      <button onClick={handleLogout} className="mt-auto p-3 hover:bg-red-100 rounded-full text-red-500 transition-colors">
-        <FiLogOut className="text-2xl" />
-      </button>
     </div>
   );
 };
