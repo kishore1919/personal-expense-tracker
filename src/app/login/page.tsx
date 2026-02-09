@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebase';
+import { auth } from '../firebase';
 import Link from 'next/link';
 
 export default function Login() {
@@ -18,8 +18,10 @@ export default function Login() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/');
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      }
     }
   };
 
@@ -71,7 +73,7 @@ export default function Login() {
       </form>
       <div className="mt-6">
         <p className="text-center text-sm text-gray-600">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link href="/signup">
             <span className="font-medium text-indigo-600 hover:text-indigo-500">Sign up</span>
           </Link>

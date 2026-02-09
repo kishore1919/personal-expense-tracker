@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebase';
+import { auth } from '../firebase';
 import Link from 'next/link';
 
 export default function SignUp() {
@@ -18,8 +18,10 @@ export default function SignUp() {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       router.push('/');
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+      }
     }
   };
 
