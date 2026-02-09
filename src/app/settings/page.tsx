@@ -4,19 +4,18 @@ import React, { useState } from 'react';
 import { FiUser, FiMail, FiMoon, FiBell, FiShield, FiGlobe } from 'react-icons/fi';
 import Card from '../components/Card';
 import { useCurrency } from '../context/CurrencyContext';
+import { useTheme } from '../context/ThemeContext';
 
 const SettingsPage = () => {
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
   const { currency, setCurrency, currencyOptions } = useCurrency();
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   React.useEffect(() => {
     // Initialize toggles from localStorage after mount to avoid SSR/hydration issues
     try {
       const savedNotifications = localStorage.getItem('pet_notifications');
-      const savedDarkMode = localStorage.getItem('pet_dark_mode');
       if (savedNotifications !== null) setNotifications(savedNotifications === 'true');
-      if (savedDarkMode !== null) setDarkMode(savedDarkMode === 'true');
     } catch {
       // ignore localStorage errors
     }
@@ -26,14 +25,6 @@ const SettingsPage = () => {
     setNotifications((prev) => {
       const next = !prev;
       try { localStorage.setItem('pet_notifications', String(next)); } catch {}
-      return next;
-    });
-  };
-
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => {
-      const next = !prev;
-      try { localStorage.setItem('pet_dark_mode', String(next)); } catch {}
       return next;
     });
   };
@@ -100,14 +91,16 @@ const SettingsPage = () => {
                 <FiMoon className="mr-3 text-slate-400" />
                 <div>
                   <span className="block font-medium text-slate-800">Dark Mode</span>
-                  <span className="text-sm text-slate-500">Currently always enabled</span>
+                  <span className="text-sm text-slate-500">Switch between light and dark themes</span>
                 </div>
               </div>
               <button
                 onClick={toggleDarkMode}
-                className={`relative h-7 w-14 rounded-full transition-colors ${darkMode ? 'bg-teal-700' : 'bg-slate-300'}`}
+                className={`relative h-7 w-14 rounded-full transition-colors ${isDarkMode ? 'bg-teal-700' : 'bg-slate-300'}`}
+                aria-label="Toggle dark mode"
+                aria-pressed={isDarkMode}
               >
-                <div className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${darkMode ? 'translate-x-8' : 'translate-x-1'}`} />
+                <div className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-transform ${isDarkMode ? 'translate-x-8' : 'translate-x-1'}`} />
               </button>
             </div>
 
