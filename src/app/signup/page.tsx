@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
 import Link from 'next/link';
+import { FaBook } from 'react-icons/fa';
 
 export default function SignUp() {
   const [email, setEmail] = useState('');
@@ -26,12 +27,17 @@ export default function SignUp() {
   };
 
   return (
-    <div>
-      <div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign up for an account</h2>
+    <div className="glassmorphic p-10 rounded-3xl shadow-2xl w-full max-w-md text-white">
+      <div className="text-center mb-8">
+        <div className="bg-white/20 w-16 h-16 flex items-center justify-center rounded-2xl mx-auto mb-4">
+          <FaBook className="text-white text-3xl" />
+        </div>
+        <h2 className="text-3xl font-bold">Create Account</h2>
+        <p className="text-white/70 mt-2">Sign up to start tracking expenses</p>
       </div>
-      <form className="mt-8 space-y-6" onSubmit={handleSignUp}>
-        <div className="rounded-md shadow-sm -space-y-px">
+      
+      <form className="space-y-6" onSubmit={handleSignUp}>
+        <div className="space-y-4">
           <div>
             <input
               id="email-address"
@@ -39,7 +45,7 @@ export default function SignUp() {
               type="email"
               autoComplete="email"
               required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              className="w-full border-none glassmorphic p-4 rounded-xl focus:ring-2 focus:ring-white/50 transition-all outline-none text-white placeholder-white/50"
               placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -50,9 +56,9 @@ export default function SignUp() {
               id="password"
               name="password"
               type="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              className="w-full border-none glassmorphic p-4 rounded-xl focus:ring-2 focus:ring-white/50 transition-all outline-none text-white placeholder-white/50"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -60,22 +66,23 @@ export default function SignUp() {
           </div>
         </div>
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p className="text-red-300 text-sm text-center bg-red-500/20 p-2 rounded-lg">{error}</p>}
 
         <div>
           <button
             type="submit"
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="w-full bg-white/90 text-indigo-600 px-6 py-4 rounded-xl font-bold shadow-lg hover:bg-white transition-all transform hover:scale-[1.02]"
           >
             Sign up
           </button>
         </div>
       </form>
-      <div className="mt-6">
-        <p className="text-center text-sm text-gray-600">
+      
+      <div className="mt-8 text-center">
+        <p className="text-white/70">
           Already have an account?{' '}
-          <Link href="/login">
-            <span className="font-medium text-indigo-600 hover:text-indigo-500">Log in</span>
+          <Link href="/login" className="font-semibold text-white hover:underline">
+            Log in
           </Link>
         </p>
       </div>

@@ -5,13 +5,15 @@ import { FiPlus, FiMoreVertical, FiSearch } from 'react-icons/fi';
 import { FaBook } from 'react-icons/fa';
 import Card from './Card';
 import AddBookModal from './AddBookModal';
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import Loading from './Loading';
+import { collection, addDoc, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from '../firebase';
 import { useRouter } from 'next/navigation';
 
 interface Book {
   id: string;
   name: string;
+  createdAt?: string;
 }
 
 const EmptyState = ({ setIsModalOpen }: { setIsModalOpen: (isOpen: boolean) => void }) => (
@@ -30,33 +32,58 @@ const EmptyState = ({ setIsModalOpen }: { setIsModalOpen: (isOpen: boolean) => v
 const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchBooks = async () => {
-      const querySnapshot = await getDocs(collection(db, 'books'));
-      const booksData = querySnapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
-      setBooks(booksData);
-    };
-
     fetchBooks();
   }, []);
+
+  const fetchBooks = async () => {
+    try {
+      setLoading(true);
+      const q = query(collection(db, 'books'), orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const booksData = querySnapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        name: doc.data().name,
+        createdAt: doc.data().createdAt?.toDate?.().toLocaleDateString() || 'Recently'
+      }));
+      setBooks(booksData);
+      setError(null);
+    } catch (e) {
+      console.error("Error fetching books:", e);
+      setError("Failed to load books. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddBook = async (bookName: string) => {
     try {
       const docRef = await addDoc(collection(db, 'books'), {
         name: bookName,
+        createdAt: new Date(),
+        userId: 'anonymous',
       });
-      setBooks([...books, { id: docRef.id, name: bookName }]);
+      
+      setBooks([{ id: docRef.id, name: bookName, createdAt: 'Just now' }, ...books]);
       setIsModalOpen(false);
+      setError(null);
     } catch (e) {
       console.error("Error adding document: ", e);
+      setError("Failed to create book. Please try again.");
     }
   };
 
   const handleBookClick = (bookId: string) => {
     router.push(`/book/${bookId}`);
   };
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <div className="text-white">
@@ -66,6 +93,12 @@ const Dashboard = () => {
           <p className="text-white/70 mt-2">Here&apos;s your financial snapshot for today.</p>
         </div>
       </header>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200">
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
         <div className="lg:col-span-2">
@@ -99,7 +132,7 @@ const Dashboard = () => {
                     </div>
                     <div>
                       <div className="font-bold text-lg">{book.name}</div>
-                      <div className="text-white/60 text-sm">Updated just now</div>
+                      <div className="text-white/60 text-sm">{book.createdAt}</div>
                     </div>
                   </div>
                   <div className="flex items-center">
