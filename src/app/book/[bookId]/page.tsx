@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { FiPlus, FiChevronLeft } from 'react-icons/fi';
 import { useParams, useRouter } from 'next/navigation';
 import { doc, getDoc, collection, getDocs, addDoc } from "firebase/firestore";
-import { db } from '../../firebase';
+import { db } from '../../../app/firebase';
 import AddExpenseModal from '../../components/AddExpenseModal';
 
 interface Expense {
