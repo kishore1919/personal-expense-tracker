@@ -48,7 +48,8 @@ interface AddExpenseModalProps {
     category?: string;
     paymentMode?: string;
     attachments?: string[];
-  }) => void;
+  }) => Promise<void>;
+  onSaveAndAddAnother?: () => void; // Optional callback for "Save and Add Another" functionality
 }
 
 const DEFAULT_CATEGORIES = ['Misc', 'Food', 'Medical', 'Travel'];
@@ -206,6 +207,7 @@ export default function AddExpenseModal({
   initialType,
   currentBalance = 0,
   initialExpense,
+  onSaveAndAddAnother,
 }: AddExpenseModalProps) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -305,7 +307,7 @@ export default function AddExpenseModal({
     setErrorMessage(null);
   }, [isOpen, initialType, initialExpense]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent, shouldSaveAndAddAnother: boolean = false) => {
     e.preventDefault();
     setErrorMessage(null);
     if (!description || !amount) {
@@ -351,7 +353,22 @@ export default function AddExpenseModal({
       }
 
       await onAddExpense(payload);
-      handleClose();
+      
+      if (shouldSaveAndAddAnother) {
+        // Reset primary form fields but keep the modal open and maintain the same type
+        setDescription('');
+        setAmount('');
+        // We keep date, category, and payment mode for faster data entry
+        setRemarks('');
+        setErrorMessage(null);
+
+        // Call the optional callback if provided
+        if (onSaveAndAddAnother) {
+          onSaveAndAddAnother();
+        }
+      } else {
+        handleClose();
+      }
     } catch (err) {
       console.error('Save failed:', err);
       const errMsg = err instanceof Error ? err.message : 'Failed to save entry. Please try again.';
@@ -549,6 +566,15 @@ export default function AddExpenseModal({
                 fullWidth
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                SelectProps={{
+                  MenuProps: {
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Set max height for scrolling
+                      },
+                    },
+                  },
+                }}
               >
                 {availableCategories.map((cat) => (
                   <MenuItem key={cat} value={cat}>
@@ -595,10 +621,23 @@ export default function AddExpenseModal({
           <Button onClick={handleClose} color="inherit" disabled={isSaving} fullWidth={isMobile}>
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            variant="contained" 
-            disableElevation 
+          {!isEditMode && (
+            <Button
+              type="button"
+              variant="outlined"
+              disableElevation
+              fullWidth={isMobile}
+              disabled={isSaving || !description || !amount || exceedsDecimalLimit || parsedAmount === null || exceedsMaxAmount}
+              onClick={(e) => handleSubmit(e, true)}
+            >
+              Save & Add Another
+            </Button>
+          )}
+          <Button
+            type="submit"
+            variant="contained"
+            disableElevation
+            fullWidth={isMobile}
             disabled={isSaving || !description || !amount || exceedsDecimalLimit || parsedAmount === null || exceedsMaxAmount}
             color={type === 'in' ? 'success' : 'error'}
           >

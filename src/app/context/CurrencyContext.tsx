@@ -1,6 +1,9 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 
 const CURRENCY_STORAGE_KEY = 'expense-tracker-currency';
 const DEFAULT_CURRENCY = 'USD';
@@ -19,7 +22,7 @@ export interface CurrencyOption {
 
 interface CurrencyContextValue {
   currency: string;
-  setCurrency: (nextCurrency: string) => void;
+  setCurrency: (nextCurrency: string) => Promise<void>;
   formatCurrency: (amount: number) => string;
   currencyOptions: CurrencyOption[];
 }
@@ -53,6 +56,8 @@ const getCurrencyLabel = (code: string): string => {
 };
 
 export const CurrencyProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user] = useAuthState(auth);
+  
   const currencyOptions = useMemo<CurrencyOption[]>(() => {
     return getSupportedCurrencyCodes()
       .map((code) => ({ code, label: getCurrencyLabel(code) }))
@@ -67,7 +72,7 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
   // Initialize to a safe default so server render matches initial client render.
   const [currency, setCurrencyState] = useState<string>(DEFAULT_CURRENCY);
 
-  // On mount, read the persisted preference and apply it (client-only) to avoid hydration mismatches.
+  // On mount, read the persisted preference from localStorage
   useEffect(() => {
     try {
       if (typeof window === 'undefined') return;
@@ -79,8 +84,27 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
     }
   }, [supportedCurrencySet]);
 
+  // When user is available, sync with Firestore
+  useEffect(() => {
+    if (!user) return;
+
+    const userRef = doc(db, 'users', user.uid);
+    const unsubscribe = onSnapshot(userRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const firestoreCurrency = data.currency?.toUpperCase();
+        if (firestoreCurrency && supportedCurrencySet.has(firestoreCurrency)) {
+          setCurrencyState(firestoreCurrency);
+          localStorage.setItem(CURRENCY_STORAGE_KEY, firestoreCurrency);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user, supportedCurrencySet]);
+
   const setCurrency = useCallback(
-    (nextCurrency: string) => {
+    async (nextCurrency: string) => {
       const normalizedCurrency = nextCurrency.toUpperCase();
       if (!supportedCurrencySet.has(normalizedCurrency)) {
         return;
@@ -88,8 +112,19 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
 
       setCurrencyState(normalizedCurrency);
       localStorage.setItem(CURRENCY_STORAGE_KEY, normalizedCurrency);
+
+      if (user) {
+        try {
+          await setDoc(doc(db, 'users', user.uid), { 
+            currency: normalizedCurrency,
+            updatedAt: new Date()
+          }, { merge: true });
+        } catch (error) {
+          console.error('Error saving currency to Firestore:', error);
+        }
+      }
     },
-    [supportedCurrencySet]
+    [supportedCurrencySet, user]
   );
 
   const formatCurrency = useCallback(

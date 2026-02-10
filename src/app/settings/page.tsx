@@ -27,6 +27,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  InputAdornment,
+  MenuItem as MuiMenuItem,
 } from '@mui/material';
 import {
   FiUser,
@@ -37,6 +39,9 @@ import {
   FiGlobe,
   FiTrash2,
   FiTag,
+  FiSearch,
+  FiChevronLeft,
+  FiChevronRight,
 } from 'react-icons/fi';
 import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, where } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -68,6 +73,11 @@ const CategoryManager: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [deleteCatTarget, setDeleteCatTarget] = useState<string | null>(null);
   const [isDeletingCat, setIsDeletingCat] = useState(false);
+  
+  // Pagination states
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -141,19 +151,41 @@ const CategoryManager: React.FC = () => {
     }
   };
 
-  // Combine core and user categories for display
-  const allCategories = [
-    ...CORE_CATEGORIES.map(name => ({ id: `core-${name}`, name, isCore: true })),
-    ...categories.map(c => ({ ...c, isCore: false }))
+  // Separate core and user categories
+  const coreCategories = CORE_CATEGORIES.map(name => ({ id: `core-${name}`, name, isCore: true }));
+  
+  // Filter user categories based on search query
+  const filteredUserCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Pagination logic for user categories only
+  const totalFiltered = filteredUserCategories.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  const startIndex = totalFiltered === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endIndex = Math.min(page * pageSize, totalFiltered);
+  const displayedUserCategories = filteredUserCategories.slice((page - 1) * pageSize, page * pageSize);
+
+  // Combine core categories with paginated user categories
+  const categoriesForDisplay = [
+    ...coreCategories.filter(c => 
+      c.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ),
+    ...displayedUserCategories
   ].sort((a, b) => a.name.localeCompare(b.name));
+
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
 
   return (
     <Box>
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      
-      <Box 
-        component="form" 
-        onSubmit={handleAddCategory} 
+
+      <Box
+        component="form"
+        onSubmit={handleAddCategory}
         sx={{ display: 'flex', gap: 1.5, mb: 3 }}
       >
         <TextField
@@ -177,6 +209,64 @@ const CategoryManager: React.FC = () => {
         </Button>
       </Box>
 
+      {/* Search and pagination controls */}
+      <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}>
+        <TextField
+          size="small"
+          placeholder="Search categories..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          fullWidth
+          sx={{
+            '& .MuiOutlinedInput-root': { bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <FiSearch color="#888" />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
+      {/* Pagination header - only for user categories */}
+      {filteredUserCategories.length > 0 && (
+        <Box sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          mb: 2,
+          gap: 1
+        }}>
+          <Typography variant="body2" color="text.secondary">
+            Showing {startIndex} - {endIndex} of {totalFiltered} user categories
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', width: { xs: '100%', sm: 'auto' }, justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <Select size="small" value={page} onChange={(e) => setPage(Number(e.target.value))} sx={{ height: 32 }}>
+                {Array.from({ length: totalPages }).map((_, i) => <MuiMenuItem key={i} value={i + 1}>{i + 1}</MuiMenuItem>)}
+              </Select>
+              <Typography variant="body2">of {totalPages}</Typography>
+              <IconButton size="small" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>
+                <FiChevronLeft />
+              </IconButton>
+              <IconButton size="small" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
+                <FiChevronRight />
+              </IconButton>
+            </Box>
+            <FormControl size="small" sx={{ minWidth: 70 }}>
+              <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} sx={{ height: 32 }}>
+                <MuiMenuItem value={5}>5</MuiMenuItem>
+                <MuiMenuItem value={10}>10</MuiMenuItem>
+                <MuiMenuItem value={25}>25</MuiMenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </Box>
+      )}
+
       {loadingCats ? (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {[1, 2, 3].map((i) => (
@@ -186,14 +276,14 @@ const CategoryManager: React.FC = () => {
       ) : (
         <Paper variant="outlined" sx={{ backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined, borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined, borderRadius: 2, overflow: 'hidden' }}>
           <List disablePadding>
-            {allCategories.map((c, index) => (
+            {categoriesForDisplay.map((c, index) => (
               <React.Fragment key={c.id}>
                 {index > 0 && <Divider sx={{ borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined }} />}
                 <ListItem
                   secondaryAction={
                     !c.isCore && (
-                      <IconButton 
-                        edge="end" 
+                      <IconButton
+                        edge="end"
                         onClick={() => handleDeleteCategory(c.id)}
                         sx={{
                           color: 'text.secondary',
@@ -225,7 +315,7 @@ const CategoryManager: React.FC = () => {
                       flexShrink: 0,
                     }}
                   />
-                  <ListItemText 
+                  <ListItemText
                     primary={c.name}
                     primaryTypographyProps={{ fontWeight: 500 }}
                     secondary={c.isCore ? 'Core Category' : null}

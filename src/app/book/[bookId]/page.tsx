@@ -182,8 +182,7 @@ export default function BookDetailPage() {
     if (!bookId || typeof bookId !== 'string') return;
     try {
       if (!Number.isFinite(expense.amount) || Math.abs(expense.amount) > MAX_ENTRY_AMOUNT) {
-        setError(`Amount cannot exceed ${formatCurrency(MAX_ENTRY_AMOUNT)}.`);
-        return;
+        throw new Error(`Amount cannot exceed ${formatCurrency(MAX_ENTRY_AMOUNT)}.`);
       }
       const createdAt = expense.createdAt instanceof Date ? expense.createdAt : new Date();
       const docRef = await addDoc(collection(db, `books/${bookId}/expenses`), {
@@ -191,10 +190,11 @@ export default function BookDetailPage() {
         createdAt,
       });
       setExpenses((prev) => [{ id: docRef.id, ...expense, createdAt }, ...prev]);
-      handleModalClose();
     } catch (e) {
       console.error("Error adding:", e);
-      setError(`Failed to add expense.`);
+      const errMsg = e instanceof Error ? e.message : 'Failed to add expense.';
+      setError(errMsg);
+      throw e;
     }
   };
 
@@ -202,8 +202,7 @@ export default function BookDetailPage() {
     if (!bookId || typeof bookId !== 'string' || !editingExpense) return;
     try {
       if (!Number.isFinite(expense.amount) || Math.abs(expense.amount) > MAX_ENTRY_AMOUNT) {
-        setError(`Amount cannot exceed ${formatCurrency(MAX_ENTRY_AMOUNT)}.`);
-        return;
+        throw new Error(`Amount cannot exceed ${formatCurrency(MAX_ENTRY_AMOUNT)}.`);
       }
       const createdAt = expense.createdAt instanceof Date ? expense.createdAt : new Date();
       await updateDoc(doc(db, `books/${bookId}/expenses`, editingExpense.id), {
@@ -218,10 +217,11 @@ export default function BookDetailPage() {
             : entry
         )
       );
-      handleModalClose();
     } catch (e) {
       console.error("Error updating:", e);
-      setError(`Failed to update expense.`);
+      const errMsg = e instanceof Error ? e.message : 'Failed to update expense.';
+      setError(errMsg);
+      throw e;
     }
   };
 
@@ -832,6 +832,10 @@ export default function BookDetailPage() {
         } : undefined}
         onClose={handleModalClose}
         onAddExpense={editingExpense ? handleEditExpense : handleAddExpense}
+        onSaveAndAddAnother={() => {
+          // After saving, keep the same type (in/out) for the next entry
+          setEditingExpense(null);
+        }}
       />
 
       <Dialog open={deleteTarget !== null} onClose={() => !isDeleting && setDeleteTarget(null)}>
