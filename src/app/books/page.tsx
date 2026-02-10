@@ -253,122 +253,124 @@ export default function BooksPage() {
   }, [page, totalPages]);
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1, sm: 2 } }}>
       
       {/* --- Top Controls Section --- */}
       <Box sx={{ 
         display: 'flex', 
-        flexDirection: { xs: 'column', md: 'row' }, 
+        flexDirection: 'column',
         gap: 2, 
         mb: 4, 
-        alignItems: 'center' 
       }}>
-        
-        {/* Search & Select */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 1 }}>
-          <Checkbox
-            size="small"
-            checked={selectedIds.length > 0 && selectedIds.length === filteredAndSortedBooks.length}
-            indeterminate={selectedIds.length > 0 && selectedIds.length < filteredAndSortedBooks.length}
-            onChange={(e) => e.target.checked ? setSelectedIds(filteredAndSortedBooks.map(b => b.id)) : setSelectedIds([])}
-          />
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' }, 
+          gap: 2, 
+          alignItems: { xs: 'stretch', sm: 'center' } 
+        }}>
+          {/* Search & Select */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+            <Checkbox
+              size="small"
+              checked={selectedIds.length > 0 && selectedIds.length === filteredAndSortedBooks.length}
+              indeterminate={selectedIds.length > 0 && selectedIds.length < filteredAndSortedBooks.length}
+              onChange={(e) => e.target.checked ? setSelectedIds(filteredAndSortedBooks.map(b => b.id)) : setSelectedIds([])}
+            />
+            <TextField
+              placeholder="Search by book name..."
+              size="small"
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setSelectedIds([]); }}
+              fullWidth
+              sx={{ 
+                '& .MuiOutlinedInput-root': { bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' } 
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FiSearch color="#888" />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' } }}>
+            {/* Sort Dropdown */}
+            <FormControl size="small" sx={{ minWidth: { xs: '50%', sm: 200 }, flex: { xs: 1, sm: 'none' } }}>
+              <Select
+                value={sortBy}
+                displayEmpty
+                sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }}
+                onChange={(e) => setSortBy(e.target.value as 'last-updated' | 'name')}
+                renderValue={(selected) => {
+                  if (selected === 'last-updated') return 'Last Updated';
+                  if (selected === 'name') return 'Name';
+                  return selected;
+                }}
+              >
+                <MenuItem value="last-updated">Sort By: Last Updated</MenuItem>
+                <MenuItem value="name">Sort By: Name</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* Add Button */}
+            <Button
+              variant="contained"
+              onClick={() => setIsModalOpen(true)}
+              startIcon={<FiPlus />}
+              sx={{ 
+                height: 40, 
+                px: { xs: 1, sm: 3 },
+                flex: { xs: 1, sm: 'none' },
+                bgcolor: '#4361EE',
+                textTransform: 'none',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: '#3651d4' }
+              }}
+            >
+              Add Book
+            </Button>
+          </Box>
         </Box>
-        <TextField
-          placeholder="Search by book name..."
-          size="small"
-          value={searchQuery}
-          onChange={(e) => { setSearchQuery(e.target.value); setSelectedIds([]); }}
-          sx={{ 
-            flex: 1, 
-            width: '100%',
-            '& .MuiOutlinedInput-root': { bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' } 
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <FiSearch color="#888" />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <Box sx={{ 
-                  border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? '#475569' : '#ddd'}`, 
-                  borderRadius: 1, 
-                  px: 1, 
-                  color: (theme) => theme.palette.mode === 'dark' ? '#94A3B8' : '#888', 
-                  fontSize: '0.75rem',
-                  bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0B1220' : '#f9f9f9'
-                }}>
-                  /
-                </Box>
-              </InputAdornment>
-            ),
-          }}
-        />
-
-        {/* Sort Dropdown */}
-        <FormControl size="small" sx={{ minWidth: 200, display: { xs: 'none', sm: 'block' } }}>
-          <Select
-            value={sortBy}
-            displayEmpty
-            sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }}
-            onChange={(e) => setSortBy(e.target.value as 'last-updated' | 'name')}
-            renderValue={(selected) => {
-              if (selected === 'last-updated') return 'Sort By: Last Updated';
-              if (selected === 'name') return 'Sort By: Name';
-              return selected;
-            }}
-          >
-            <MenuItem value="last-updated">Sort By: Last Updated</MenuItem>
-            <MenuItem value="name">Sort By: Name</MenuItem>
-          </Select>
-        </FormControl>
-
-        {/* Add Button */}
-        <Button
-          variant="contained"
-          onClick={() => setIsModalOpen(true)}
-          startIcon={<FiPlus />}
-          sx={{ 
-            height: 40, 
-            px: 3, 
-            bgcolor: '#4361EE', // Matches the specific blue in screenshot
-            textTransform: 'none',
-            fontWeight: 600,
-            whiteSpace: 'nowrap',
-            '&:hover': { bgcolor: '#3651d4' }
-          }}
-        >
-          Add New Book
-        </Button>
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-    <Typography variant="body2" color="text.secondary">
-      Showing {startIndex} - {endIndex} of {totalFiltered} entries
-    </Typography>
-    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-      <Select size="small" value={page} onChange={(e) => setPage(Number(e.target.value))} sx={{ height: 32 }}>
-        {Array.from({ length: totalPages }).map((_, i) => <MenuItem key={i} value={i + 1}>Page {i + 1}</MenuItem>)}
-      </Select>
-      <Typography variant="body2">of {totalPages}</Typography>
-      <IconButton size="small" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}><FiChevronLeft /></IconButton>
-      <IconButton size="small" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}><FiChevronRight /></IconButton>
-      <FormControl size="small" sx={{ minWidth: 80 }}>
-        <Select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}>
-          <MenuItem value={10}>10</MenuItem>
-          <MenuItem value={25}>25</MenuItem>
-          <MenuItem value={50}>50</MenuItem>
-          <MenuItem value={100}>100</MenuItem>
-        </Select>
-      </FormControl>
-    </Box>
-  </Box>
+      {/* --- Pagination Header --- */}
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'flex-start', sm: 'center' }, 
+        mb: 2,
+        gap: 1
+      }}>
+        <Typography variant="body2" color="text.secondary">
+          Showing {startIndex} - {endIndex} of {totalFiltered}
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', width: { xs: '100%', sm: 'auto' }, justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <Select size="small" value={page} onChange={(e) => setPage(Number(e.target.value))} sx={{ height: 32 }}>
+              {Array.from({ length: totalPages }).map((_, i) => <MenuItem key={i} value={i + 1}>{i + 1}</MenuItem>)}
+            </Select>
+            <Typography variant="body2">of {totalPages}</Typography>
+            <IconButton size="small" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}><FiChevronLeft /></IconButton>
+            <IconButton size="small" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}><FiChevronRight /></IconButton>
+          </Box>
+          <FormControl size="small" sx={{ minWidth: 70 }}>
+            <Select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} sx={{ height: 32 }}>
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={25}>25</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
 
-  {/* --- Books List --- */}
-  <Box sx={{ minHeight: 300 }}>
+      {/* --- Books List --- */}
+      <Box sx={{ minHeight: 300 }}>
         {loading ? (
           [1, 2, 3].map((i) => <ListSkeleton key={i} />)
         ) : filteredAndSortedBooks.length > 0 ? (
@@ -377,25 +379,23 @@ export default function BooksPage() {
               key={book.id}
               elevation={0}
               sx={{
-                p: 2,
+                p: { xs: 1.5, sm: 2 },
                 mb: 2,
                 borderRadius: 2,
-                border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? 'transparent' : 'transparent'}`,
                 display: 'flex',
                 alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: 2,
+                gap: { xs: 1, sm: 2 },
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 '&:hover': (theme) => ({
                   bgcolor: theme.palette.mode === 'dark' ? '#0B1220' : '#f8f9fc',
-                  borderColor: theme.palette.mode === 'dark' ? '#334155' : '#e0e0e0',
+                  boxShadow: 1
                 })
               }}
               onClick={() => handleBookClick(book.id)}
             >
               {/* Selector */}
-              <Box sx={{ display: 'flex', alignItems: 'center', pr: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Checkbox
                   size="small"
                   checked={selectedIds.includes(book.id)}
@@ -407,57 +407,50 @@ export default function BooksPage() {
                   onClick={(e) => e.stopPropagation()}
                 />
               </Box>
+              
               {/* Icon */}
               <Box sx={{ 
-                width: 48, 
-                height: 48, 
+                width: { xs: 36, sm: 48 }, 
+                height: { xs: 36, sm: 48 }, 
                 borderRadius: '50%', 
                 bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : '#eef2ff', 
                 color: '#4361EE',
                 display: 'flex', 
                 alignItems: 'center', 
-                justifyContent: 'center' 
+                justifyContent: 'center',
+                flexShrink: 0
               }}>
-                <FaBook size={20} />
+                <FaBook size={18} />
               </Box>
 
               {/* Title & Date */}
-              <Box sx={{ flex: 1, minWidth: 150 }}>
-                <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="subtitle2" fontWeight={600} color="text.primary" noWrap sx={{ fontSize: { xs: '0.9rem', sm: '1rem' } }}>
                   {book.name}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary" noWrap display="block">
                   {book.updatedAtString}
                 </Typography>
               </Box>
 
               {/* Net Balance */}
-              <Box sx={{ textAlign: 'right', mr: 2, display: { xs: 'none', sm: 'block' } }}>
+              <Box sx={{ textAlign: 'right', mr: { xs: 0, sm: 1 } }}>
                 <Typography
-                  variant="h6"
-                  fontWeight={600}
+                  variant="subtitle2"
+                  fontWeight={700}
                   color={(book.netBalance ?? 0) >= 0 ? '#00a86b' : '#d32f2f'}
+                  sx={{ fontSize: { xs: '0.85rem', sm: '1.1rem' } }}
                 >
                   {formatCurrency(Math.abs(book.netBalance ?? 0))}
                 </Typography>
               </Box>
 
               {/* Actions */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }} onClick={(e) => e.stopPropagation()}>
-                {/* <IconButton 
-                  onClick={(e) => {
-                     e.stopPropagation();
-                     setDeleteTarget(book.id);
-                  }}
-                  size="small" 
-                  color="error"
-                >
-                  <FiTrash2 size={18} />
-                </IconButton> */}
+              <Box sx={{ display: 'flex', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
                 <IconButton 
                   onClick={() => handleBookClick(book.id)}
                   size="small" 
-                  sx={{ color: '#d32f2f' }} // Red arrow from screenshot (or keep standard)
+                  sx={{ color: '#d32f2f' }}
                 >
                   <FiArrowRight size={18} />
                 </IconButton>
@@ -473,30 +466,44 @@ export default function BooksPage() {
       </Box>
 
       {/* --- Contextual Delete (Selected Items) --- */}
-  {selectedIds.length > 0 && (
-    <Box sx={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0B1220' : 'white', p: 2, borderRadius: 2, boxShadow: 3, display: 'flex', gap: 2, alignItems: 'center', zIndex: 10 }}>
-      <Typography variant="body2">{selectedIds.length} items selected</Typography>
-      <Button variant="contained" color="error" size="small" onClick={() => setDeleteTarget(selectedIds)}>Delete Selected</Button>
-      <Button variant="outlined" size="small" onClick={() => setSelectedIds([])}>Cancel</Button>
-    </Box>
-  )}
+      {selectedIds.length > 0 && (
+        <Box sx={{ 
+          position: 'fixed', 
+          bottom: { xs: 80, md: 24 }, // Avoid mobile bottom nav
+          left: '50%', 
+          transform: 'translateX(-50%)', 
+          bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0B1220' : 'white', 
+          p: { xs: 1.5, sm: 2 }, 
+          borderRadius: 2, 
+          boxShadow: 3, 
+          display: 'flex', 
+          gap: { xs: 1, sm: 2 }, 
+          alignItems: 'center', 
+          zIndex: 10,
+          width: { xs: '90%', sm: 'auto' },
+          justifyContent: 'center'
+        }}>
+          <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>{selectedIds.length} selected</Typography>
+          <Button variant="contained" color="error" size="small" onClick={() => setDeleteTarget(selectedIds)}>Delete ({selectedIds.length})</Button>
+          <Button variant="outlined" size="small" onClick={() => setSelectedIds([])}>Cancel</Button>
+        </Box>
+      )}
 
-  {/* --- Quick Add / Suggestions Section --- */}
-  <Paper elevation={0} sx={{ 
-        p: 3, 
+      {/* --- Quick Add / Suggestions Section --- */}
+      <Paper elevation={0} sx={{ 
+        p: { xs: 2, sm: 3 }, 
         mt: 4, 
         border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? '#334155' : '#f0f0f0'}` ,
         borderRadius: 2,
         display: 'flex',
-        alignItems: { xs: 'flex-start', md: 'center' },
-        gap: 3,
-        flexDirection: { xs: 'column', md: 'row' },
+        flexDirection: 'column',
+        gap: 2,
         backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined
       }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
            <Box sx={{ 
-             width: 48, 
-             height: 48, 
+             width: 40, 
+             height: 40, 
              borderRadius: '50%', 
              bgcolor: (theme) => theme.palette.mode === 'dark' ? '#072018' : '#e8f5e9', 
              color: (theme) => theme.palette.mode === 'dark' ? '#6EE7B7' : '#2e7d32',
@@ -505,16 +512,11 @@ export default function BooksPage() {
              justifyContent: 'center',
              flexShrink: 0
            }}>
-             <img 
-               src="https://cdn-icons-png.flaticon.com/512/2921/2921222.png" 
-               alt="Add" 
-               style={{ width: 24, height: 24, opacity: 0.8 }} 
-             /> 
-             {/* Alternatively use <FiPlus size={24} /> if no image asset */}
+             <FiPlus size={20} />
            </Box>
            <Box>
-             <Typography variant="subtitle1" fontWeight={700}>Add New Book</Typography>
-             <Typography variant="body2" color="text.secondary">Click to quickly add books for</Typography>
+             <Typography variant="subtitle2" fontWeight={700}>Quick Add</Typography>
+             <Typography variant="caption" color="text.secondary">Select a suggestion to quickly create a book</Typography>
            </Box>
         </Box>
 
@@ -524,6 +526,7 @@ export default function BooksPage() {
               key={suggestion} 
               label={suggestion} 
               onClick={() => handleAddBook(suggestion)}
+              size="small"
               sx={{ 
                 bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0E1B2A' : '#eff2ff', 
                 color: (theme) => theme.palette.mode === 'dark' ? '#7FB3FF' : '#4361EE', 

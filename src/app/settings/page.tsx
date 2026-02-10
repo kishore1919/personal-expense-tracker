@@ -44,6 +44,8 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
+const CORE_CATEGORIES = ['Food', 'Travel', 'Medical', 'Shopping', 'Bills', 'Misc'];
+
 // Skeleton loader
 const SettingSkeleton = () => (
   <Card>
@@ -97,13 +99,20 @@ const CategoryManager: React.FC = () => {
     if (e) e.preventDefault();
     if (!newCategory.trim() || !user) return;
 
+    const name = newCategory.trim();
+    if (CORE_CATEGORIES.some(c => c.toLowerCase() === name.toLowerCase())) {
+      setError('This category already exists in core categories.');
+      return;
+    }
+
     try {
       const docRef = await addDoc(collection(db, 'categories'), {
-        name: newCategory.trim(),
+        name: name,
         userId: user.uid
       });
-      setCategories((prev) => [...prev, { id: docRef.id, name: newCategory.trim() }].sort((a,b)=>a.name.localeCompare(b.name)));
+      setCategories((prev) => [...prev, { id: docRef.id, name: name }].sort((a,b)=>a.name.localeCompare(b.name)));
       setNewCategory('');
+      setError(null);
     } catch (err) {
       console.error('Error adding category:', err);
       setError('Failed to add category.');
@@ -131,6 +140,12 @@ const CategoryManager: React.FC = () => {
       setDeleteCatTarget(null);
     }
   };
+
+  // Combine core and user categories for display
+  const allCategories = [
+    ...CORE_CATEGORIES.map(name => ({ id: `core-${name}`, name, isCore: true })),
+    ...categories.map(c => ({ ...c, isCore: false }))
+  ].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <Box>
@@ -168,33 +183,29 @@ const CategoryManager: React.FC = () => {
             <Skeleton key={i} variant="rounded" height={48} />
           ))}
         </Box>
-      ) : categories.length === 0 ? (
-        <Paper variant="outlined" sx={{ p: 3, textAlign: 'center', backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined, borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined }}>
-          <Typography color="text.secondary">
-            No categories yet. Add your first one above.
-          </Typography>
-        </Paper>
       ) : (
         <Paper variant="outlined" sx={{ backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined, borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined, borderRadius: 2, overflow: 'hidden' }}>
           <List disablePadding>
-            {categories.map((c, index) => (
+            {allCategories.map((c, index) => (
               <React.Fragment key={c.id}>
                 {index > 0 && <Divider sx={{ borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined }} />}
                 <ListItem
                   secondaryAction={
-                    <IconButton 
-                      edge="end" 
-                      onClick={() => handleDeleteCategory(c.id)}
-                      sx={{
-                        color: 'text.secondary',
-                        '&:hover': {
-                          color: 'error.main',
-                          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(239,68,68,0.08)' : 'error.bg',
-                        },
-                      }}
-                    >
-                      <FiTrash2 size={18} />
-                    </IconButton>
+                    !c.isCore && (
+                      <IconButton 
+                        edge="end" 
+                        onClick={() => handleDeleteCategory(c.id)}
+                        sx={{
+                          color: 'text.secondary',
+                          '&:hover': {
+                            color: 'error.main',
+                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(239,68,68,0.08)' : 'error.bg',
+                          },
+                        }}
+                      >
+                        <FiTrash2 size={18} />
+                      </IconButton>
+                    )
                   }
                   sx={{
                     py: 1.5,
@@ -209,7 +220,7 @@ const CategoryManager: React.FC = () => {
                       width: 8,
                       height: 8,
                       borderRadius: '50%',
-                      bgcolor: 'primary.main',
+                      bgcolor: c.isCore ? 'secondary.main' : 'primary.main',
                       mr: 2,
                       flexShrink: 0,
                     }}
@@ -217,6 +228,7 @@ const CategoryManager: React.FC = () => {
                   <ListItemText 
                     primary={c.name}
                     primaryTypographyProps={{ fontWeight: 500 }}
+                    secondary={c.isCore ? 'Core Category' : null}
                   />
                 </ListItem>
               </React.Fragment>

@@ -16,11 +16,14 @@ import {
   ToggleButtonGroup,
   MenuItem,
   Grid,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { FiX, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import { useCurrency } from '../context/CurrencyContext';
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { db } from '../firebase';
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { auth, db } from '../firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -48,7 +51,7 @@ interface AddExpenseModalProps {
   }) => void;
 }
 
-const DEFAULT_CATEGORIES = ['Misc', 'Food', 'Medical', 'Travel'];
+const CORE_CATEGORIES = ['Food', 'Travel', 'Medical', 'Shopping', 'Bills', 'Misc'];
 const MAX_AMOUNT = 99_99_99_999; // 99,99,99,999
 const MAX_DECIMAL_PLACES = 2;
 const NUMERIC_TOKEN_REGEX = /(?:\d+\.\d*|\.\d+|\d+)/g;
@@ -204,6 +207,10 @@ export default function AddExpenseModal({
   currentBalance = 0,
   initialExpense,
 }: AddExpenseModalProps) {
+  const [user] = useAuthState(auth);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'in' | 'out'>(initialType ?? 'out');
@@ -211,7 +218,7 @@ export default function AddExpenseModal({
   const [remarks, setRemarks] = useState('');
   const [category, setCategory] = useState('Misc');
   const [paymentMode, setPaymentMode] = useState('Online');
-  const [availableCategories, setAvailableCategories] = useState<string[]>(DEFAULT_CATEGORIES);
+  const [availableCategories, setAvailableCategories] = useState<string[]>(CORE_CATEGORIES);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { currency, formatCurrency } = useCurrency();
@@ -242,27 +249,34 @@ export default function AddExpenseModal({
 
   useEffect(() => {
     const fetchCategories = async () => {
+      if (!user) return;
       try {
-        const q = query(collection(db, 'categories'), orderBy('name', 'asc'));
+        const q = query(
+          collection(db, 'categories'),
+          where('userId', '==', user.uid)
+        );
         const querySnapshot = await getDocs(q);
-        const categoriesData = querySnapshot.docs.map(doc => doc.data().name as string);
+        const userCategories = querySnapshot.docs.map(doc => doc.data().name as string);
 
-        if (categoriesData.length > 0) {
-          setAvailableCategories(categoriesData);
-          setCategory((prev) => categoriesData.includes(prev) ? prev : categoriesData[0]);
-        } else {
-          setAvailableCategories(DEFAULT_CATEGORIES);
-        }
+        // Merge CORE_CATEGORIES with userCategories and remove duplicates, then sort
+        const merged = Array.from(new Set([...CORE_CATEGORIES, ...userCategories])).sort();
+        setAvailableCategories(merged);
+
+        // If current category is not in the merged list, reset it to 'Misc' or the first item
+        setCategory((prev) => {
+          if (merged.includes(prev)) return prev;
+          return merged.includes('Misc') ? 'Misc' : merged[0];
+        });
       } catch (err) {
         console.error("Error fetching categories:", err);
-        setAvailableCategories(DEFAULT_CATEGORIES);
+        setAvailableCategories(CORE_CATEGORIES);
       }
     };
 
-    if (isOpen) {
+    if (isOpen && user) {
       fetchCategories();
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -375,16 +389,17 @@ export default function AddExpenseModal({
       onClose={handleClose} 
       fullWidth 
       maxWidth="sm"
+      fullScreen={isMobile}
       PaperProps={{
         sx: {
-          borderRadius: 3,
+          borderRadius: isMobile ? 0 : 3,
         },
       }}
     >
-      <form onSubmit={handleSubmit}>
-        <DialogTitle sx={{ p: 3, pb: 0 }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <DialogTitle sx={{ p: { xs: 2, sm: 3 }, pb: 0 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Typography variant="h5" fontWeight={600}>
+            <Typography variant={isMobile ? 'h6' : 'h5'} fontWeight={600}>
               {isEditMode ? 'Edit Entry' : 'Add Entry'}
             </Typography>
             <IconButton 
@@ -400,7 +415,7 @@ export default function AddExpenseModal({
           </Box>
         </DialogTitle>
 
-        <DialogContent sx={{ p: 3, pt: 3 }}>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 }, pt: { xs: 2, sm: 3 }, flexGrow: 1 }}>
           {/* Type Toggle */}
           <Box sx={{ mb: 3 }}>
             <ToggleButtonGroup
@@ -414,7 +429,7 @@ export default function AddExpenseModal({
                   borderRadius: 2,
                   border: '1px solid',
                   borderColor: 'divider',
-                  py: 1.5,
+                  py: { xs: 1, sm: 1.5 },
                   '&.Mui-selected': {
                     bgcolor: type === 'in' ? 'success.main' : 'error.main',
                     color: 'white',
@@ -445,7 +460,7 @@ export default function AddExpenseModal({
           <Box sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                {isEditMode ? 'Balance before this entry' : 'Current Balance'}
+                {isEditMode ? 'Previous Balance' : 'Current Balance'}
               </Typography>
               <Typography
                 variant="subtitle1"
@@ -458,7 +473,7 @@ export default function AddExpenseModal({
             {amount && parsedAmount !== null && parsedAmount > 0 && (
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
-                  Balance after this entry
+                  Projected Balance
                 </Typography>
                 <Typography
                   variant="subtitle1"
@@ -485,7 +500,7 @@ export default function AddExpenseModal({
 
           {/* Amount and Date */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 7 }}>
+            <Grid size={{ xs: 12, sm: 7 }}>
               <TextField
                 id="entry-amount"
                 label={`Amount (${currency})`}
@@ -501,18 +516,18 @@ export default function AddExpenseModal({
                     ? exceedsDecimalLimit
                       ? 'Only up to 2 decimal places are allowed.'
                       : parsedAmount === null
-                      ? 'Invalid expression. Use +, -, *, /, %, and parentheses.'
+                      ? 'Invalid expression.'
                       : exceedsMaxAmount
                         ? `Max allowed is ${formatCurrency(MAX_AMOUNT)}.`
                       : `Calculated: ${formatCurrency(parsedAmount)}`
-                    : 'You can type formulas like 10+3, 10+4-7, 10+6/9+10-3, or 10%.'
+                    : 'Use formulas like 10+3, 50*10%, etc.'
                 }
                 inputProps={{
                   inputMode: 'decimal',
                 }}
               />
             </Grid>
-            <Grid size={{ xs: 5 }}>
+            <Grid size={{ xs: 12, sm: 5 }}>
               <TextField
                 id="entry-date"
                 label="Date"
@@ -527,7 +542,7 @@ export default function AddExpenseModal({
 
           {/* Category and Payment Mode */}
           <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 6 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 id="entry-category"
                 select
@@ -543,7 +558,7 @@ export default function AddExpenseModal({
                 ))}
               </TextField>
             </Grid>
-            <Grid size={{ xs: 6 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 id="entry-paymentMode"
                 select
@@ -577,14 +592,15 @@ export default function AddExpenseModal({
           )}
         </DialogContent>
 
-        <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Button onClick={handleClose} color="inherit" disabled={isSaving}>
+        <DialogActions sx={{ p: { xs: 2, sm: 3 }, pt: 0, flexDirection: isMobile ? 'column-reverse' : 'row', gap: 1 }}>
+          <Button onClick={handleClose} color="inherit" disabled={isSaving} fullWidth={isMobile}>
             Cancel
           </Button>
           <Button 
             type="submit" 
             variant="contained" 
             disableElevation 
+            fullWidth={isMobile}
             disabled={isSaving || !description || !amount || exceedsDecimalLimit || parsedAmount === null || exceedsMaxAmount}
             color={type === 'in' ? 'success' : 'error'}
           >
