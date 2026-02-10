@@ -207,6 +207,130 @@ export default function AddExpenseModal({
   currentBalance = 0,
   initialExpense,
 }: AddExpenseModalProps) {
+  const [user] = useAuthState(auth);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+function evaluateAmountExpression(input: string): number | null {
+  const source = input.replace(/\s+/g, '');
+  if (!source) return null;
+
+  let index = 0;
+
+  const peek = () => source[index];
+
+  const parseNumber = (): number | null => {
+    const start = index;
+    let hasDot = false;
+
+    while (index < source.length) {
+      const ch = source[index];
+      if (ch >= '0' && ch <= '9') {
+        index += 1;
+        continue;
+      }
+      if (ch === '.') {
+        if (hasDot) return null;
+        hasDot = true;
+        index += 1;
+        continue;
+      }
+      break;
+    }
+
+    if (start === index) return null;
+    const raw = source.slice(start, index);
+    if (raw === '.') return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : null;
+  };
+
+  const parseExpression = (): number | null => {
+    let value = parseTerm();
+    if (value === null) return null;
+
+    while (true) {
+      const op = peek();
+      if (op !== '+' && op !== '-') break;
+      index += 1;
+      const rhs = parseTerm();
+      if (rhs === null) return null;
+      value = op === '+' ? value + rhs : value - rhs;
+    }
+
+    return value;
+  };
+
+  const parseTerm = (): number | null => {
+    let value = parseFactor();
+    if (value === null) return null;
+
+    while (true) {
+      const op = peek();
+      if (op !== '*' && op !== '/') break;
+      index += 1;
+      const rhs = parseFactor();
+      if (rhs === null) return null;
+      if (op === '/') {
+        if (rhs === 0) return null;
+        value = value / rhs;
+      } else {
+        value = value * rhs;
+      }
+    }
+
+    return value;
+  };
+
+  const parseFactor = (): number | null => {
+    let value = parseUnary();
+    if (value === null) return null;
+
+    while (peek() === '%') {
+      value = value / 100;
+      index += 1;
+    }
+
+    return value;
+  };
+
+  const parseUnary = (): number | null => {
+    const op = peek();
+    if (op === '+' || op === '-') {
+      index += 1;
+      const value = parseUnary();
+      if (value === null) return null;
+      return op === '+' ? value : -value;
+    }
+    return parsePrimary();
+  };
+
+  const parsePrimary = (): number | null => {
+    if (peek() === '(') {
+      index += 1;
+      const value = parseExpression();
+      if (value === null || peek() !== ')') return null;
+      index += 1;
+      return value;
+    }
+    return parseNumber();
+  };
+
+  const result = parseExpression();
+  if (result === null || index !== source.length || !Number.isFinite(result)) {
+    return null;
+  }
+  return result;
+}
+
+export default function AddExpenseModal({
+  isOpen,
+  onClose,
+  onAddExpense,
+  initialType,
+  currentBalance = 0,
+  initialExpense,
+}: AddExpenseModalProps) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'in' | 'out'>(initialType ?? 'out');
@@ -223,11 +347,6 @@ export default function AddExpenseModal({
   const { currency, formatCurrency } = useCurrency();
   const parsedAmount = React.useMemo(() => evaluateAmountExpression(amount), [amount]);
   const isEditMode = Boolean(initialExpense);
-  const exceedsDecimalLimit = React.useMemo(() => exceedsDecimalPrecision(amount), [amount]);
-  const exceedsMaxAmount = React.useMemo(
-    () => exceedsAmountLimit(amount, parsedAmount),
-    [amount, parsedAmount]
-  );
   const balanceBeforeEntry = React.useMemo(() => {
     if (!initialExpense) return currentBalance;
     const previousSignedAmount = (initialExpense.type ?? 'out') === 'in'
@@ -312,16 +431,8 @@ export default function AddExpenseModal({
       setErrorMessage('Please provide a description and amount.');
       return;
     }
-    if (exceedsDecimalLimit) {
-      setErrorMessage('Use at most 2 digits after the decimal point.');
-      return;
-    }
     if (parsedAmount === null) {
       setErrorMessage('Please enter a valid amount expression.');
-      return;
-    }
-    if (exceedsMaxAmount) {
-      setErrorMessage(`Amount cannot exceed ${formatCurrency(MAX_AMOUNT)}.`);
       return;
     }
 
@@ -507,17 +618,13 @@ export default function AddExpenseModal({
                 fullWidth
                 required
                 value={amount}
-                onChange={(e) => handleAmountChange(e.target.value)}
+                onChange={(e) => setAmount(e.target.value)}
                 placeholder="e.g. 10+3 or 50*10%"
-                error={Boolean(amount) && (exceedsDecimalLimit || parsedAmount === null || exceedsMaxAmount)}
+                error={Boolean(amount) && parsedAmount === null}
                 helperText={
                   amount
-                    ? exceedsDecimalLimit
-                      ? 'Only up to 2 decimal places are allowed.'
-                      : parsedAmount === null
+                    ? parsedAmount === null
                       ? 'Invalid expression. Use +, -, *, /, %, and parentheses.'
-                      : exceedsMaxAmount
-                        ? `Max allowed is ${formatCurrency(MAX_AMOUNT)}.`
                       : `Calculated: ${formatCurrency(parsedAmount)}`
                     : 'You can type formulas like 10+3, 10+4-7, 10+6/9+10-3, or 10%.'
                 }
@@ -599,8 +706,7 @@ export default function AddExpenseModal({
             type="submit" 
             variant="contained" 
             disableElevation 
-            fullWidth={isMobile}
-            disabled={isSaving || !description || !amount || exceedsDecimalLimit || parsedAmount === null || exceedsMaxAmount}
+            disabled={isSaving || !description || !amount || parsedAmount === null}
             color={type === 'in' ? 'success' : 'error'}
           >
             {isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Entry' : 'Save Entry')}
