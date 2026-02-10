@@ -47,11 +47,10 @@ import {
   useMediaQuery
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, updateDoc, writeBatch, query } from "firebase/firestore";
-import { auth, db } from '../../../app/firebase'; 
-import AddExpenseModal from '../../components/AddExpenseModal'; 
-import { useCurrency } from '../../context/CurrencyContext'; 
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, updateDoc, writeBatch, orderBy, query } from "firebase/firestore";
+import { db } from '../../../app/firebase'; // Adjust path if needed based on your folder structure
+import AddExpenseModal from '../../components/AddExpenseModal'; // Adjust path if needed
+import { useCurrency } from '../../context/CurrencyContext'; // Adjust path if needed
 
 interface Expense {
   id: string;
@@ -76,8 +75,6 @@ interface ExpensePayload {
   paymentMode?: string;
   attachments?: string[];
 }
-
-const MAX_ENTRY_AMOUNT = 99_99_99_999; // 99,99,99,999
 
 // Helper to format date and time separately
 const formatDate = (date?: Date) => {
@@ -182,10 +179,6 @@ export default function BookDetailPage() {
   const handleAddExpense = async (expense: ExpensePayload) => {
     if (!bookId || typeof bookId !== 'string') return;
     try {
-      if (!Number.isFinite(expense.amount) || Math.abs(expense.amount) > MAX_ENTRY_AMOUNT) {
-        setError(`Amount cannot exceed ${formatCurrency(MAX_ENTRY_AMOUNT)}.`);
-        return;
-      }
       const createdAt = expense.createdAt instanceof Date ? expense.createdAt : new Date();
       const docRef = await addDoc(collection(db, `books/${bookId}/expenses`), {
         ...expense,
@@ -223,6 +216,34 @@ export default function BookDetailPage() {
     } catch (e) {
       console.error("Error updating:", e);
       setError(`Failed to update expense.`);
+    }
+  };
+
+  const handleEditExpense = async (expense: ExpensePayload) => {
+    if (!bookId || typeof bookId !== 'string' || !editingExpense) return;
+    try {
+      const createdAt = expense.createdAt instanceof Date ? expense.createdAt : new Date();
+      await updateDoc(doc(db, `books/${bookId}/expenses`, editingExpense.id), {
+        ...expense,
+        createdAt,
+      });
+
+      setExpenses((prev) =>
+        prev.map((entry) =>
+          entry.id === editingExpense.id
+            ? {
+                ...entry,
+                ...expense,
+                createdAt,
+              }
+            : entry
+        )
+      );
+      handleModalClose();
+    } catch (e) {
+      console.error("Error updating:", e);
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(`Failed to update expense: ${msg}`);
     }
   };
 
@@ -378,39 +399,32 @@ export default function BookDetailPage() {
       <Divider sx={{ mb: 3 }} />
 
       {/* --- Filter Bar --- */}
-      <Collapse in={showFilters || !isMobile}>
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 1.5, 
-          mb: 3, 
-          flexWrap: 'wrap',
-          flexDirection: { xs: 'column', sm: 'row' }
-        }}>
-          <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 } }}>
-            <Select
-              value={durationFilter}
-              onChange={(e) => setDurationFilter(e.target.value as any)}
-              displayEmpty
-              sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }}
-            >
-              <MenuItem value={'all'}>Duration: All Time</MenuItem>
-              <MenuItem value={'7'}>Last 7 days</MenuItem>
-              <MenuItem value={'30'}>Last 30 days</MenuItem>
-              <MenuItem value={'365'}>Last 12 months</MenuItem>
-            </Select>
-          </FormControl>
+      <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <Select
+            value={durationFilter}
+            onChange={(e) => setDurationFilter(e.target.value as 'all' | '7' | '30' | '365')}
+            displayEmpty
+            sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white', fontSize: '0.875rem' }}
+          >
+            <MenuItem value={'all'}>Duration: All Time</MenuItem>
+            <MenuItem value={'7'}>Last 7 days</MenuItem>
+            <MenuItem value={'30'}>Last 30 days</MenuItem>
+            <MenuItem value={'365'}>Last 12 months</MenuItem>
+          </Select>
+        </FormControl>
 
-          <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 140 } }}>
-            <Select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as any)}
-              sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }}
-            >
-              <MenuItem value={'all'}>Types: All</MenuItem>
-              <MenuItem value={'in'}>Income</MenuItem>
-              <MenuItem value={'out'}>Expense</MenuItem>
-            </Select>
-          </FormControl>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <Select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as 'all' | 'in' | 'out')}
+            sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white', fontSize: '0.875rem' }}
+          >
+            <MenuItem value={'all'}>Types: All</MenuItem>
+            <MenuItem value={'in'}>Income</MenuItem>
+            <MenuItem value={'out'}>Expense</MenuItem>
+          </Select>
+        </FormControl>
 
           <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 } }}>
             <Select 
@@ -472,9 +486,8 @@ export default function BookDetailPage() {
             variant="contained" 
             color="success" 
             startIcon={<FiPlus />}
-            fullWidth
             onClick={() => { setEditingExpense(null); setModalInitialType('in'); setIsModalOpen(true); }}
-            sx={{ textTransform: 'none', fontWeight: 600, bgcolor: '#00875A' }}
+            sx={{ textTransform: 'none', px: 3, fontWeight: 600, bgcolor: '#00875A' }}
           >
             Cash In
           </Button>
@@ -482,9 +495,8 @@ export default function BookDetailPage() {
             variant="contained" 
             color="error" 
             startIcon={<FiMinus />}
-            fullWidth
             onClick={() => { setEditingExpense(null); setModalInitialType('out'); setIsModalOpen(true); }}
-            sx={{ textTransform: 'none', fontWeight: 600, bgcolor: '#DE350B' }}
+            sx={{ textTransform: 'none', px: 3, fontWeight: 600, bgcolor: '#DE350B' }}
           >
             Cash Out
           </Button>
@@ -556,27 +568,72 @@ export default function BookDetailPage() {
         </Box>
       </Box>
 
-      {/* --- Table / Card Section --- */}
-      {isMobile ? (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {loading ? (
-            [1, 2, 3].map(i => <Skeleton key={i} variant="rounded" height={100} />)
-          ) : displayedExpenses.length === 0 ? (
-            <Paper sx={{ p: 4, textAlign: 'center' }}><Typography color="text.secondary">No entries found</Typography></Paper>
-          ) : (
-            displayedExpenses.map((row) => {
-              const { date, time } = formatDate(row.createdAt);
-              const isSelected = selectedIds.includes(row.id);
-              return (
-                <Paper key={row.id} sx={{ 
-                  p: 2, 
-                  border: theme => `1px solid ${isSelected ? theme.palette.primary.main : theme.palette.divider}`,
-                  bgcolor: theme => isSelected ? (theme.palette.mode === 'dark' ? 'rgba(99, 102, 241, 0.1)' : '#f5f6ff') : 'background.paper'
-                }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Checkbox 
-                        size="small" 
+      <TableContainer component={Paper} elevation={0} sx={{ border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? '#334155' : '#f0f0f0'}` }}>
+        <Table sx={{ minWidth: 650 }} aria-label="expenses table">
+          <TableHead sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#071427' : '#F4F5F7', '& th': { color: (theme) => theme.palette.mode === 'dark' ? '#94A3B8' : '#5E6C84' } }}>
+            <TableRow>
+              <TableCell padding="checkbox">
+                <Checkbox 
+                  size="small"
+                  checked={filteredExpenses.length > 0 && selectedIds.length === filteredExpenses.length}
+                  indeterminate={selectedIds.length > 0 && selectedIds.length < filteredExpenses.length}
+                  onChange={(e) => e.target.checked ? setSelectedIds(filteredExpenses.map(ex => ex.id)) : setSelectedIds([])}
+                />
+              </TableCell>
+              <TableCell 
+                onClick={() => handleSort('createdAt')} 
+                sx={{ fontWeight: 600, color: (theme) => theme.palette.mode === 'dark' ? '#94A3B8' : '#5E6C84', fontSize: '0.8rem', cursor: 'pointer' }}
+              >
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  Date & Time {sortBy === 'createdAt' ? (sortDir === 'asc' ? <FiChevronDown style={{ transform: 'rotate(180deg)' }} /> : <FiChevronDown />) : null}
+                </Box>
+              </TableCell>
+              <TableCell sx={{ fontWeight: 600, color: (theme) => theme.palette.mode === 'dark' ? '#94A3B8' : '#5E6C84', fontSize: '0.8rem' }}>Details</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: (theme) => theme.palette.mode === 'dark' ? '#94A3B8' : '#5E6C84', fontSize: '0.8rem' }}>Category</TableCell>
+              <TableCell sx={{ fontWeight: 600, color: (theme) => theme.palette.mode === 'dark' ? '#94A3B8' : '#5E6C84', fontSize: '0.8rem' }}>Mode</TableCell>
+              <TableCell 
+                align="right" 
+                onClick={() => handleSort('amount')} 
+                sx={{ fontWeight: 600, color: '#5E6C84', fontSize: '0.8rem', cursor: 'pointer', width: 140, minWidth: 120 }}
+              >
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: 'flex-end' }}>
+                  Amount {sortBy === 'amount' ? (sortDir === 'asc' ? <FiChevronDown style={{ transform: 'rotate(180deg)' }} /> : <FiChevronDown />) : null}
+                </Box>
+              </TableCell>
+              <TableCell 
+                align="right" 
+                onClick={() => handleSort('balance')} 
+                sx={{ fontWeight: 600, color: '#5E6C84', fontSize: '0.8rem', cursor: 'pointer', width: 140, minWidth: 120 }}
+              >
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: 'flex-end' }}>
+                  Balance {sortBy === 'balance' ? (sortDir === 'asc' ? <FiChevronDown style={{ transform: 'rotate(180deg)' }} /> : <FiChevronDown />) : null}
+                </Box>
+              </TableCell>
+              <TableCell align="center" sx={{ fontWeight: 600, color: '#5E6C84', fontSize: '0.8rem', width: 96 }}>
+                Action
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {loading ? (
+              <TableRow><TableCell colSpan={8} align="center">Loading...</TableCell></TableRow>
+            ) : filteredExpenses.length === 0 ? (
+              <TableRow><TableCell colSpan={8} align="center">No expenses found.</TableCell></TableRow>
+            ) : (
+              displayedExpenses.map((row) => {
+                const { date, time } = formatDate(row.createdAt);
+                const isSelected = selectedIds.indexOf(row.id) !== -1;
+                
+                return (
+                  <TableRow
+                    key={row.id}
+                    hover
+                    selected={isSelected}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': (theme) => ({ backgroundColor: theme.palette.mode === 'dark' ? '#071427' : undefined }) }}
+                  >
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        size="small"
                         checked={isSelected}
                         sx={{ p: 0 }}
                         onChange={(e) => {
@@ -661,6 +718,20 @@ export default function BookDetailPage() {
                   <TableRow key={i}>
                     <TableCell colSpan={8} align="center">
                       <Skeleton height={40} />
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        aria-label={`Edit ${row.description}`}
+                        onClick={() => {
+                          setEditingExpense(row);
+                          setModalInitialType(row.type ?? 'out');
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        <FiEdit2 />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))
