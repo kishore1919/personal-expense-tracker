@@ -22,6 +22,11 @@ import {
   Alert,
   Grid,
   Skeleton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import {
   FiUser,
@@ -57,6 +62,8 @@ const CategoryManager: React.FC = () => {
   const [newCategory, setNewCategory] = useState('');
   const [loadingCats, setLoadingCats] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteCatTarget, setDeleteCatTarget] = useState<string | null>(null);
+  const [isDeletingCat, setIsDeletingCat] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -92,14 +99,25 @@ const CategoryManager: React.FC = () => {
     }
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this category?')) return;
+  const handleDeleteCategory = (id: string) => {
+    // Open the confirmation dialog
+    setDeleteCatTarget(id);
+  };
+
+  const handleConfirmDeleteCategory = async () => {
+    if (!deleteCatTarget) return;
+    setIsDeletingCat(true);
     try {
-      await deleteDoc(doc(db, 'categories', id));
-      setCategories((prev) => prev.filter(c => c.id !== id));
+      await deleteDoc(doc(db, 'categories', deleteCatTarget));
+      setCategories((prev) => prev.filter(c => c.id !== deleteCatTarget));
+      setError(null);
     } catch (err) {
       console.error('Error deleting category:', err);
-      setError('Failed to delete category.');
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Failed to delete category: ${msg}`);
+    } finally {
+      setIsDeletingCat(false);
+      setDeleteCatTarget(null);
     }
   };
 
@@ -195,6 +213,24 @@ const CategoryManager: React.FC = () => {
           </List>
         </Paper>
       )}
+
+      <Dialog
+        open={deleteCatTarget !== null}
+        onClose={() => !isDeletingCat && setDeleteCatTarget(null)}
+      >
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this category? This cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteCatTarget(null)} disabled={isDeletingCat}>Cancel</Button>
+          <Button onClick={handleConfirmDeleteCategory} color="error" autoFocus disabled={isDeletingCat}>
+            {isDeletingCat ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
