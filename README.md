@@ -34,3 +34,31 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
+## Developer Guide (short)
+
+**Environment & Firebase**
+- Create a Firebase project and enable Firestore (and Auth if needed).
+- Add your Firebase config to the app (see `src/app/firebase.ts`).
+- Firestore rules and indexes are in `firestore.rules` and `firestore.indexes.json`.
+
+**Important scripts**
+- `dev` — start the local dev server
+- `build` — create production build
+- `start` — run production build
+- `lint` — run ESLint
+
+**Key files**
+- `src/app/books/page.tsx` — Books list (search, sort, pagination)
+- `src/app/book/[bookId]/page.tsx` — Book detail (filters, CSV export, running balance)
+- `src/app/components/MUIProvider.tsx` — theme + CSS variable sync
+
+**Troubleshooting highlights**
+- Use `useEffect` to read `localStorage` to avoid hydration mismatches.
+- If Next infers the wrong root due to multiple lockfiles, set `turbopack.root` in `next.config.ts` or remove the extra lockfile.
+- A minimal `public/service-worker.js` is included to prevent 404s from stale registrations.
+- Bulk deletes handle Firestore's 500-op batch limit by chunking expense deletions.
+
+---
