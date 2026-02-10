@@ -38,10 +38,11 @@ import {
   FiTrash2,
   FiTag,
 } from 'react-icons/fi';
-import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
-import { db } from '../firebase';
+import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, where } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 // Skeleton loader
 const SettingSkeleton = () => (
@@ -58,6 +59,7 @@ const SettingSkeleton = () => (
 );
 
 const CategoryManager: React.FC = () => {
+  const [user] = useAuthState(auth);
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [newCategory, setNewCategory] = useState('');
   const [loadingCats, setLoadingCats] = useState(true);
@@ -67,11 +69,17 @@ const CategoryManager: React.FC = () => {
 
   useEffect(() => {
     const fetchCategories = async () => {
+      if (!user) return;
       try {
         setLoadingCats(true);
-        const q = query(collection(db, 'categories'), orderBy('name', 'asc'));
+        const q = query(
+          collection(db, 'categories'),
+          where('userId', '==', user.uid)
+        );
         const querySnapshot = await getDocs(q);
-        const cats = querySnapshot.docs.map(d => ({ id: d.id, name: d.data().name }));
+        const cats = querySnapshot.docs
+          .map(d => ({ id: d.id, name: d.data().name }))
+          .sort((a, b) => a.name.localeCompare(b.name));
         setCategories(cats);
         setError(null);
       } catch (err) {
@@ -83,14 +91,17 @@ const CategoryManager: React.FC = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [user]);
 
   const handleAddCategory = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!newCategory.trim()) return;
+    if (!newCategory.trim() || !user) return;
 
     try {
-      const docRef = await addDoc(collection(db, 'categories'), { name: newCategory.trim() });
+      const docRef = await addDoc(collection(db, 'categories'), {
+        name: newCategory.trim(),
+        userId: user.uid
+      });
       setCategories((prev) => [...prev, { id: docRef.id, name: newCategory.trim() }].sort((a,b)=>a.name.localeCompare(b.name)));
       setNewCategory('');
     } catch (err) {
@@ -236,6 +247,7 @@ const CategoryManager: React.FC = () => {
 };
 
 export default function SettingsPage() {
+  const [user] = useAuthState(auth);
   // Default to 'true' at initial render and hydrate actual persisted value on mount to avoid
   // server/client content differences that cause hydration warnings.
   const [notifications, setNotifications] = useState<boolean>(true);
@@ -270,7 +282,7 @@ export default function SettingsPage() {
     {
       icon: <FiMail size={20} />,
       label: 'Email',
-      value: 'Anonymous',
+      value: user?.email || 'N/A',
     },
     {
       icon: <FiShield size={20} />,
@@ -280,7 +292,7 @@ export default function SettingsPage() {
     {
       icon: <FiUser size={20} />,
       label: 'User ID',
-      value: <Typography variant="body2" color="text.secondary">Anonymous</Typography>,
+      value: <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>{user?.uid || 'N/A'}</Typography>,
     },
   ];
 

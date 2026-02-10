@@ -11,19 +11,22 @@ import {
   CardContent,
   Paper,
 } from '@mui/material';
-import { collection, getDocs } from "firebase/firestore";
-import { db } from '../firebase';
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { auth, db } from '../firebase';
 import Loading from '../components/Loading';
 import { useCurrency } from '../context/CurrencyContext';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface Expense {
   id: string;
   description: string;
   amount: number;
+  type?: 'in' | 'out';
   createdAt?: string;
 }
 
 export default function AnalyticsPage() {
+  const [user] = useAuthState(auth);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [totalBooks, setTotalBooks] = useState(0);
   const [averageExpense, setAverageExpense] = useState(0);
@@ -32,19 +35,24 @@ export default function AnalyticsPage() {
   const { formatCurrency } = useCurrency();
 
   useEffect(() => {
-    fetchAnalyticsData();
-  }, []);
+    if (user) {
+      fetchAnalyticsData();
+    }
+  }, [user]);
 
   const fetchAnalyticsData = async () => {
+    if (!user) return;
     try {
-      const booksSnapshot = await getDocs(collection(db, 'books'));
+      setLoading(true);
+      const q = query(collection(db, 'books'), where('userId', '==', user.uid));
+      const booksSnapshot = await getDocs(q);
       const booksData = booksSnapshot.docs.map(doc => ({ 
         id: doc.id, 
         name: doc.data().name 
       }));
       setTotalBooks(booksData.length);
 
-      let totalAmount = 0;
+      let totalOutAmount = 0;
       let expenseCount = 0;
       let highestAmount = 0;
 
@@ -53,16 +61,19 @@ export default function AnalyticsPage() {
         expensesSnapshot.forEach((doc) => {
           const expense = doc.data() as Expense;
           const amount = expense.amount || 0;
-          totalAmount += amount;
-          expenseCount++;
-          if (amount > highestAmount) {
-            highestAmount = amount;
+          
+          if (expense.type === 'out') {
+            totalOutAmount += amount;
+            expenseCount++;
+            if (amount > highestAmount) {
+              highestAmount = amount;
+            }
           }
         });
       }
 
-      setTotalExpenses(totalAmount);
-      setAverageExpense(expenseCount > 0 ? totalAmount / expenseCount : 0);
+      setTotalExpenses(totalOutAmount);
+      setAverageExpense(expenseCount > 0 ? totalOutAmount / expenseCount : 0);
       setHighestExpense(highestAmount);
     } catch (error) {
       console.error("Error fetching analytics:", error);

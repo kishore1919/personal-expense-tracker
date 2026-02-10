@@ -36,11 +36,12 @@ import {
   DialogActions,
   Checkbox,
 } from '@mui/material';
-import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, writeBatch } from "firebase/firestore";
-import { db } from '../firebase';
+import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, writeBatch, where } from "firebase/firestore";
+import { auth, db } from '../firebase';
 import { useRouter } from 'next/navigation';
 import AddBookModal from '../components/AddBookModal';
 import { useCurrency } from '../context/CurrencyContext';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface Book {
   id: string;
@@ -66,6 +67,7 @@ const ListSkeleton = () => (
 const SUGGESTIONS = ['February Expenses', 'Home Expense', 'Project Book', 'Account Book'];
 
 export default function BooksPage() {
+  const [user] = useAuthState(auth);
   const [books, setBooks] = useState<Book[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,13 +90,19 @@ export default function BooksPage() {
   const { formatCurrency } = useCurrency();
 
   useEffect(() => {
-    fetchBooks();
-  }, []);
+    if (user) {
+      fetchBooks();
+    }
+  }, [user]);
 
   const fetchBooks = async () => {
+    if (!user) return;
     try {
       setLoading(true);
-      const q = query(collection(db, 'books'), orderBy('createdAt', 'desc'));
+      const q = query(
+        collection(db, 'books'),
+        where('userId', '==', user.uid)
+      );
       const querySnapshot = await getDocs(q);
       
       // Fetch books with their net balances
@@ -125,6 +133,13 @@ export default function BooksPage() {
           };
         })
       );
+
+      // Sort in memory to avoid index requirement for now
+      booksData.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.()?.getTime() || 0;
+        const dateB = b.createdAt?.toDate?.()?.getTime() || 0;
+        return dateB - dateA;
+      });
       
       setBooks(booksData);
       setError(null);
@@ -137,11 +152,12 @@ export default function BooksPage() {
   };
 
   const handleAddBook = async (bookName: string) => {
+    if (!user) return;
     try {
       const docRef = await addDoc(collection(db, 'books'), {
         name: bookName,
         createdAt: new Date(),
-        userId: 'anonymous',
+        userId: user.uid,
       });
       
       setBooks([{ id: docRef.id, name: bookName, updatedAtString: 'Just now', netBalance: 0 }, ...books]);

@@ -24,9 +24,13 @@ import {
   FiSettings,
   FiChevronLeft,
   FiChevronRight,
+  FiLogOut,
 } from 'react-icons/fi';
 import { FaBook } from 'react-icons/fa';
 import { useSidebar } from '../context/SidebarContext';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase';
+import { useRouter } from 'next/navigation';
 
 const menuItems = [
   { icon: FiGrid, name: 'Dashboard', path: '/' },
@@ -36,7 +40,17 @@ const menuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isCollapsed, setIsCollapsed, sidebarWidth } = useSidebar();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
   
   // Calculate active index based on pathname
   const activeIndex = useMemo(() => {
@@ -146,6 +160,50 @@ export default function Sidebar() {
             </ListItem>
           );
         })}
+      </List>
+
+      {/* Logout Button */}
+      <List sx={{ px: 1.5, pb: 2 }}>
+        <ListItem disablePadding>
+          <Tooltip
+            title={isCollapsed ? 'Logout' : ''}
+            placement="right"
+            arrow
+          >
+            <ListItemButton
+              onClick={handleLogout}
+              sx={{
+                borderRadius: 2,
+                py: 1.5,
+                px: isCollapsed ? 1.5 : 2,
+                justifyContent: isCollapsed ? 'center' : 'flex-start',
+                color: 'error.main',
+                '&:hover': {
+                  bgcolor: 'error.lighter',
+                  opacity: 0.8,
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: isCollapsed ? 0 : 40,
+                  color: 'inherit',
+                  justifyContent: 'center',
+                }}
+              >
+                <FiLogOut size={22} />
+              </ListItemIcon>
+              {!isCollapsed && (
+                <ListItemText
+                  primary="Logout"
+                  primaryTypographyProps={{
+                    fontWeight: 500,
+                  }}
+                />
+              )}
+            </ListItemButton>
+          </Tooltip>
+        </ListItem>
       </List>
 
       {/* Collapse Toggle Button */}
