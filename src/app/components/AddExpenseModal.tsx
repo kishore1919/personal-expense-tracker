@@ -207,10 +207,6 @@ export default function AddExpenseModal({
   currentBalance = 0,
   initialExpense,
 }: AddExpenseModalProps) {
-  const [user] = useAuthState(auth);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'in' | 'out'>(initialType ?? 'out');
@@ -221,6 +217,9 @@ export default function AddExpenseModal({
   const [availableCategories, setAvailableCategories] = useState<string[]>(CORE_CATEGORIES);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [user] = useAuthState(auth);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { currency, formatCurrency } = useCurrency();
   const parsedAmount = React.useMemo(() => evaluateAmountExpression(amount), [amount]);
   const isEditMode = Boolean(initialExpense);
@@ -399,7 +398,7 @@ export default function AddExpenseModal({
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <DialogTitle sx={{ p: { xs: 2, sm: 3 }, pb: 0 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Typography variant={isMobile ? 'h6' : 'h5'} fontWeight={600}>
+            <Typography variant="h5" fontWeight={600}>
               {isEditMode ? 'Edit Entry' : 'Add Entry'}
             </Typography>
             <IconButton 
@@ -460,7 +459,7 @@ export default function AddExpenseModal({
           <Box sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                {isEditMode ? 'Previous Balance' : 'Current Balance'}
+                {isEditMode ? 'Balance before this entry' : 'Current Balance'}
               </Typography>
               <Typography
                 variant="subtitle1"
@@ -516,11 +515,11 @@ export default function AddExpenseModal({
                     ? exceedsDecimalLimit
                       ? 'Only up to 2 decimal places are allowed.'
                       : parsedAmount === null
-                      ? 'Invalid expression.'
+                      ? 'Invalid expression. Use +, -, *, /, %, and parentheses.'
                       : exceedsMaxAmount
                         ? `Max allowed is ${formatCurrency(MAX_AMOUNT)}.`
                       : `Calculated: ${formatCurrency(parsedAmount)}`
-                    : 'Use formulas like 10+3, 50*10%, etc.'
+                    : 'You can type formulas like 10+3, 10+4-7, 10+6/9+10-3, or 10%.'
                 }
                 inputProps={{
                   inputMode: 'decimal',

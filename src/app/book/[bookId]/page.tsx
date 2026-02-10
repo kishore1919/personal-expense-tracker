@@ -77,8 +77,9 @@ interface ExpensePayload {
   attachments?: string[];
 }
 
-const MAX_ENTRY_AMOUNT = 99_99_99_999;
+const MAX_ENTRY_AMOUNT = 99_99_99_999; // 99,99,99,999
 
+// Helper to format date and time separately
 const formatDate = (date?: Date) => {
   if (!date) return { date: '-', time: '' };
   return {
