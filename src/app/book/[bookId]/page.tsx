@@ -72,6 +72,8 @@ interface ExpensePayload {
   attachments?: string[];
 }
 
+const MAX_ENTRY_AMOUNT = 99_99_99_999; // 99,99,99,999
+
 // Helper to format date and time separately
 const formatDate = (date?: Date) => {
   if (!date) return { date: '-', time: '' };
@@ -164,6 +166,10 @@ export default function BookDetailPage() {
   const handleAddExpense = async (expense: ExpensePayload) => {
     if (!bookId || typeof bookId !== 'string') return;
     try {
+      if (!Number.isFinite(expense.amount) || Math.abs(expense.amount) > MAX_ENTRY_AMOUNT) {
+        setError(`Amount cannot exceed ${formatCurrency(MAX_ENTRY_AMOUNT)}.`);
+        return;
+      }
       const createdAt = expense.createdAt instanceof Date ? expense.createdAt : new Date();
       const docRef = await addDoc(collection(db, `books/${bookId}/expenses`), {
         ...expense,
@@ -181,6 +187,10 @@ export default function BookDetailPage() {
   const handleEditExpense = async (expense: ExpensePayload) => {
     if (!bookId || typeof bookId !== 'string' || !editingExpense) return;
     try {
+      if (!Number.isFinite(expense.amount) || Math.abs(expense.amount) > MAX_ENTRY_AMOUNT) {
+        setError(`Amount cannot exceed ${formatCurrency(MAX_ENTRY_AMOUNT)}.`);
+        return;
+      }
       const createdAt = expense.createdAt instanceof Date ? expense.createdAt : new Date();
       await updateDoc(doc(db, `books/${bookId}/expenses`, editingExpense.id), {
         ...expense,

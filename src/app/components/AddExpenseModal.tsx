@@ -49,6 +49,10 @@ interface AddExpenseModalProps {
 }
 
 const DEFAULT_CATEGORIES = ['Misc', 'Food', 'Medical', 'Travel'];
+const MAX_AMOUNT = 99_99_99_999; // 99,99,99,999
+const MAX_DECIMAL_PLACES = 2;
+const NUMERIC_TOKEN_REGEX = /(?:\d+\.\d*|\.\d+|\d+)/g;
+const ALLOWED_AMOUNT_INPUT = /^[0-9+\-*/%.()\s]*$/;
 
 function evaluateAmountExpression(input: string): number | null {
   const source = input.replace(/\s+/g, '');
@@ -80,6 +84,8 @@ function evaluateAmountExpression(input: string): number | null {
     if (start === index) return null;
     const raw = source.slice(start, index);
     if (raw === '.') return null;
+    const dotIndex = raw.indexOf('.');
+    if (dotIndex !== -1 && raw.slice(dotIndex + 1).length > MAX_DECIMAL_PLACES) return null;
     const value = Number(raw);
     return Number.isFinite(value) ? value : null;
   };
@@ -162,6 +168,34 @@ function evaluateAmountExpression(input: string): number | null {
   return result;
 }
 
+function exceedsAmountLimit(input: string, evaluatedResult?: number | null): boolean {
+  const compact = input.replace(/\s+/g, '');
+  if (!compact) return false;
+
+  const numericTokens = compact.match(NUMERIC_TOKEN_REGEX) ?? [];
+  for (const token of numericTokens) {
+    const tokenValue = Number(token);
+    if (Number.isFinite(tokenValue) && Math.abs(tokenValue) > MAX_AMOUNT) {
+      return true;
+    }
+  }
+
+  const evaluated = evaluatedResult === undefined ? evaluateAmountExpression(compact) : evaluatedResult;
+  return evaluated !== null && Math.abs(evaluated) > MAX_AMOUNT;
+}
+
+function exceedsDecimalPrecision(input: string): boolean {
+  const compact = input.replace(/\s+/g, '');
+  if (!compact) return false;
+
+  const numericTokens = compact.match(NUMERIC_TOKEN_REGEX) ?? [];
+  return numericTokens.some((token) => {
+    const dotIndex = token.indexOf('.');
+    if (dotIndex === -1) return false;
+    return token.slice(dotIndex + 1).length > MAX_DECIMAL_PLACES;
+  });
+}
+
 export default function AddExpenseModal({
   isOpen,
   onClose,
@@ -183,6 +217,11 @@ export default function AddExpenseModal({
   const { currency, formatCurrency } = useCurrency();
   const parsedAmount = React.useMemo(() => evaluateAmountExpression(amount), [amount]);
   const isEditMode = Boolean(initialExpense);
+  const exceedsDecimalLimit = React.useMemo(() => exceedsDecimalPrecision(amount), [amount]);
+  const exceedsMaxAmount = React.useMemo(
+    () => exceedsAmountLimit(amount, parsedAmount),
+    [amount, parsedAmount]
+  );
   const balanceBeforeEntry = React.useMemo(() => {
     if (!initialExpense) return currentBalance;
     const previousSignedAmount = (initialExpense.type ?? 'out') === 'in'
@@ -260,8 +299,16 @@ export default function AddExpenseModal({
       setErrorMessage('Please provide a description and amount.');
       return;
     }
+    if (exceedsDecimalLimit) {
+      setErrorMessage('Use at most 2 digits after the decimal point.');
+      return;
+    }
     if (parsedAmount === null) {
       setErrorMessage('Please enter a valid amount expression.');
+      return;
+    }
+    if (exceedsMaxAmount) {
+      setErrorMessage(`Amount cannot exceed ${formatCurrency(MAX_AMOUNT)}.`);
       return;
     }
 
@@ -299,6 +346,15 @@ export default function AddExpenseModal({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleAmountChange = (value: string) => {
+    if (!ALLOWED_AMOUNT_INPUT.test(value)) return;
+    if (exceedsDecimalPrecision(value)) return;
+    if (exceedsAmountLimit(value)) return;
+
+    setAmount(value);
+    if (errorMessage) setErrorMessage(null);
   };
 
   const handleClose = () => {
@@ -437,13 +493,17 @@ export default function AddExpenseModal({
                 fullWidth
                 required
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => handleAmountChange(e.target.value)}
                 placeholder="e.g. 10+3 or 50*10%"
-                error={Boolean(amount) && parsedAmount === null}
+                error={Boolean(amount) && (exceedsDecimalLimit || parsedAmount === null || exceedsMaxAmount)}
                 helperText={
                   amount
-                    ? parsedAmount === null
+                    ? exceedsDecimalLimit
+                      ? 'Only up to 2 decimal places are allowed.'
+                      : parsedAmount === null
                       ? 'Invalid expression. Use +, -, *, /, %, and parentheses.'
+                      : exceedsMaxAmount
+                        ? `Max allowed is ${formatCurrency(MAX_AMOUNT)}.`
                       : `Calculated: ${formatCurrency(parsedAmount)}`
                     : 'You can type formulas like 10+3, 10+4-7, 10+6/9+10-3, or 10%.'
                 }
@@ -525,7 +585,7 @@ export default function AddExpenseModal({
             type="submit" 
             variant="contained" 
             disableElevation 
-            disabled={isSaving || !description || !amount || parsedAmount === null}
+            disabled={isSaving || !description || !amount || exceedsDecimalLimit || parsedAmount === null || exceedsMaxAmount}
             color={type === 'in' ? 'success' : 'error'}
           >
             {isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Entry' : 'Save Entry')}
