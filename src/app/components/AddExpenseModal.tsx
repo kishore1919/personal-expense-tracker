@@ -27,6 +27,15 @@ interface AddExpenseModalProps {
   onClose: () => void;
   initialType?: 'in' | 'out';
   currentBalance?: number;
+  initialExpense?: {
+    description: string;
+    amount: number;
+    type?: 'in' | 'out';
+    createdAt?: Date;
+    remarks?: string;
+    category?: string;
+    paymentMode?: string;
+  };
   onAddExpense: (expense: {
     description: string;
     amount: number;
@@ -41,7 +50,126 @@ interface AddExpenseModalProps {
 
 const DEFAULT_CATEGORIES = ['Misc', 'Food', 'Medical', 'Travel'];
 
-export default function AddExpenseModal({ isOpen, onClose, onAddExpense, initialType, currentBalance = 0 }: AddExpenseModalProps) {
+function evaluateAmountExpression(input: string): number | null {
+  const source = input.replace(/\s+/g, '');
+  if (!source) return null;
+
+  let index = 0;
+
+  const peek = () => source[index];
+
+  const parseNumber = (): number | null => {
+    const start = index;
+    let hasDot = false;
+
+    while (index < source.length) {
+      const ch = source[index];
+      if (ch >= '0' && ch <= '9') {
+        index += 1;
+        continue;
+      }
+      if (ch === '.') {
+        if (hasDot) return null;
+        hasDot = true;
+        index += 1;
+        continue;
+      }
+      break;
+    }
+
+    if (start === index) return null;
+    const raw = source.slice(start, index);
+    if (raw === '.') return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : null;
+  };
+
+  const parseExpression = (): number | null => {
+    let value = parseTerm();
+    if (value === null) return null;
+
+    while (true) {
+      const op = peek();
+      if (op !== '+' && op !== '-') break;
+      index += 1;
+      const rhs = parseTerm();
+      if (rhs === null) return null;
+      value = op === '+' ? value + rhs : value - rhs;
+    }
+
+    return value;
+  };
+
+  const parseTerm = (): number | null => {
+    let value = parseFactor();
+    if (value === null) return null;
+
+    while (true) {
+      const op = peek();
+      if (op !== '*' && op !== '/') break;
+      index += 1;
+      const rhs = parseFactor();
+      if (rhs === null) return null;
+      if (op === '/') {
+        if (rhs === 0) return null;
+        value = value / rhs;
+      } else {
+        value = value * rhs;
+      }
+    }
+
+    return value;
+  };
+
+  const parseFactor = (): number | null => {
+    let value = parseUnary();
+    if (value === null) return null;
+
+    while (peek() === '%') {
+      value = value / 100;
+      index += 1;
+    }
+
+    return value;
+  };
+
+  const parseUnary = (): number | null => {
+    const op = peek();
+    if (op === '+' || op === '-') {
+      index += 1;
+      const value = parseUnary();
+      if (value === null) return null;
+      return op === '+' ? value : -value;
+    }
+    return parsePrimary();
+  };
+
+  const parsePrimary = (): number | null => {
+    if (peek() === '(') {
+      index += 1;
+      const value = parseExpression();
+      if (value === null || peek() !== ')') return null;
+      index += 1;
+      return value;
+    }
+    return parseNumber();
+  };
+
+  const result = parseExpression();
+  if (result === null || index !== source.length || !Number.isFinite(result)) {
+    return null;
+  }
+  return result;
+}
+
+export default function AddExpenseModal({
+  isOpen,
+  onClose,
+  onAddExpense,
+  initialType,
+  currentBalance = 0,
+  initialExpense,
+}: AddExpenseModalProps) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'in' | 'out'>(initialType ?? 'out');
@@ -53,16 +181,25 @@ export default function AddExpenseModal({ isOpen, onClose, onAddExpense, initial
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { currency, formatCurrency } = useCurrency();
+  const parsedAmount = React.useMemo(() => evaluateAmountExpression(amount), [amount]);
+  const isEditMode = Boolean(initialExpense);
+  const balanceBeforeEntry = React.useMemo(() => {
+    if (!initialExpense) return currentBalance;
+    const previousSignedAmount = (initialExpense.type ?? 'out') === 'in'
+      ? initialExpense.amount
+      : -initialExpense.amount;
+    return currentBalance - previousSignedAmount;
+  }, [currentBalance, initialExpense]);
 
   // Calculate projected balance after this entry
   const projectedBalance = React.useMemo(() => {
-    const amountNum = parseFloat(amount) || 0;
+    const amountNum = parsedAmount ?? 0;
     if (type === 'in') {
-      return currentBalance + amountNum;
+      return balanceBeforeEntry + amountNum;
     } else {
-      return currentBalance - amountNum;
+      return balanceBeforeEntry - amountNum;
     }
-  }, [currentBalance, amount, type]);
+  }, [balanceBeforeEntry, parsedAmount, type]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -89,16 +226,42 @@ export default function AddExpenseModal({ isOpen, onClose, onAddExpense, initial
   }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen) {
-      setType(initialType ?? 'out');
+    if (!isOpen) return;
+
+    if (initialExpense) {
+      const initialDate = initialExpense.createdAt instanceof Date
+        ? initialExpense.createdAt
+        : new Date();
+      setDescription(initialExpense.description || '');
+      setAmount(String(initialExpense.amount ?? ''));
+      setType(initialExpense.type ?? 'out');
+      setDate(initialDate.toISOString().slice(0, 10));
+      setRemarks(initialExpense.remarks || '');
+      setCategory(initialExpense.category || 'Misc');
+      setPaymentMode(initialExpense.paymentMode || 'Online');
+      setErrorMessage(null);
+      return;
     }
-  }, [isOpen, initialType]);
+
+    setDescription('');
+    setAmount('');
+    setType(initialType ?? 'out');
+    setDate(new Date().toISOString().slice(0, 10));
+    setRemarks('');
+    setCategory('Misc');
+    setPaymentMode('Online');
+    setErrorMessage(null);
+  }, [isOpen, initialType, initialExpense]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     if (!description || !amount) {
       setErrorMessage('Please provide a description and amount.');
+      return;
+    }
+    if (parsedAmount === null) {
+      setErrorMessage('Please enter a valid amount expression.');
       return;
     }
 
@@ -116,7 +279,7 @@ export default function AddExpenseModal({ isOpen, onClose, onAddExpense, initial
         remarks?: string;
       } = {
         description,
-        amount: parseFloat(amount),
+        amount: parsedAmount,
         type,
         createdAt,
         category,
@@ -166,7 +329,7 @@ export default function AddExpenseModal({ isOpen, onClose, onAddExpense, initial
         <DialogTitle sx={{ p: 3, pb: 0 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <Typography variant="h5" fontWeight={600}>
-              Add Entry
+              {isEditMode ? 'Edit Entry' : 'Add Entry'}
             </Typography>
             <IconButton 
               onClick={handleClose} 
@@ -226,17 +389,17 @@ export default function AddExpenseModal({ isOpen, onClose, onAddExpense, initial
           <Box sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
               <Typography variant="body2" color="text.secondary">
-                Current Balance
+                {isEditMode ? 'Balance before this entry' : 'Current Balance'}
               </Typography>
               <Typography
                 variant="subtitle1"
                 fontWeight={600}
-                color={currentBalance >= 0 ? 'success.main' : 'error.main'}
+                color={balanceBeforeEntry >= 0 ? 'success.main' : 'error.main'}
               >
-                {formatCurrency(currentBalance)}
+                {formatCurrency(balanceBeforeEntry)}
               </Typography>
             </Box>
-            {amount && parseFloat(amount) > 0 && (
+            {amount && parsedAmount !== null && parsedAmount > 0 && (
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
                   Balance after this entry
@@ -270,12 +433,23 @@ export default function AddExpenseModal({ isOpen, onClose, onAddExpense, initial
               <TextField
                 id="entry-amount"
                 label={`Amount (${currency})`}
-                type="number"
+                type="text"
                 fullWidth
                 required
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
+                placeholder="e.g. 10+3 or 50*10%"
+                error={Boolean(amount) && parsedAmount === null}
+                helperText={
+                  amount
+                    ? parsedAmount === null
+                      ? 'Invalid expression. Use +, -, *, /, %, and parentheses.'
+                      : `Calculated: ${formatCurrency(parsedAmount)}`
+                    : 'You can type formulas like 10+3, 10+4-7, 10+6/9+10-3, or 10%.'
+                }
+                inputProps={{
+                  inputMode: 'decimal',
+                }}
               />
             </Grid>
             <Grid size={{ xs: 5 }}>
@@ -351,10 +525,10 @@ export default function AddExpenseModal({ isOpen, onClose, onAddExpense, initial
             type="submit" 
             variant="contained" 
             disableElevation 
-            disabled={isSaving || !description || !amount}
+            disabled={isSaving || !description || !amount || parsedAmount === null}
             color={type === 'in' ? 'success' : 'error'}
           >
-            {isSaving ? 'Saving...' : 'Save Entry'}
+            {isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Entry' : 'Save Entry')}
           </Button>
         </DialogActions>
       </form>

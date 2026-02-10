@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FiChevronLeft, 
   FiTrash2, 
+  FiEdit2,
   FiPlus, 
   FiMinus, 
   FiSearch, 
@@ -43,7 +44,7 @@ import {
   Divider
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, writeBatch, orderBy, query } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, updateDoc, writeBatch, orderBy, query } from "firebase/firestore";
 import { db } from '../../../app/firebase'; // Adjust path if needed based on your folder structure
 import AddExpenseModal from '../../components/AddExpenseModal'; // Adjust path if needed
 import { useCurrency } from '../../context/CurrencyContext'; // Adjust path if needed
@@ -54,6 +55,17 @@ interface Expense {
   amount: number;
   type?: 'in' | 'out';
   createdAt?: Date;
+  remarks?: string;
+  category?: string;
+  paymentMode?: string;
+  attachments?: string[];
+}
+
+interface ExpensePayload {
+  description: string;
+  amount: number;
+  type: 'in' | 'out';
+  createdAt: Date;
   remarks?: string;
   category?: string;
   paymentMode?: string;
@@ -76,6 +88,7 @@ export default function BookDetailPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalInitialType, setModalInitialType] = useState<'in' | 'out' | undefined>(undefined);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -142,20 +155,54 @@ export default function BookDetailPage() {
     fetchBookDetails();
   }, [bookId]);
 
-  const handleAddExpense = async (expense: any) => {
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setModalInitialType(undefined);
+    setEditingExpense(null);
+  };
+
+  const handleAddExpense = async (expense: ExpensePayload) => {
     if (!bookId || typeof bookId !== 'string') return;
     try {
+      const createdAt = expense.createdAt instanceof Date ? expense.createdAt : new Date();
       const docRef = await addDoc(collection(db, `books/${bookId}/expenses`), {
         ...expense,
-        createdAt: new Date() // Ensure server timestamp in real app
+        createdAt,
       });
-      // Naive update for immediate UI feedback
-      setExpenses([{ id: docRef.id, ...expense, createdAt: new Date() }, ...expenses]);
-      setIsModalOpen(false);
+      setExpenses((prev) => [{ id: docRef.id, ...expense, createdAt }, ...prev]);
+      handleModalClose();
     } catch (e) {
       console.error("Error adding:", e);
       const msg = e instanceof Error ? e.message : String(e);
       setError(`Failed to add expense: ${msg}`);
+    }
+  };
+
+  const handleEditExpense = async (expense: ExpensePayload) => {
+    if (!bookId || typeof bookId !== 'string' || !editingExpense) return;
+    try {
+      const createdAt = expense.createdAt instanceof Date ? expense.createdAt : new Date();
+      await updateDoc(doc(db, `books/${bookId}/expenses`, editingExpense.id), {
+        ...expense,
+        createdAt,
+      });
+
+      setExpenses((prev) =>
+        prev.map((entry) =>
+          entry.id === editingExpense.id
+            ? {
+                ...entry,
+                ...expense,
+                createdAt,
+              }
+            : entry
+        )
+      );
+      handleModalClose();
+    } catch (e) {
+      console.error("Error updating:", e);
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(`Failed to update expense: ${msg}`);
     }
   };
 
@@ -220,6 +267,10 @@ export default function BookDetailPage() {
   const cashIn = useMemo(() => filteredExpenses.reduce((sum, item) => sum + (item.type === 'in' ? item.amount : 0), 0), [filteredExpenses]);
   const cashOut = useMemo(() => filteredExpenses.reduce((sum, item) => sum + (item.type === 'out' ? item.amount : 0), 0), [filteredExpenses]);
   const netBalance = cashIn - cashOut;
+  const bookBalance = useMemo(
+    () => expenses.reduce((sum, item) => sum + (item.type === 'in' ? item.amount : -item.amount), 0),
+    [expenses]
+  );
 
   // Sort and compute running balance (balance is cumulative from oldest to newest)
   const sortedWithBalance = useMemo(() => {
@@ -314,7 +365,12 @@ export default function BookDetailPage() {
       {/* --- Filter Bar --- */}
       <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
         <FormControl size="small" sx={{ minWidth: 160 }}>
-          <Select value={durationFilter} onChange={(e) => setDurationFilter(e.target.value as any)} displayEmpty sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white', fontSize: '0.875rem' }}>
+          <Select
+            value={durationFilter}
+            onChange={(e) => setDurationFilter(e.target.value as 'all' | '7' | '30' | '365')}
+            displayEmpty
+            sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white', fontSize: '0.875rem' }}
+          >
             <MenuItem value={'all'}>Duration: All Time</MenuItem>
             <MenuItem value={'7'}>Last 7 days</MenuItem>
             <MenuItem value={'30'}>Last 30 days</MenuItem>
@@ -323,7 +379,11 @@ export default function BookDetailPage() {
         </FormControl>
 
         <FormControl size="small" sx={{ minWidth: 140 }}>
-          <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as any)} sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white', fontSize: '0.875rem' }}>
+          <Select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as 'all' | 'in' | 'out')}
+            sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white', fontSize: '0.875rem' }}
+          >
             <MenuItem value={'all'}>Types: All</MenuItem>
             <MenuItem value={'in'}>Income</MenuItem>
             <MenuItem value={'out'}>Expense</MenuItem>
@@ -369,7 +429,7 @@ export default function BookDetailPage() {
             variant="contained" 
             color="success" 
             startIcon={<FiPlus />}
-            onClick={() => { setModalInitialType('in'); setIsModalOpen(true); }}
+            onClick={() => { setEditingExpense(null); setModalInitialType('in'); setIsModalOpen(true); }}
             sx={{ textTransform: 'none', px: 3, fontWeight: 600, bgcolor: '#00875A' }}
           >
             Cash In
@@ -378,7 +438,7 @@ export default function BookDetailPage() {
             variant="contained" 
             color="error" 
             startIcon={<FiMinus />}
-            onClick={() => { setModalInitialType('out'); setIsModalOpen(true); }}
+            onClick={() => { setEditingExpense(null); setModalInitialType('out'); setIsModalOpen(true); }}
             sx={{ textTransform: 'none', px: 3, fontWeight: 600, bgcolor: '#DE350B' }}
           >
             Cash Out
@@ -494,13 +554,16 @@ export default function BookDetailPage() {
                   Balance {sortBy === 'balance' ? (sortDir === 'asc' ? <FiChevronDown style={{ transform: 'rotate(180deg)' }} /> : <FiChevronDown />) : null}
                 </Box>
               </TableCell>
+              <TableCell align="center" sx={{ fontWeight: 600, color: '#5E6C84', fontSize: '0.8rem', width: 96 }}>
+                Action
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={7} align="center">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} align="center">Loading...</TableCell></TableRow>
             ) : filteredExpenses.length === 0 ? (
-              <TableRow><TableCell colSpan={7} align="center">No expenses found.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} align="center">No expenses found.</TableCell></TableRow>
             ) : (
               displayedExpenses.map((row) => {
                 const { date, time } = formatDate(row.createdAt);
@@ -552,6 +615,20 @@ export default function BookDetailPage() {
                          {formatCurrency ? formatCurrency(row.balance) : row.balance.toLocaleString()}
                       </Typography>
                     </TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        aria-label={`Edit ${row.description}`}
+                        onClick={() => {
+                          setEditingExpense(row);
+                          setModalInitialType(row.type ?? 'out');
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        <FiEdit2 />
+                      </IconButton>
+                    </TableCell>
                   </TableRow>
                 );
               })
@@ -573,9 +650,18 @@ export default function BookDetailPage() {
       <AddExpenseModal
         isOpen={isModalOpen}
         initialType={modalInitialType}
-        currentBalance={netBalance}
-        onClose={() => { setIsModalOpen(false); setModalInitialType(undefined); }}
-        onAddExpense={handleAddExpense}
+        currentBalance={bookBalance}
+        initialExpense={editingExpense ? {
+          description: editingExpense.description,
+          amount: editingExpense.amount,
+          type: editingExpense.type,
+          createdAt: editingExpense.createdAt,
+          remarks: editingExpense.remarks,
+          category: editingExpense.category,
+          paymentMode: editingExpense.paymentMode,
+        } : undefined}
+        onClose={handleModalClose}
+        onAddExpense={editingExpense ? handleEditExpense : handleAddExpense}
       />
 
       <Dialog
