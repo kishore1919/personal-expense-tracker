@@ -55,10 +55,7 @@ A modern, full-featured expense tracking application built with Next.js, Materia
 
 1. Clone the repository
 ```bash
-# Clone this repository or your fork
-git clone https://github.com/your-org/personal-expense-tracker.git
-# or, if using a fork:
-# git clone <your-fork-url>
+git clone <repository-url>
 cd personal-expense-tracker
 ```
 
@@ -75,36 +72,9 @@ bun install
    - Create a Firebase project at [firebase.google.com](https://firebase.google.com)
    - Enable Firestore Database
    - Enable Authentication (if using auth features)
-   - Add your Firebase configuration to a `.env.local` file using the `NEXT_PUBLIC_FIREBASE_*` variables (this project reads these environment variables from `src/app/firebase.ts`). Example `.env.local`:
-
-```env
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-```
-
-   - Login and initialize Firebase CLI (if needed):
-
-```bash
-firebase login
-firebase init    # choose Hosting / Firestore as needed
-```
-
-   - Deploy Firestore rules and indexes explicitly:
-
-```bash
-firebase deploy --only firestore:rules
-firebase deploy --only firestore:indexes
-```
-
-   - Deploy hosting when ready:
-
-```bash
-firebase deploy --only hosting
-```
+   - Add your Firebase configuration to `src/app/firebase.ts`
+   - Deploy Firestore rules: `firestore.rules`
+   - Deploy indexes: `firestore.indexes.json`
 
 4. Run the development server
 ```bash
@@ -206,13 +176,6 @@ Bulk operations automatically chunk deletions into batches of 499 operations to 
 4. Push to your fork: `git push origin feature/my-feature`
 5. Open a Pull Request with a detailed description
 
-## License
-
-This project is licensed under the MIT License — see the `LICENSE` file for details.
-
----
-
-Built with Next.js, MUI, and Firebase.
 
 ---
 
