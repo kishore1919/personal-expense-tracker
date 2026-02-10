@@ -16,10 +16,11 @@ import {
   Skeleton,
 } from '@mui/material';
 import AddBookModal from './AddBookModal';
-import { collection, addDoc, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, orderBy, where } from "firebase/firestore";
 import { useCurrency } from '../context/CurrencyContext';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 import { useRouter } from 'next/navigation';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface Book {
   id: string;
@@ -102,6 +103,7 @@ const EmptyState = ({ onCreate }: { onCreate: () => void }) => (
 );
 
 export default function Dashboard() {
+  const [user] = useAuthState(auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [books, setBooks] = useState<Book[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -111,13 +113,19 @@ export default function Dashboard() {
   const { formatCurrency } = useCurrency();
 
   useEffect(() => {
-    fetchBooks();
-  }, []);
+    if (user) {
+      fetchBooks();
+    }
+  }, [user]);
 
   const fetchBooks = async () => {
+    if (!user) return;
     try {
       setLoading(true);
-      const q = query(collection(db, 'books'), orderBy('createdAt', 'desc'));
+      const q = query(
+        collection(db, 'books'),
+        where('userId', '==', user.uid)
+      );
       const querySnapshot = await getDocs(q);
 
       const booksData = await Promise.all(querySnapshot.docs.map(async (doc) => {
@@ -146,6 +154,13 @@ export default function Dashboard() {
         } as Book;
       }));
 
+      // Sort in memory to avoid index requirement for now
+      booksData.sort((a, b) => {
+        const dateA = a.createdAtRaw?.getTime() || 0;
+        const dateB = b.createdAtRaw?.getTime() || 0;
+        return dateB - dateA;
+      });
+
       setBooks(booksData);
       setError(null);
     } catch (e) {
@@ -157,11 +172,12 @@ export default function Dashboard() {
   };
 
   const handleAddBook = async (bookName: string) => {
+    if (!user) return;
     try {
       const docRef = await addDoc(collection(db, 'books'), {
         name: bookName,
         createdAt: new Date(),
-        userId: 'anonymous',
+        userId: user.uid,
       });
       
       setBooks([{ id: docRef.id, name: bookName, createdAt: 'Just now' }, ...books]);

@@ -10,6 +10,10 @@ import { CurrencyProvider } from './context/CurrencyContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { SidebarProvider, useSidebar } from './context/SidebarContext';
 import MUIProvider from './components/MUIProvider';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from './firebase';
+import { useRouter } from 'next/navigation';
+import Loading from './components/Loading';
 
 const bodyFont = Manrope({
   subsets: ['latin'],
@@ -25,12 +29,33 @@ const headingFont = Space_Grotesk({
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const router = useRouter();
+  const [user, loading] = useAuthState(auth);
+  const isAuthPage = pathname === '/login';
   const { sidebarWidth } = useSidebar();
+
+  React.useEffect(() => {
+    if (!loading) {
+      if (!user && !isAuthPage) {
+        router.push('/login');
+      } else if (user && isAuthPage) {
+        router.push('/');
+      }
+    }
+  }, [user, loading, isAuthPage, router]);
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  // Prevent showing protected content while redirecting
+  if (!user && !isAuthPage) {
+    return <Loading />;
+  }
 
   return (
     <>
-      {!isAuthPage && <Sidebar />}
+      {!isAuthPage && user && <Sidebar />}
       <Box
         component="main"
         sx={{
@@ -38,7 +63,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
-          ml: isAuthPage ? 0 : { xs: 0, md: `${sidebarWidth}px` },
+          ml: (isAuthPage || !user) ? 0 : { xs: 0, md: `${sidebarWidth}px` },
           transition: 'margin-left 200ms ease',
           pb: { xs: '80px', md: 0 },
         }}

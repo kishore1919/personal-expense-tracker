@@ -39,6 +39,11 @@ const createShadows = (isDark: boolean): Shadows => {
 
 export default function MUIProvider({ children }: { children: React.ReactNode }) {
   const { isDarkMode } = useAppTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const theme = useMemo(
     () =>
@@ -491,7 +496,7 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {children}
+      {mounted ? children : <div style={{ visibility: 'hidden' }}>{children}</div>}
     </ThemeProvider>
   );
 }

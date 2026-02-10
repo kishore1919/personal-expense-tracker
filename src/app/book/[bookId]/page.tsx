@@ -45,9 +45,10 @@ import {
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
 import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, updateDoc, writeBatch, orderBy, query } from "firebase/firestore";
-import { db } from '../../../app/firebase'; // Adjust path if needed based on your folder structure
+import { auth, db } from '../../../app/firebase'; // Adjust path if needed based on your folder structure
 import AddExpenseModal from '../../components/AddExpenseModal'; // Adjust path if needed
 import { useCurrency } from '../../context/CurrencyContext'; // Adjust path if needed
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface Expense {
   id: string;
@@ -84,6 +85,7 @@ const formatDate = (date?: Date) => {
 };
 
 export default function BookDetailPage() {
+  const [user] = useAuthState(auth);
   const router = useRouter();
   const { bookId } = useParams();
   const [bookName, setBookName] = useState('');
@@ -112,7 +114,7 @@ export default function BookDetailPage() {
 
   useEffect(() => {
     const fetchBookDetails = async () => {
-      if (!bookId || typeof bookId !== 'string') return;
+      if (!bookId || typeof bookId !== 'string' || !user) return;
 
       try {
         setLoading(true);
@@ -120,13 +122,20 @@ export default function BookDetailPage() {
         const bookSnap = await getDoc(bookRef);
 
         if (bookSnap.exists()) {
-          setBookName(bookSnap.data().name);
+          const data = bookSnap.data();
+          // Ownership check
+          if (data.userId !== user.uid) {
+            router.push('/');
+            return;
+          }
+          setBookName(data.name);
         } else {
-          setBookName('Expense Book');
+          router.push('/');
+          return;
         }
 
-        // Fetch expenses ordered by date
-        const q = query(collection(db, `books/${bookId}/expenses`), orderBy('createdAt', 'desc'));
+        // Fetch expenses
+        const q = query(collection(db, `books/${bookId}/expenses`));
         const querySnapshot = await getDocs(q);
         
         const expensesData = querySnapshot.docs.map((d) => {
@@ -145,6 +154,9 @@ export default function BookDetailPage() {
           } as Expense;
         });
 
+        // Sort in memory
+        expensesData.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+
         setExpenses(expensesData);
       } catch (e) {
         console.error("Error loading data:", e);
@@ -155,7 +167,7 @@ export default function BookDetailPage() {
     };
 
     fetchBookDetails();
-  }, [bookId]);
+  }, [bookId, user, router]);
 
   const handleModalClose = () => {
     setIsModalOpen(false);
