@@ -48,7 +48,7 @@ interface AddExpenseModalProps {
     category?: string;
     paymentMode?: string;
     attachments?: string[];
-  }) => void;
+  }, keepOpen?: boolean) => Promise<void> | void;
 }
 
 const CORE_CATEGORIES = ['Food', 'Travel', 'Medical', 'Shopping', 'Bills', 'Misc'];
@@ -305,8 +305,7 @@ export default function AddExpenseModal({
     setErrorMessage(null);
   }, [isOpen, initialType, initialExpense]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (keepOpen = false) => {
     setErrorMessage(null);
     if (!description || !amount) {
       setErrorMessage('Please provide a description and amount.');
@@ -350,8 +349,17 @@ export default function AddExpenseModal({
         payload.remarks = remarks.trim();
       }
 
-      await onAddExpense(payload);
-      handleClose();
+      await onAddExpense(payload, keepOpen);
+
+      if (keepOpen && !isEditMode) {
+        // Prepare form for next entry without closing modal
+        setDescription('');
+        setAmount('');
+        setRemarks('');
+        setErrorMessage(null);
+      } else {
+        handleClose();
+      }
     } catch (err) {
       console.error('Save failed:', err);
       const errMsg = err instanceof Error ? err.message : 'Failed to save entry. Please try again.';
@@ -360,6 +368,11 @@ export default function AddExpenseModal({
       setIsSaving(false);
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handleSave(false);
+  }; 
 
   const handleAmountChange = (value: string) => {
     if (!ALLOWED_AMOUNT_INPUT.test(value)) return;
@@ -595,6 +608,19 @@ export default function AddExpenseModal({
           <Button onClick={handleClose} color="inherit" disabled={isSaving} fullWidth={isMobile}>
             Cancel
           </Button>
+          {!isEditMode && (
+            <Button
+              type="button"
+              variant="outlined"
+              disableElevation
+              fullWidth={isMobile}
+              disabled={isSaving || !description || !amount || exceedsDecimalLimit || parsedAmount === null || exceedsMaxAmount}
+              onClick={() => handleSave(true)}
+              color={type === 'in' ? 'success' : 'error'}
+            >
+              {isSaving ? 'Saving...' : 'Add & Save Another'}
+            </Button>
+          )}
           <Button 
             type="submit" 
             variant="contained" 

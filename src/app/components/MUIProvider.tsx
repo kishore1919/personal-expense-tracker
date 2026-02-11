@@ -39,11 +39,6 @@ const createShadows = (isDark: boolean): Shadows => {
 
 export default function MUIProvider({ children }: { children: React.ReactNode }) {
   const { isDarkMode } = useAppTheme();
-  const [mounted, setMounted] = React.useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const theme = useMemo(
     () =>
@@ -496,7 +491,7 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      {mounted ? children : <div suppressHydrationWarning style={{ visibility: 'hidden' }}>{children}</div>}
+      {children}
     </ThemeProvider>
   );
 }

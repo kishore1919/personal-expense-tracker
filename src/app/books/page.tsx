@@ -4,12 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
   FiPlus,
   FiSearch,
-  FiTrash2,
   FiArrowRight,
-  FiEdit2,
-  FiCopy,
-  FiUserPlus,
-  FiChevronDown,
   FiChevronLeft,
   FiChevronRight,
 } from 'react-icons/fi';
@@ -36,7 +31,7 @@ import {
   DialogActions,
   Checkbox,
 } from '@mui/material';
-import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, writeBatch, where } from "firebase/firestore";
+import { collection, getDocs, addDoc, deleteDoc, doc, query, writeBatch, where } from "firebase/firestore";
 import { auth, db } from '../firebase';
 import { useRouter } from 'next/navigation';
 import AddBookModal from '../components/AddBookModal';
@@ -46,7 +41,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 interface Book {
   id: string;
   name: string;
-  createdAt?: any;
+  createdAt?: { toDate?: () => Date } | Date | undefined;
   updatedAtString?: string; // Mapped for UI display
   netBalance?: number; // Calculated net balance from expenses
 }
@@ -90,66 +85,67 @@ export default function BooksPage() {
   const { formatCurrency } = useCurrency();
 
   useEffect(() => {
-    if (user) {
-      fetchBooks();
-    }
+    if (!user) return;
+
+    const fetchBooks = async () => {
+      try {
+        setLoading(true);
+        const q = query(
+          collection(db, 'books'),
+          where('userId', '==', user.uid)
+        );
+        const querySnapshot = await getDocs(q);
+        
+        // Fetch books with their net balances
+        const booksData = await Promise.all(
+          querySnapshot.docs.map(async (bookDoc) => {
+            const bookData = bookDoc.data();
+            
+            // Fetch expenses for this book to calculate net balance
+            const expensesSnapshot = await getDocs(collection(db, `books/${bookDoc.id}/expenses`));
+            let netBalance = 0;
+            
+            expensesSnapshot.docs.forEach((expenseDoc) => {
+              const expenseData = expenseDoc.data();
+              const amount = expenseData.amount || 0;
+              if (expenseData.type === 'in') {
+                netBalance += amount;
+              } else {
+                netBalance -= amount;
+              }
+            });
+
+            return {
+              id: bookDoc.id,
+              name: bookData.name,
+              createdAt: bookData.createdAt,
+              updatedAtString: 'Updated recently',
+              netBalance
+            };
+          })
+        );
+
+        // Sort in memory to avoid index requirement for now
+        booksData.sort((a, b) => {
+          const dateA = a.createdAt?.toDate?.()?.getTime() || 0;
+          const dateB = b.createdAt?.toDate?.()?.getTime() || 0;
+          return dateB - dateA;
+        });
+
+        setBooks(booksData);
+        setError(null);
+      } catch (e) {
+        console.error("Error loading data:", e);
+        setError('Failed to load books.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBooks();
   }, [user]);
 
-  const fetchBooks = async () => {
-    if (!user) return;
-    try {
-      setLoading(true);
-      const q = query(
-        collection(db, 'books'),
-        where('userId', '==', user.uid)
-      );
-      const querySnapshot = await getDocs(q);
-      
-      // Fetch books with their net balances
-      const booksData = await Promise.all(
-        querySnapshot.docs.map(async (bookDoc) => {
-          const bookData = bookDoc.data();
-          
-          // Fetch expenses for this book to calculate net balance
-          const expensesSnapshot = await getDocs(collection(db, `books/${bookDoc.id}/expenses`));
-          let netBalance = 0;
-          
-          expensesSnapshot.docs.forEach((expenseDoc) => {
-            const expenseData = expenseDoc.data();
-            const amount = expenseData.amount || 0;
-            if (expenseData.type === 'in') {
-              netBalance += amount;
-            } else {
-              netBalance -= amount;
-            }
-          });
-          
-          return {
-            id: bookDoc.id,
-            name: bookData.name,
-            createdAt: bookData.createdAt,
-            updatedAtString: 'Updated recently',
-            netBalance
-          };
-        })
-      );
 
-      // Sort in memory to avoid index requirement for now
-      booksData.sort((a, b) => {
-        const dateA = a.createdAt?.toDate?.()?.getTime() || 0;
-        const dateB = b.createdAt?.toDate?.()?.getTime() || 0;
-        return dateB - dateA;
-      });
-      
-      setBooks(booksData);
-      setError(null);
-    } catch (error) {
-      console.error("Error fetching books:", error);
-      setError("Failed to load books.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddBook = async (bookName: string) => {
     if (!user) return;
@@ -168,10 +164,7 @@ export default function BooksPage() {
     }
   };
 
-  const handleDeleteBook = (bookId: string) => {
-    // Open confirm dialog instead of using window.confirm()
-    setDeleteTarget(bookId);
-  };
+
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;

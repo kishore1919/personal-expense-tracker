@@ -14,23 +14,20 @@ const DRAWER_WIDTH = 260;
 const DRAWER_COLLAPSED_WIDTH = 72;
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  // Default to false so server render matches initial client render to avoid hydration mismatches.
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  // On mount, read persisted preference once and apply it. Doing this in an effect ensures
-  // the value isn't read during server-side render and avoids content differences between
-  // server and client that lead to hydration errors.
-  useEffect(() => {
+  // Default to false but initialize lazily from storage to avoid setState-in-effect.
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     try {
+      if (typeof window === 'undefined') return false;
       const saved = localStorage.getItem('sidebar_collapsed');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (typeof parsed === 'boolean') setIsCollapsed(parsed);
+        if (typeof parsed === 'boolean') return parsed;
       }
-    } catch (e) {
-      console.error('Failed to read sidebar collapsed state:', e);
+    } catch {
+      // ignore
     }
-  }, []);
+    return false;
+  });
 
   useEffect(() => {
     localStorage.setItem('sidebar_collapsed', JSON.stringify(isCollapsed));

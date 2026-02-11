@@ -2,12 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
-import Link from 'next/link';
 import { FaBook } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
-import { Button, TextField, Typography, Box, Alert, Card, CardContent, Divider } from '@mui/material';
+import { Button, Typography, Box, Alert, Card, CardContent } from '@mui/material';
 
 export default function Login() {
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +20,7 @@ export default function Login() {
       await signInWithPopup(auth, googleProvider);
       router.push('/');
     } catch (err: unknown) {
-      const fbErr = err as any;
+      const fbErr = err as { code?: string } | undefined;
       if (fbErr?.code === 'auth/popup-closed-by-user') {
         // User closed the popup, don't show an error
       } else {

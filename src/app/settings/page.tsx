@@ -38,7 +38,7 @@ import {
   FiTrash2,
   FiTag,
 } from 'react-icons/fi';
-import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
@@ -260,19 +260,17 @@ const CategoryManager: React.FC = () => {
 
 export default function SettingsPage() {
   const [user] = useAuthState(auth);
-  // Default to 'true' at initial render and hydrate actual persisted value on mount to avoid
-  // server/client content differences that cause hydration warnings.
-  const [notifications, setNotifications] = useState<boolean>(true);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
+  // Initialize notifications lazily from storage to avoid setState-in-effect/hydration issues.
+  const [notifications, setNotifications] = useState<boolean>(() => {
     try {
+      if (typeof window === 'undefined') return true;
       const savedNotifications = localStorage.getItem('pet_notifications');
-      if (savedNotifications !== null) setNotifications(savedNotifications === 'true');
+      return savedNotifications !== null ? savedNotifications === 'true' : true;
     } catch {
-      // ignore
+      return true;
     }
-  }, []);
+  });
+  const [loading, setLoading] = useState(true);
   const { currency, setCurrency, currencyOptions } = useCurrency();
   const { isDarkMode, toggleDarkMode } = useTheme();
 

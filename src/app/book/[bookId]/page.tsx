@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FiChevronLeft, 
-  FiTrash2, 
   FiEdit2,
   FiPlus, 
   FiMinus, 
@@ -18,10 +17,7 @@ import {
   IconButton,
   Typography,
   Box,
-  Alert,
   Grid,
-  Card,
-  CardContent,
   Checkbox,
   Dialog,
   DialogActions,
@@ -47,7 +43,7 @@ import {
   useMediaQuery
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, updateDoc, writeBatch, query } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, addDoc, updateDoc, writeBatch, query } from "firebase/firestore";
 import { auth, db } from '../../../app/firebase'; 
 import AddExpenseModal from '../../components/AddExpenseModal'; 
 import { useCurrency } from '../../context/CurrencyContext'; 
@@ -101,7 +97,7 @@ export default function BookDetailPage() {
   const [modalInitialType, setModalInitialType] = useState<'in' | 'out' | undefined>(undefined);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<string | string[] | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -179,7 +175,7 @@ export default function BookDetailPage() {
     setEditingExpense(null);
   };
 
-  const handleAddExpense = async (expense: ExpensePayload) => {
+  const handleAddExpense = async (expense: ExpensePayload, keepOpen = false) => {
     if (!bookId || typeof bookId !== 'string') return;
     try {
       if (!Number.isFinite(expense.amount) || Math.abs(expense.amount) > MAX_ENTRY_AMOUNT) {
@@ -192,12 +188,12 @@ export default function BookDetailPage() {
         createdAt,
       });
       setExpenses((prev) => [{ id: docRef.id, ...expense, createdAt }, ...prev]);
-      handleModalClose();
+      if (!keepOpen) handleModalClose();
     } catch (e) {
       console.error("Error adding:", e);
       setError(`Failed to add expense.`);
     }
-  };
+  }; 
 
   const handleEditExpense = async (expense: ExpensePayload) => {
     if (!bookId || typeof bookId !== 'string' || !editingExpense) return;
@@ -389,7 +385,7 @@ export default function BookDetailPage() {
           <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 } }}>
             <Select
               value={durationFilter}
-              onChange={(e) => setDurationFilter(e.target.value as any)}
+              onChange={(e) => setDurationFilter(e.target.value as 'all' | '7' | '30' | '365')}
               displayEmpty
               sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }}
             >
@@ -403,7 +399,7 @@ export default function BookDetailPage() {
           <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 140 } }}>
             <Select
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as any)}
+              onChange={(e) => setTypeFilter(e.target.value as 'all' | 'in' | 'out')}
               sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }}
             >
               <MenuItem value={'all'}>Types: All</MenuItem>
@@ -668,7 +664,7 @@ export default function BookDetailPage() {
                 <TableRow><TableCell colSpan={8} align="center">No expenses found.</TableCell></TableRow>
               ) : (
                 displayedExpenses.map((row) => {
-                  const { date, time } = formatDate(row.createdAt);
+                  const { date } = formatDate(row.createdAt);
                   const isSelected = selectedIds.includes(row.id);
                   return (
                     <TableRow key={row.id} hover selected={isSelected}>

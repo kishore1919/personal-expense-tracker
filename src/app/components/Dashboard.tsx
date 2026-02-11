@@ -16,7 +16,7 @@ import {
   Skeleton,
 } from '@mui/material';
 import AddBookModal from './AddBookModal';
-import { collection, addDoc, getDocs, query, orderBy, where } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { useCurrency } from '../context/CurrencyContext';
 import { auth, db } from '../firebase';
 import { useRouter } from 'next/navigation';
@@ -113,63 +113,63 @@ export default function Dashboard() {
   const { formatCurrency } = useCurrency();
 
   useEffect(() => {
-    if (user) {
-      fetchBooks();
-    }
-  }, [user]);
-
-  const fetchBooks = async () => {
     if (!user) return;
-    try {
-      setLoading(true);
-      const q = query(
-        collection(db, 'books'),
-        where('userId', '==', user.uid)
-      );
-      const querySnapshot = await getDocs(q);
 
-      const booksData = await Promise.all(querySnapshot.docs.map(async (doc) => {
-        const raw = doc.data().createdAt;
-        const createdAtDate = raw?.toDate?.() ?? null;
+    const fetchBooks = async () => {
+      try {
+        setLoading(true);
+        const q = query(
+          collection(db, 'books'),
+          where('userId', '==', user.uid)
+        );
+        const querySnapshot = await getDocs(q);
 
-        const expensesSnap = await getDocs(collection(db, `books/${doc.id}/expenses`));
-        let cashIn = 0;
-        let cashOut = 0;
+        const booksData = await Promise.all(querySnapshot.docs.map(async (doc) => {
+          const raw = doc.data().createdAt;
+          const createdAtDate = raw?.toDate?.() ?? null;
 
-        expensesSnap.docs.forEach((ed) => {
-          const data = ed.data();
-          const raw = data.amount;
-          const amountNum = Number(raw);
-          const safeAmt = Number.isFinite(amountNum) ? amountNum : 0;
-          if (data.type === 'in') cashIn += safeAmt;
-          else cashOut += safeAmt;
+          const expensesSnap = await getDocs(collection(db, `books/${doc.id}/expenses`));
+          let cashIn = 0;
+          let cashOut = 0;
+
+          expensesSnap.docs.forEach((ed) => {
+            const data = ed.data();
+            const raw = data.amount;
+            const amountNum = Number(raw);
+            const safeAmt = Number.isFinite(amountNum) ? amountNum : 0;
+            if (data.type === 'in') cashIn += safeAmt;
+            else cashOut += safeAmt;
+          });
+
+          return {
+            id: doc.id,
+            name: doc.data().name,
+            createdAt: createdAtDate ? createdAtDate.toLocaleDateString() : 'Recently',
+            createdAtRaw: createdAtDate,
+            net: cashIn - cashOut,
+          } as Book;
+        }));
+
+        // Sort in memory to avoid index requirement for now
+        booksData.sort((a, b) => {
+          const dateA = a.createdAtRaw?.getTime() || 0;
+          const dateB = b.createdAtRaw?.getTime() || 0;
+          return dateB - dateA;
         });
 
-        return {
-          id: doc.id,
-          name: doc.data().name,
-          createdAt: createdAtDate ? createdAtDate.toLocaleDateString() : 'Recently',
-          createdAtRaw: createdAtDate,
-          net: cashIn - cashOut,
-        } as Book;
-      }));
+        setBooks(booksData);
+        setError(null);
+      } catch (e) {
+        console.error("Error fetching books:", e);
+        setError("Failed to load books. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      // Sort in memory to avoid index requirement for now
-      booksData.sort((a, b) => {
-        const dateA = a.createdAtRaw?.getTime() || 0;
-        const dateB = b.createdAtRaw?.getTime() || 0;
-        return dateB - dateA;
-      });
+    fetchBooks();
+  }, [user]);
 
-      setBooks(booksData);
-      setError(null);
-    } catch (e) {
-      console.error("Error fetching books:", e);
-      setError("Failed to load books. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAddBook = async (bookName: string) => {
     if (!user) return;

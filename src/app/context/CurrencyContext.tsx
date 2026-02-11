@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 const CURRENCY_STORAGE_KEY = 'expense-tracker-currency';
 const DEFAULT_CURRENCY = 'USD';
@@ -64,20 +64,17 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
     [currencyOptions]
   );
 
-  // Initialize to a safe default so server render matches initial client render.
-  const [currency, setCurrencyState] = useState<string>(DEFAULT_CURRENCY);
-
-  // On mount, read the persisted preference and apply it (client-only) to avoid hydration mismatches.
-  useEffect(() => {
+  // Initialize to a safe default and read persisted preference lazily to avoid setState-in-effect.
+  const [currency, setCurrencyState] = useState<string>(() => {
     try {
-      if (typeof window === 'undefined') return;
+      if (typeof window === 'undefined') return DEFAULT_CURRENCY;
       const saved = localStorage.getItem(CURRENCY_STORAGE_KEY);
       const normalized = saved ? saved.toUpperCase() : null;
-      if (normalized && supportedCurrencySet.has(normalized)) setCurrencyState(normalized);
+      return normalized && supportedCurrencySet.has(normalized) ? normalized : DEFAULT_CURRENCY;
     } catch {
-      // ignore
+      return DEFAULT_CURRENCY;
     }
-  }, [supportedCurrencySet]);
+  });
 
   const setCurrency = useCallback(
     (nextCurrency: string) => {

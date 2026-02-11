@@ -14,28 +14,20 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  // Default to 'light' to ensure server and initial client render match.
-  const [theme, setTheme] = useState<Theme>('light');
-
-  // On client mount, read persisted preference (or system preference) and apply it.
-  useEffect(() => {
+  // Initialize theme lazily from persisted choice or system preference to avoid setState-in-effect.
+  const [theme, setTheme] = useState<Theme>(() => {
     try {
-      const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-      if (savedTheme === 'dark' || savedTheme === 'light') {
-        setTheme(savedTheme as Theme);
-        return;
+      if (typeof window !== 'undefined') {
+        const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+        if (savedTheme === 'dark' || savedTheme === 'light') return savedTheme as Theme;
+        const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+        return prefersDark ? 'dark' : 'light';
       }
-    } catch {
-      // Ignore storage read errors.
-    }
-
-    try {
-      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-      setTheme(prefersDark ? 'dark' : 'light');
     } catch {
       // ignore
     }
-  }, []);
+    return 'light';
+  });
 
   useEffect(() => {
     const root = document.documentElement;

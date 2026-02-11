@@ -34,53 +34,69 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const { formatCurrency } = useCurrency();
 
+  const [monthlyBudget, setMonthlyBudget] = useState<number>(() => Math.max(1000, totalBooks * 1000));
+
   useEffect(() => {
-    if (user) {
-      fetchAnalyticsData();
-    }
-  }, [user]);
-
-  const fetchAnalyticsData = async () => {
-    if (!user) return;
     try {
-      setLoading(true);
-      const q = query(collection(db, 'books'), where('userId', '==', user.uid));
-      const booksSnapshot = await getDocs(q);
-      const booksData = booksSnapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        name: doc.data().name 
-      }));
-      setTotalBooks(booksData.length);
-
-      let totalOutAmount = 0;
-      let expenseCount = 0;
-      let highestAmount = 0;
-
-      for (const book of booksData) {
-        const expensesSnapshot = await getDocs(collection(db, `books/${book.id}/expenses`));
-        expensesSnapshot.forEach((doc) => {
-          const expense = doc.data() as Expense;
-          const amount = expense.amount || 0;
-          
-          if (expense.type === 'out') {
-            totalOutAmount += amount;
-            expenseCount++;
-            if (amount > highestAmount) {
-              highestAmount = amount;
-            }
-          }
-        });
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('monthly_budget') : null;
+      if (stored !== null) {
+        const n = Number(stored) || 0;
+        setMonthlyBudget(Math.max(1000, n || totalBooks * 1000));
+      } else {
+        setMonthlyBudget(Math.max(1000, totalBooks * 1000));
       }
-
-      setTotalExpenses(totalOutAmount);
-      setAverageExpense(expenseCount > 0 ? totalOutAmount / expenseCount : 0);
-      setHighestExpense(highestAmount);
-    } catch (error) {
-      console.error("Error fetching analytics:", error);
-    } finally {
-      setLoading(false);
+    } catch {
+      setMonthlyBudget(Math.max(1000, totalBooks * 1000));
     }
-  };
+  }, [totalBooks]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchAnalyticsData = async () => {
+      if (!user) return;
+      try {
+        setLoading(true);
+        const q = query(collection(db, 'books'), where('userId', '==', user.uid));
+        const booksSnapshot = await getDocs(q);
+        const booksData = booksSnapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          name: doc.data().name 
+        }));
+        setTotalBooks(booksData.length);
+
+        let totalOutAmount = 0;
+        let expenseCount = 0;
+        let highestAmount = 0;
+
+        for (const book of booksData) {
+          const expensesSnapshot = await getDocs(collection(db, `books/${book.id}/expenses`));
+          expensesSnapshot.forEach((doc) => {
+            const expense = doc.data() as Expense;
+            const amount = expense.amount || 0;
+            
+            if (expense.type === 'out') {
+              totalOutAmount += amount;
+              expenseCount++;
+              if (amount > highestAmount) {
+                highestAmount = amount;
+              }
+            }
+          });
+        }
+
+        setTotalExpenses(totalOutAmount);
+        setAverageExpense(expenseCount > 0 ? totalOutAmount / expenseCount : 0);
+        setHighestExpense(highestAmount);
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAnalyticsData();
+  }, [user]);
 
   const stats = [
     {
@@ -113,22 +129,7 @@ export default function AnalyticsPage() {
     return <Loading />;
   }
 
-  // Manage monthlyBudget on the client to avoid SSR/client mismatches when reading localStorage
-  const [monthlyBudget, setMonthlyBudget] = useState<number>(Math.max(1000, totalBooks * 1000));
 
-  useEffect(() => {
-    try {
-      const stored = typeof window !== 'undefined' ? localStorage.getItem('monthly_budget') : null;
-      if (stored !== null) {
-        const n = Number(stored) || 0;
-        setMonthlyBudget(Math.max(1000, n || totalBooks * 1000));
-      } else {
-        setMonthlyBudget(Math.max(1000, totalBooks * 1000));
-      }
-    } catch {
-      setMonthlyBudget(Math.max(1000, totalBooks * 1000));
-    }
-  }, [totalBooks]);
 
   const spendingPercent = totalExpenses > 0 ? Math.min(Math.max(Math.round((totalExpenses / monthlyBudget) * 100), 0), 100) : 0;
   const healthPercent = totalExpenses > 0 ? Math.min(Math.max(Math.round(((monthlyBudget - totalExpenses) / monthlyBudget) * 100), 0), 100) : 100;
