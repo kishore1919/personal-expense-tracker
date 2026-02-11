@@ -25,6 +25,7 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiLogOut,
+  FiBarChart2,
 } from 'react-icons/fi';
 import { FaBook } from 'react-icons/fa';
 import { useSidebar } from '../context/SidebarContext';
@@ -34,6 +35,7 @@ import { useRouter } from 'next/navigation';
 
 const menuItems = [
   { icon: FiGrid, name: 'Dashboard', path: '/' },
+  { icon: FiBarChart2, name: 'Analytics', path: '/analytics' },
   { icon: FiBookOpen, name: 'My Books', path: '/books' },
   { icon: FiSettings, name: 'Settings', path: '/settings' },
 ];
