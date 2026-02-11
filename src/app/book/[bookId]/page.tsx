@@ -179,7 +179,7 @@ export default function BookDetailPage() {
     setEditingExpense(null);
   };
 
-  const handleAddExpense = async (expense: ExpensePayload) => {
+  const handleAddExpense = async (expense: ExpensePayload, keepOpen = false) => {
     if (!bookId || typeof bookId !== 'string') return;
     try {
       if (!Number.isFinite(expense.amount) || Math.abs(expense.amount) > MAX_ENTRY_AMOUNT) {
@@ -192,14 +192,14 @@ export default function BookDetailPage() {
         createdAt,
       });
       setExpenses((prev) => [{ id: docRef.id, ...expense, createdAt }, ...prev]);
-      handleModalClose();
+      if (!keepOpen) handleModalClose();
     } catch (e) {
       console.error("Error adding:", e);
       setError(`Failed to add expense.`);
     }
-  };
+  }; 
 
-  const handleEditExpense = async (expense: ExpensePayload) => {
+  const handleEditExpense = async (expense: ExpensePayload, _keepOpen = false) => {
     if (!bookId || typeof bookId !== 'string' || !editingExpense) return;
     try {
       if (!Number.isFinite(expense.amount) || Math.abs(expense.amount) > MAX_ENTRY_AMOUNT) {
