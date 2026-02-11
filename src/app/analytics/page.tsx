@@ -7,15 +7,18 @@ import {
   Box,
   Grid,
   LinearProgress,
+  Paper,
   Card,
   CardContent,
-  Paper,
 } from '@mui/material';
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from '../firebase';
 import Loading from '../components/Loading';
 import { useCurrency } from '../context/CurrencyContext';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import PageHeader from '../components/PageHeader';
+import StatCard from '../components/StatCard';
+import IconBox from '../components/IconBox';
 
 interface Expense {
   id: string;
@@ -135,43 +138,21 @@ export default function AnalyticsPage() {
 
   return (
     <Box sx={{ pb: 10 }}>
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Typography variant="h4" gutterBottom>
-            Analytics
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Track your financial insights and spending patterns.
-          </Typography>
-        </CardContent>
-      </Card>
+      <PageHeader
+        title="Analytics"
+        subtitle="Track your financial insights and spending patterns."
+        variant="card"
+      />
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
         {stats.map((stat, index) => (
           <Grid size={{ xs: 12, sm: 6, xl: 3 }} key={index}>
-            <Card>
-              <CardContent>
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 2,
-                    bgcolor: stat.color,
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    mb: 2,
-                  }}
-                >
-                  <stat.icon size={24} />
-                </Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {stat.title}
-                </Typography>
-                <Typography variant="h4">{stat.value}</Typography>
-              </CardContent>
-            </Card>
+            <StatCard
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              color={stat.color}
+            />
           </Grid>
         ))}
       </Grid>
@@ -245,22 +226,12 @@ export default function AnalyticsPage() {
                 Quick Insights
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Paper sx={{ p: 3, display: 'flex', gap: 3 }}>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      flexShrink: 0,
-                      borderRadius: 2,
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <FiTrendingUp />
-                  </Box>
+              <Paper sx={{ p: 3, display: 'flex', gap: 3 }}>
+                  <IconBox
+                    icon={FiTrendingUp}
+                    size="md"
+                    color="primary"
+                  />
                   <Box>
                     <Typography variant="subtitle2" fontWeight="600">
                       Spending Trend
@@ -275,21 +246,11 @@ export default function AnalyticsPage() {
                 </Paper>
 
                 <Paper sx={{ p: 3, display: 'flex', gap: 3 }}>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      flexShrink: 0,
-                      borderRadius: 2,
-                      bgcolor: 'secondary.main',
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <FiDollarSign />
-                  </Box>
+                  <IconBox
+                    icon={FiDollarSign}
+                    size="md"
+                    color="secondary"
+                  />
                   <Box>
                     <Typography variant="subtitle2" fontWeight="600">
                       Average Transaction
@@ -304,21 +265,11 @@ export default function AnalyticsPage() {
                 </Paper>
 
                 <Paper sx={{ p: 3, display: 'flex', gap: 3 }}>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      flexShrink: 0,
-                      borderRadius: 2,
-                      bgcolor: 'error.main',
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <FiTrendingDown />
-                  </Box>
+                  <IconBox
+                    icon={FiTrendingDown}
+                    size="md"
+                    color="error"
+                  />
                   <Box>
                     <Typography variant="subtitle2" fontWeight="600">
                       Top Expense

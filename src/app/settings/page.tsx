@@ -22,13 +22,6 @@ import {
   Alert,
   Grid,
   Skeleton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  InputAdornment,
-  MenuItem as MuiMenuItem,
 } from '@mui/material';
 import {
   FiUser,
@@ -48,6 +41,11 @@ import { auth, db } from '../firebase';
 import { useCurrency } from '../context/CurrencyContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import PageHeader from '../components/PageHeader';
+import CardHeader from '../components/CardHeader';
+import SearchInput from '../components/SearchInput';
+import PaginationControls from '../components/PaginationControls';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const CORE_CATEGORIES = ['Food', 'Travel', 'Medical', 'Shopping', 'Bills', 'Misc'];
 
@@ -166,13 +164,13 @@ const CategoryManager: React.FC = () => {
   const endIndex = Math.min(page * pageSize, totalFiltered);
   const displayedUserCategories = filteredUserCategories.slice((page - 1) * pageSize, page * pageSize);
 
-  // Combine core categories with paginated user categories
-  const categoriesForDisplay = [
-    ...coreCategories.filter(c => 
-      c.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
-    ...displayedUserCategories
-  ].sort((a, b) => a.name.localeCompare(b.name));
+  // Only show user categories (not core categories)
+  const categoriesForDisplay = displayedUserCategories;
+
+  // Reset to page 1 when search query changes
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
 
   // Reset to page 1 when search query changes
   useEffect(() => {
@@ -209,62 +207,21 @@ const CategoryManager: React.FC = () => {
         </Button>
       </Box>
 
-      {/* Search and pagination controls */}
-      <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'center' }}>
-        <TextField
-          size="small"
-          placeholder="Search categories..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          fullWidth
-          sx={{
-            '& .MuiOutlinedInput-root': { bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <FiSearch color="#888" />
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
+      <SearchInput
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Search categories..."
+      />
 
-      {/* Pagination header - only for user categories */}
       {filteredUserCategories.length > 0 && (
-        <Box sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          justifyContent: 'space-between',
-          alignItems: { xs: 'flex-start', sm: 'center' },
-          mb: 2,
-          gap: 1
-        }}>
-          <Typography variant="body2" color="text.secondary">
-            Showing {startIndex} - {endIndex} of {totalFiltered} user categories
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', width: { xs: '100%', sm: 'auto' }, justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-              <Select size="small" value={page} onChange={(e) => setPage(Number(e.target.value))} sx={{ height: 32 }}>
-                {Array.from({ length: totalPages }).map((_, i) => <MuiMenuItem key={i} value={i + 1}>{i + 1}</MuiMenuItem>)}
-              </Select>
-              <Typography variant="body2">of {totalPages}</Typography>
-              <IconButton size="small" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}>
-                <FiChevronLeft />
-              </IconButton>
-              <IconButton size="small" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
-                <FiChevronRight />
-              </IconButton>
-            </Box>
-            <FormControl size="small" sx={{ minWidth: 70 }}>
-              <Select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} sx={{ height: 32 }}>
-                <MuiMenuItem value={5}>5</MuiMenuItem>
-                <MuiMenuItem value={10}>10</MuiMenuItem>
-                <MuiMenuItem value={25}>25</MuiMenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </Box>
+        <PaginationControls
+          page={page}
+          pageSize={pageSize}
+          totalItems={totalFiltered}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          pageSizeOptions={[5, 10, 25]}
+        />
       )}
 
       {loadingCats ? (
@@ -281,21 +238,19 @@ const CategoryManager: React.FC = () => {
                 {index > 0 && <Divider sx={{ borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined }} />}
                 <ListItem
                   secondaryAction={
-                    !c.isCore && (
-                      <IconButton
-                        edge="end"
-                        onClick={() => handleDeleteCategory(c.id)}
-                        sx={{
-                          color: 'text.secondary',
-                          '&:hover': {
-                            color: 'error.main',
-                            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(239,68,68,0.08)' : 'error.bg',
-                          },
-                        }}
-                      >
-                        <FiTrash2 size={18} />
-                      </IconButton>
-                    )
+                    <IconButton
+                      edge="end"
+                      onClick={() => handleDeleteCategory(c.id)}
+                      sx={{
+                        color: 'text.secondary',
+                        '&:hover': {
+                          color: 'error.main',
+                          bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(239,68,68,0.08)' : 'error.bg',
+                        },
+                      }}
+                    >
+                      <FiTrash2 size={18} />
+                    </IconButton>
                   }
                   sx={{
                     py: 1.5,
@@ -310,7 +265,7 @@ const CategoryManager: React.FC = () => {
                       width: 8,
                       height: 8,
                       borderRadius: '50%',
-                      bgcolor: c.isCore ? 'secondary.main' : 'primary.main',
+                      bgcolor: 'primary.main',
                       mr: 2,
                       flexShrink: 0,
                     }}
@@ -318,7 +273,6 @@ const CategoryManager: React.FC = () => {
                   <ListItemText
                     primary={c.name}
                     primaryTypographyProps={{ fontWeight: 500 }}
-                    secondary={c.isCore ? 'Core Category' : null}
                   />
                 </ListItem>
               </React.Fragment>
@@ -327,23 +281,16 @@ const CategoryManager: React.FC = () => {
         </Paper>
       )}
 
-      <Dialog
+      <ConfirmDialog
         open={deleteCatTarget !== null}
-        onClose={() => !isDeletingCat && setDeleteCatTarget(null)}
-      >
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this category? This cannot be undone.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteCatTarget(null)} disabled={isDeletingCat}>Cancel</Button>
-          <Button onClick={handleConfirmDeleteCategory} color="error" autoFocus disabled={isDeletingCat}>
-            {isDeletingCat ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        title="Confirm Deletion"
+        message="Are you sure you want to delete this category? This cannot be undone."
+        confirmLabel="Delete"
+        isLoading={isDeletingCat}
+        severity="error"
+        onConfirm={handleConfirmDeleteCategory}
+        onCancel={() => setDeleteCatTarget(null)}
+      />
     </Box>
   );
 };
@@ -400,15 +347,10 @@ export default function SettingsPage() {
 
   return (
     <Box>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" fontWeight={600} gutterBottom>
-          Settings
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage your account and preferences.
-        </Typography>
-      </Box>
+      <PageHeader
+        title="Settings"
+        subtitle="Manage your account and preferences."
+      />
 
       <Grid container spacing={3}>
         {/* Account Information */}
@@ -418,14 +360,7 @@ export default function SettingsPage() {
           ) : (
             <Card sx={{ height: '100%', backgroundColor: isDarkMode ? '#1E293B' : undefined, color: isDarkMode ? '#F8FAFC' : undefined, border: isDarkMode ? '1px solid #334155' : undefined, boxShadow: isDarkMode ? 'none' : undefined }}>
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                  <Box sx={{ color: 'primary.main' }}>
-                    <FiUser size={24} />
-                  </Box>
-                  <Typography variant="h5" fontWeight={600}>
-                    Account Information
-                  </Typography>
-                </Box>
+                <CardHeader icon={FiUser} title="Account Information" />
 
                 <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                   {settingsItems.map((item, index) => (
@@ -459,14 +394,7 @@ export default function SettingsPage() {
           ) : (
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                  <Box sx={{ color: 'primary.main' }}>
-                    <FiBell size={24} />
-                  </Box>
-                  <Typography variant="h5" fontWeight={600}>
-                    Preferences
-                  </Typography>
-                </Box>
+                <CardHeader icon={FiBell} title="Preferences" />
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   {/* Notifications */}
@@ -539,14 +467,7 @@ export default function SettingsPage() {
           ) : (
             <Card sx={{ backgroundColor: isDarkMode ? '#1E293B' : undefined, color: isDarkMode ? '#F8FAFC' : undefined, border: isDarkMode ? '1px solid #334155' : undefined }}>
               <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                  <Box sx={{ color: 'primary.main' }}>
-                    <FiTag size={24} />
-                  </Box>
-                  <Typography variant="h5" fontWeight={600}>
-                    Categories
-                  </Typography>
-                </Box>
+                <CardHeader icon={FiTag} title="Categories" />
                 <CategoryManager />
               </CardContent>
             </Card>

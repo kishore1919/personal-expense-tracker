@@ -206,13 +206,6 @@ Bulk operations automatically chunk deletions into batches of 499 operations to 
 4. Push to your fork: `git push origin feature/my-feature`
 5. Open a Pull Request with a detailed description
 
-## License
-
-This project is licensed under the MIT License — see the `LICENSE` file for details.
-
----
-
-Built with Next.js, MUI, and Firebase.
 
 ---
 

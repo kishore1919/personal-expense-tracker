@@ -8,20 +8,16 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
+import PageHeader from '../components/PageHeader';
 
 export default function AdminPage() {
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto', py: 4 }}>
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Typography variant="h4" gutterBottom>
-            Admin Dashboard
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Manage categories for your expenses.
-          </Typography>
-        </CardContent>
-      </Card>
+      <PageHeader
+        title="Admin Dashboard"
+        subtitle="Manage categories for your expenses."
+        variant="card"
+      />
 
       <Card>
         <CardContent>

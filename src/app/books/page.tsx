@@ -3,21 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import {
   FiPlus,
-  FiSearch,
   FiTrash2,
   FiArrowRight,
   FiEdit2,
   FiCopy,
   FiUserPlus,
   FiChevronDown,
-  FiChevronLeft,
-  FiChevronRight,
 } from 'react-icons/fi';
 import { FaBook } from 'react-icons/fa';
 import {
   Button,
-  TextField,
-  InputAdornment,
   Box,
   Typography,
   Alert,
@@ -29,11 +24,6 @@ import {
   MenuItem,
   Select,
   FormControl,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
   Checkbox,
 } from '@mui/material';
 import { collection, getDocs, addDoc, deleteDoc, doc, query, orderBy, writeBatch, where } from "firebase/firestore";
@@ -42,6 +32,10 @@ import { useRouter } from 'next/navigation';
 import AddBookModal from '../components/AddBookModal';
 import { useCurrency } from '../context/CurrencyContext';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import SearchInput from '../components/SearchInput';
+import PaginationControls from '../components/PaginationControls';
+import SelectionActionBar from '../components/SelectionActionBar';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 interface Book {
   id: string;
@@ -276,22 +270,10 @@ export default function BooksPage() {
               indeterminate={selectedIds.length > 0 && selectedIds.length < filteredAndSortedBooks.length}
               onChange={(e) => e.target.checked ? setSelectedIds(filteredAndSortedBooks.map(b => b.id)) : setSelectedIds([])}
             />
-            <TextField
-              placeholder="Search by book name..."
-              size="small"
+            <SearchInput
               value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setSelectedIds([]); }}
-              fullWidth
-              sx={{ 
-                '& .MuiOutlinedInput-root': { bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' } 
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FiSearch color="#888" />
-                  </InputAdornment>
-                ),
-              }}
+              onChange={(value) => { setSearchQuery(value); setSelectedIds([]); }}
+              placeholder="Search by book name..."
             />
           </Box>
 
@@ -338,36 +320,13 @@ export default function BooksPage() {
 
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-      {/* --- Pagination Header --- */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: { xs: 'column', sm: 'row' },
-        justifyContent: 'space-between', 
-        alignItems: { xs: 'flex-start', sm: 'center' }, 
-        mb: 2,
-        gap: 1
-      }}>
-        <Typography variant="body2" color="text.secondary">
-          Showing {startIndex} - {endIndex} of {totalFiltered}
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', width: { xs: '100%', sm: 'auto' }, justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Select size="small" value={page} onChange={(e) => setPage(Number(e.target.value))} sx={{ height: 32 }}>
-              {Array.from({ length: totalPages }).map((_, i) => <MenuItem key={i} value={i + 1}>{i + 1}</MenuItem>)}
-            </Select>
-            <Typography variant="body2">of {totalPages}</Typography>
-            <IconButton size="small" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}><FiChevronLeft /></IconButton>
-            <IconButton size="small" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}><FiChevronRight /></IconButton>
-          </Box>
-          <FormControl size="small" sx={{ minWidth: 70 }}>
-            <Select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} sx={{ height: 32 }}>
-              <MenuItem value={10}>10</MenuItem>
-              <MenuItem value={25}>25</MenuItem>
-              <MenuItem value={50}>50</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-      </Box>
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalFiltered}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
 
       {/* --- Books List --- */}
       <Box sx={{ minHeight: 300 }}>
@@ -465,29 +424,11 @@ export default function BooksPage() {
         )}
       </Box>
 
-      {/* --- Contextual Delete (Selected Items) --- */}
-      {selectedIds.length > 0 && (
-        <Box sx={{ 
-          position: 'fixed', 
-          bottom: { xs: 80, md: 24 }, // Avoid mobile bottom nav
-          left: '50%', 
-          transform: 'translateX(-50%)', 
-          bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0B1220' : 'white', 
-          p: { xs: 1.5, sm: 2 }, 
-          borderRadius: 2, 
-          boxShadow: 3, 
-          display: 'flex', 
-          gap: { xs: 1, sm: 2 }, 
-          alignItems: 'center', 
-          zIndex: 10,
-          width: { xs: '90%', sm: 'auto' },
-          justifyContent: 'center'
-        }}>
-          <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>{selectedIds.length} selected</Typography>
-          <Button variant="contained" color="error" size="small" onClick={() => setDeleteTarget(selectedIds)}>Delete ({selectedIds.length})</Button>
-          <Button variant="outlined" size="small" onClick={() => setSelectedIds([])}>Cancel</Button>
-        </Box>
-      )}
+      <SelectionActionBar
+        selectedCount={selectedIds.length}
+        onDelete={() => setDeleteTarget(selectedIds)}
+        onCancel={() => setSelectedIds([])}
+      />
 
       {/* --- Quick Add / Suggestions Section --- */}
       <Paper elevation={0} sx={{ 
@@ -545,23 +486,16 @@ export default function BooksPage() {
         onAddBook={handleAddBook}
       />
 
-      <Dialog
+      <ConfirmDialog
         open={deleteTarget !== null}
-        onClose={() => !isDeleting && setDeleteTarget(null)}
-      >
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {Array.isArray(deleteTarget) ? `Are you sure you want to delete ${deleteTarget.length} books and all their expenses? This cannot be undone.` : 'Are you sure you want to delete this book and all its expenses? This cannot be undone.'}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} color="error" autoFocus disabled={isDeleting}>
-            {isDeleting ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        title="Confirm Deletion"
+        message={Array.isArray(deleteTarget) ? `Are you sure you want to delete ${deleteTarget.length} books and all their expenses? This cannot be undone.` : 'Are you sure you want to delete this book and all its expenses? This cannot be undone.'}
+        confirmLabel="Delete"
+        isLoading={isDeleting}
+        severity="error"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </Container>
   );
 }

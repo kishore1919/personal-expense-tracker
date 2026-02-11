@@ -7,10 +7,8 @@ import {
   FiEdit2,
   FiPlus, 
   FiMinus, 
-  FiSearch, 
   FiDownload,
   FiChevronDown,
-  FiChevronRight,
   FiFilter
 } from 'react-icons/fi';
 import {
@@ -23,15 +21,8 @@ import {
   Card,
   CardContent,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   Paper,
   Skeleton,
-  TextField,
-  InputAdornment,
   Table,
   TableBody,
   TableCell,
@@ -47,10 +38,15 @@ import {
   useMediaQuery
 } from '@mui/material';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, updateDoc, writeBatch, orderBy, query } from "firebase/firestore";
-import { db } from '../../../app/firebase'; // Adjust path if needed based on your folder structure
-import AddExpenseModal from '../../components/AddExpenseModal'; // Adjust path if needed
-import { useCurrency } from '../../context/CurrencyContext'; // Adjust path if needed
+import { doc, getDoc, collection, getDocs, addDoc, deleteDoc, updateDoc, writeBatch, query } from "firebase/firestore";
+import { auth, db } from '../../../app/firebase'; 
+import AddExpenseModal from '../../components/AddExpenseModal'; 
+import { useCurrency } from '../../context/CurrencyContext'; 
+import { useAuthState } from 'react-firebase-hooks/auth';
+import SearchInput from '../../components/SearchInput';
+import PaginationControls from '../../components/PaginationControls';
+import SelectionActionBar from '../../components/SelectionActionBar';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 interface Expense {
   id: string;
@@ -213,34 +209,6 @@ export default function BookDetailPage() {
       setExpenses((prev) =>
         prev.map((entry) =>
           entry.id === editingExpense.id
-            ? { ...entry, ...expense, createdAt }
-            : entry
-        )
-      );
-    } catch (e) {
-      console.error("Error updating:", e);
-      const errMsg = e instanceof Error ? e.message : 'Failed to update expense.';
-      setError(errMsg);
-      throw e;
-    }
-  };
-
-  const handleEditExpense = async (expense: ExpensePayload) => {
-    if (!bookId || typeof bookId !== 'string' || !editingExpense) return;
-    try {
-      if (!Number.isFinite(expense.amount) || Math.abs(expense.amount) > MAX_ENTRY_AMOUNT) {
-        setError(`Amount cannot exceed ${formatCurrency(MAX_ENTRY_AMOUNT)}.`);
-        return;
-      }
-      const createdAt = expense.createdAt instanceof Date ? expense.createdAt : new Date();
-      await updateDoc(doc(db, `books/${bookId}/expenses`, editingExpense.id), {
-        ...expense,
-        createdAt,
-      });
-
-      setExpenses((prev) =>
-        prev.map((entry) =>
-          entry.id === editingExpense.id
             ? {
                 ...entry,
                 ...expense,
@@ -249,11 +217,11 @@ export default function BookDetailPage() {
             : entry
         )
       );
-      handleModalClose();
     } catch (e) {
       console.error("Error updating:", e);
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(`Failed to update expense: ${msg}`);
+      const errMsg = e instanceof Error ? e.message : 'Failed to update expense.';
+      setError(errMsg);
+      throw e;
     }
   };
 
@@ -480,16 +448,12 @@ export default function BookDetailPage() {
         gap: 2, 
         flexDirection: { xs: 'column', md: 'row' }
       }}>
-        <TextField
+        <SearchInput
           value={searchTerm}
-          onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+          onChange={(value) => { setSearchTerm(value); setPage(1); }}
           placeholder="Search remark, desc or amount..."
-          size="small"
           fullWidth
-          sx={{ maxWidth: { md: 500 }, '& .MuiOutlinedInput-root': { bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' } }}
-          InputProps={{
-            startAdornment: <InputAdornment position="start"><FiSearch color="#999" /></InputAdornment>
-          }}
+          sx={{ maxWidth: { md: 500 } }}
         />
         <Box sx={{ display: 'flex', gap: 1.5, width: { xs: '100%', md: 'auto' } }}>
           <Button 
@@ -550,33 +514,13 @@ export default function BookDetailPage() {
         ))}
       </Grid>
 
-      {/* --- Pagination Header --- */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: 2,
-        flexDirection: { xs: 'column', sm: 'row' },
-        gap: 1
-      }}>
-        <Typography variant="body2" color="text.secondary">
-          Showing {startIndex} - {endIndex} of {totalFiltered}
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', width: { xs: '100%', sm: 'auto' }, justifyContent: 'space-between' }}>
-           <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-             <IconButton size="small" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}><FiChevronLeft /></IconButton>
-             <Typography variant="body2">{page} / {totalPages}</Typography>
-             <IconButton size="small" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}><FiChevronRight /></IconButton>
-           </Box>
-           <FormControl size="small" sx={{ minWidth: 70 }}>
-             <Select value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }} sx={{ height: 32 }}>
-               <MenuItem value={10}>10</MenuItem>
-               <MenuItem value={25}>25</MenuItem>
-               <MenuItem value={50}>50</MenuItem>
-             </Select>
-           </FormControl>
-        </Box>
-      </Box>
+      <PaginationControls
+        page={page}
+        pageSize={pageSize}
+        totalItems={totalFiltered}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
 
       <TableContainer component={Paper} elevation={0} sx={{ border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? '#334155' : '#f0f0f0'}` }}>
         <Table sx={{ minWidth: 650 }} aria-label="expenses table">
@@ -793,29 +737,11 @@ export default function BookDetailPage() {
         </TableContainer>
       )}
 
-      {/* Delete Selection Bar */}
-      {selectedIds.length > 0 && (
-         <Box sx={{ 
-           position: 'fixed', 
-           bottom: { xs: 80, md: 24 }, 
-           left: '50%', 
-           transform: 'translateX(-50%)', 
-           bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0B1220' : 'white', 
-           p: 2, 
-           borderRadius: 2, 
-           boxShadow: 3, 
-           display: 'flex', 
-           gap: 2, 
-           alignItems: 'center', 
-           zIndex: 10,
-           width: { xs: '90%', sm: 'auto' },
-           justifyContent: 'center'
-         }}>
-           <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>{selectedIds.length} items selected</Typography>
-           <Button variant="contained" color="error" size="small" onClick={() => setDeleteTarget(selectedIds)}>Delete ({selectedIds.length})</Button>
-           <Button variant="outlined" size="small" onClick={() => setSelectedIds([])}>Cancel</Button>
-         </Box>
-      )}
+      <SelectionActionBar
+        selectedCount={selectedIds.length}
+        onDelete={() => setDeleteTarget(selectedIds)}
+        onCancel={() => setSelectedIds([])}
+      />
 
       <AddExpenseModal
         isOpen={isModalOpen}
@@ -838,18 +764,16 @@ export default function BookDetailPage() {
         }}
       />
 
-      <Dialog open={deleteTarget !== null} onClose={() => !isDeleting && setDeleteTarget(null)}>
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <DialogContentText>Are you sure you want to delete the selected items? This cannot be undone.</DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setDeleteTarget(null)} disabled={isDeleting}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} color="error" variant="contained" disabled={isDeleting}>
-             {isDeleting ? 'Deleting...' : 'Delete'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Confirm Deletion"
+        message="Are you sure you want to delete the selected items? This cannot be undone."
+        confirmLabel="Delete"
+        isLoading={isDeleting}
+        severity="error"
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </Box>
   );
 }

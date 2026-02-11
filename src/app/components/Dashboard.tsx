@@ -1,12 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiSearch, FiBook, FiTrendingUp, FiCalendar } from 'react-icons/fi';
+import { FiPlus, FiBook, FiTrendingUp, FiCalendar } from 'react-icons/fi';
 import { FaBook } from 'react-icons/fa';
 import {
   Button,
-  TextField,
-  InputAdornment,
   Box,
   Typography,
   Alert,
@@ -16,6 +14,11 @@ import {
   Skeleton,
 } from '@mui/material';
 import AddBookModal from './AddBookModal';
+import PageHeader from './PageHeader';
+import StatCard from './StatCard';
+import IconBox from './IconBox';
+import SearchInput from './SearchInput';
+import EmptyState from './EmptyState';
 import { collection, addDoc, getDocs, query, orderBy, where } from "firebase/firestore";
 import { useCurrency } from '../context/CurrencyContext';
 import { auth, db } from '../firebase';
@@ -56,51 +59,7 @@ const BookSkeleton = () => (
   </Card>
 );
 
-const EmptyState = ({ onCreate }: { onCreate: () => void }) => (
-  <Card
-    sx={{
-      textAlign: 'center',
-      py: 8,
-      px: 3,
-      border: '2px dashed',
-      borderColor: 'divider',
-      bgcolor: 'transparent',
-    }}
-  >
-    <CardContent>
-      <Box
-        sx={{
-          width: 80,
-          height: 80,
-          borderRadius: 3,
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          mx: 'auto',
-          mb: 3,
-        }}
-      >
-        <FaBook size={32} />
-      </Box>
-      <Typography variant="h5" gutterBottom fontWeight={600}>
-        No expense books yet
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 400, mx: 'auto' }}>
-        Create your first book to organize expenses by goal, trip, or monthly budget.
-      </Typography>
-      <Button
-        variant="contained"
-        onClick={onCreate}
-        startIcon={<FiPlus />}
-        size="large"
-      >
-        Create Your First Book
-      </Button>
-    </CardContent>
-  </Card>
-);
+
 
 export default function Dashboard() {
   const [user] = useAuthState(auth);
@@ -210,17 +169,10 @@ export default function Dashboard() {
 
   return (
     <Box>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
-          <Box>
-            <Typography variant="h4" fontWeight={600} gutterBottom>
-              Dashboard
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Welcome back! Here is your expense overview.
-            </Typography>
-          </Box>
+      <PageHeader
+        title="Dashboard"
+        subtitle="Welcome back! Here is your expense overview."
+        action={
           <Button
             variant="contained"
             onClick={() => setIsModalOpen(true)}
@@ -229,8 +181,8 @@ export default function Dashboard() {
           >
             New Book
           </Button>
-        </Box>
-      </Box>
+        }
+      />
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -247,20 +199,7 @@ export default function Dashboard() {
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                  <Box
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 2,
-                      bgcolor: 'primary.main',
-                      color: 'primary.contrastText',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <FiBook size={16} />
-                  </Box>
+                  <IconBox icon={FiBook} size="sm" color="primary" />
                   <Typography variant="body2" color="text.secondary" fontWeight={500}>
                     Total Books
                   </Typography>
@@ -279,20 +218,7 @@ export default function Dashboard() {
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                  <Box
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 2,
-                      bgcolor: 'success.main',
-                      color: 'success.contrastText',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <FiTrendingUp size={16} />
-                  </Box>
+                  <IconBox icon={FiTrendingUp} size="sm" color="success" />
                   <Typography variant="body2" color="text.secondary" fontWeight={500}>
                     Net Worth
                   </Typography>
@@ -315,20 +241,7 @@ export default function Dashboard() {
             <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                  <Box
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 2,
-                      bgcolor: 'info.main',
-                      color: 'info.contrastText',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <FiCalendar size={16} />
-                  </Box>
+                  <IconBox icon={FiCalendar} size="sm" color="info" />
                   <Typography variant="body2" color="text.secondary" fontWeight={500}>
                     Books This Month
                   </Typography>
@@ -349,18 +262,11 @@ export default function Dashboard() {
             Your Expense Books
           </Typography>
           {books.length > 0 && (
-            <TextField
-              placeholder="Search books..."
-              size="small"
+            <SearchInput
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <FiSearch />
-                  </InputAdornment>
-                ),
-              }}
+              onChange={setSearchQuery}
+              placeholder="Search books..."
+              fullWidth={false}
               sx={{ width: { xs: '100%', sm: 280 } }}
             />
           )}
@@ -392,20 +298,7 @@ export default function Dashboard() {
                   >
                     <CardContent sx={{ p: 3 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                        <Box
-                          sx={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 2,
-                            bgcolor: 'primary.main',
-                            color: 'primary.contrastText',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <FaBook size={20} />
-                        </Box>
+                        <IconBox icon={FaBook} size="lg" color="primary" iconSize={20} />
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Typography variant="h6" noWrap fontWeight={600}>
                             {book.name}
@@ -451,7 +344,13 @@ export default function Dashboard() {
             </Card>
           )
         ) : (
-          <EmptyState onCreate={() => setIsModalOpen(true)} />
+          <EmptyState 
+            icon={FaBook}
+            title="No expense books yet"
+            description="Create your first book to organize expenses by goal, trip, or monthly budget."
+            actionLabel="Create Your First Book"
+            onAction={() => setIsModalOpen(true)}
+          />
         )}
       </Box>
 
