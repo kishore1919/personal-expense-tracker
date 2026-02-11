@@ -48,7 +48,7 @@ interface Book {
 
 // Skeleton loader for list rows
 const ListSkeleton = () => (
-  <Paper elevation={0} sx={{ p: 2, mb: 2, border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? '#334155' : '#f0f0f0'}`, display: 'flex', alignItems: 'center', gap: 2 }}>
+  <Paper elevation={0} sx={{ p: 2, mb: 2, border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 2 }}>
     <Skeleton variant="circular" width={40} height={40} />
     <Box sx={{ flex: 1 }}>
       <Skeleton variant="text" width="40%" height={24} />
@@ -276,12 +276,12 @@ export default function BooksPage() {
               onChange={(e) => { setSearchQuery(e.target.value); setSelectedIds([]); }}
               fullWidth
               sx={{ 
-                '& .MuiOutlinedInput-root': { bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' } 
+                '& .MuiOutlinedInput-root': { bgcolor: 'background.default' } 
               }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <FiSearch color="#888" />
+                    <FiSearch color="inherit" style={{ opacity: 0.5 }} />
                   </InputAdornment>
                 ),
               }}
@@ -294,7 +294,7 @@ export default function BooksPage() {
               <Select
                 value={sortBy}
                 displayEmpty
-                sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }}
+                sx={{ bgcolor: 'background.default' }}
                 onChange={(e) => setSortBy(e.target.value as 'last-updated' | 'name')}
                 renderValue={(selected) => {
                   if (selected === 'last-updated') return 'Last Updated';
@@ -316,11 +316,9 @@ export default function BooksPage() {
                 height: 40, 
                 px: { xs: 1, sm: 3 },
                 flex: { xs: 1, sm: 'none' },
-                bgcolor: '#4361EE',
                 textTransform: 'none',
                 fontWeight: 600,
                 whiteSpace: 'nowrap',
-                '&:hover': { bgcolor: '#3651d4' }
               }}
             >
               Add Book
@@ -381,7 +379,7 @@ export default function BooksPage() {
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 '&:hover': (theme) => ({
-                  bgcolor: theme.palette.mode === 'dark' ? '#0B1220' : '#f8f9fc',
+                  bgcolor: theme.palette.mode === 'dark' ? 'background.default' : 'action.hover',
                   boxShadow: 1
                 })
               }}
@@ -406,8 +404,8 @@ export default function BooksPage() {
                 width: { xs: 36, sm: 48 }, 
                 height: { xs: 36, sm: 48 }, 
                 borderRadius: '50%', 
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : '#eef2ff', 
-                color: '#4361EE',
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(129, 140, 248, 0.1)' : 'primary.light', 
+                color: 'primary.main',
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center',
@@ -431,7 +429,7 @@ export default function BooksPage() {
                 <Typography
                   variant="subtitle2"
                   fontWeight={700}
-                  color={(book.netBalance ?? 0) >= 0 ? '#00a86b' : '#d32f2f'}
+                  color={(book.netBalance ?? 0) >= 0 ? 'success.main' : 'error.main'}
                   sx={{ fontSize: { xs: '0.85rem', sm: '1.1rem' } }}
                 >
                   {formatCurrency(Math.abs(book.netBalance ?? 0))}
@@ -443,7 +441,7 @@ export default function BooksPage() {
                 <IconButton 
                   onClick={() => handleBookClick(book.id)}
                   size="small" 
-                  sx={{ color: '#d32f2f' }}
+                  color="primary"
                 >
                   <FiArrowRight size={18} />
                 </IconButton>
@@ -465,16 +463,18 @@ export default function BooksPage() {
           bottom: { xs: 80, md: 24 }, // Avoid mobile bottom nav
           left: '50%', 
           transform: 'translateX(-50%)', 
-          bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0B1220' : 'white', 
+          bgcolor: 'background.paper', 
           p: { xs: 1.5, sm: 2 }, 
           borderRadius: 2, 
-          boxShadow: 3, 
+          boxShadow: 6, 
           display: 'flex', 
           gap: { xs: 1, sm: 2 }, 
           alignItems: 'center', 
           zIndex: 10,
           width: { xs: '90%', sm: 'auto' },
-          justifyContent: 'center'
+          justifyContent: 'center',
+          border: '1px solid',
+          borderColor: 'divider'
         }}>
           <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>{selectedIds.length} selected</Typography>
           <Button variant="contained" color="error" size="small" onClick={() => setDeleteTarget(selectedIds)}>Delete ({selectedIds.length})</Button>
@@ -486,20 +486,21 @@ export default function BooksPage() {
       <Paper elevation={0} sx={{ 
         p: { xs: 2, sm: 3 }, 
         mt: 4, 
-        border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? '#334155' : '#f0f0f0'}` ,
+        border: '1px solid',
+        borderColor: 'divider',
         borderRadius: 2,
         display: 'flex',
         flexDirection: 'column',
         gap: 2,
-        backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined
+        backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : undefined
       }}>
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
            <Box sx={{ 
              width: 40, 
              height: 40, 
              borderRadius: '50%', 
-             bgcolor: (theme) => theme.palette.mode === 'dark' ? '#072018' : '#e8f5e9', 
-             color: (theme) => theme.palette.mode === 'dark' ? '#6EE7B7' : '#2e7d32',
+             bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(16, 185, 129, 0.1)' : 'success.light', 
+             color: 'success.main',
              display: 'flex', 
              alignItems: 'center', 
              justifyContent: 'center',
@@ -521,11 +522,11 @@ export default function BooksPage() {
               onClick={() => handleAddBook(suggestion)}
               size="small"
               sx={{ 
-                bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0E1B2A' : '#eff2ff', 
-                color: (theme) => theme.palette.mode === 'dark' ? '#7FB3FF' : '#4361EE', 
+                bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(129, 140, 248, 0.1)' : 'rgba(99, 102, 241, 0.08)', 
+                color: 'primary.main', 
                 fontWeight: 500,
                 cursor: 'pointer',
-                '&:hover': { bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0B1522' : '#dde4ff' }
+                '&:hover': { bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(129, 140, 248, 0.2)' : 'rgba(99, 102, 241, 0.15)' }
               }} 
             />
           ))}

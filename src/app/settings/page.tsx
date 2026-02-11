@@ -204,14 +204,14 @@ const CategoryManager: React.FC = () => {
             flex: 1,
             '& .MuiOutlinedInput-root': {
               borderRadius: 8,
-              backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined,
-              '& fieldset': { borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined },
-              '&:hover fieldset': { borderColor: '#6366F1' },
+              backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : undefined,
+              '& fieldset': { borderColor: (theme) => theme.palette.mode === 'dark' ? 'divider' : undefined },
+              '&:hover fieldset': { borderColor: 'primary.main' },
             },
-            '& .MuiInputBase-input::placeholder': { color: (theme) => theme.palette.mode === 'dark' ? '#64748B' : undefined }
+            '& .MuiInputBase-input::placeholder': { color: (theme) => theme.palette.mode === 'dark' ? 'text.secondary' : undefined }
           }}
         />
-        <Button type="submit" variant="contained" disabled={!newCategory.trim()} sx={{ width: 92, borderRadius: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined, color: (theme) => theme.palette.mode === 'dark' ? '#94A3B8' : undefined, border: (theme) => theme.palette.mode === 'dark' ? '1px solid #334155' : undefined }}>
+        <Button type="submit" variant="contained" disabled={!newCategory.trim()} sx={{ width: 92, borderRadius: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : undefined, color: (theme) => theme.palette.mode === 'dark' ? 'text.secondary' : undefined, border: (theme) => theme.palette.mode === 'dark' ? '1px solid' : undefined, borderColor: 'divider' }}>
           Add
         </Button>
       </Box>
@@ -235,11 +235,11 @@ const CategoryManager: React.FC = () => {
           ))}
         </Box>
       ) : (
-        <Paper variant="outlined" sx={{ backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined, borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined, borderRadius: 2, overflow: 'hidden' }}>
+        <Paper variant="outlined" sx={{ backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : undefined, borderColor: (theme) => theme.palette.mode === 'dark' ? 'divider' : undefined, borderRadius: 2, overflow: 'hidden' }}>
           <List disablePadding>
             {displayedCategories.map((c, index) => (
               <React.Fragment key={c.id}>
-                {index > 0 && <Divider sx={{ borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined }} />}
+                {index > 0 && <Divider sx={{ borderColor: (theme) => theme.palette.mode === 'dark' ? 'divider' : undefined }} />}
                 <ListItem
                   secondaryAction={
                     !c.isCore && (
@@ -263,7 +263,7 @@ const CategoryManager: React.FC = () => {
                     px: 2,
                     display: 'flex',
                     alignItems: 'center',
-                    backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined,
+                    backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : undefined,
                   }}
                 >
                   <Box
@@ -401,7 +401,7 @@ export default function SettingsPage() {
           {loading ? (
             <SettingSkeleton />
           ) : (
-            <Card sx={{ height: '100%', backgroundColor: isDarkMode ? '#1E293B' : undefined, color: isDarkMode ? '#F8FAFC' : undefined, border: isDarkMode ? '1px solid #334155' : undefined, boxShadow: isDarkMode ? 'none' : undefined }}>
+            <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                   <Box sx={{ color: 'primary.main' }}>
@@ -415,7 +415,7 @@ export default function SettingsPage() {
                 <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                   {settingsItems.map((item, index) => (
                     <React.Fragment key={item.label}>
-                      {index > 0 && <Divider sx={{ my: 2, borderColor: isDarkMode ? '#334155' : undefined }} />}
+                      {index > 0 && <Divider sx={{ my: 2 }} />}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.5 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           <Box sx={{ color: 'text.secondary' }}>{item.icon}</Box>
@@ -522,7 +522,7 @@ export default function SettingsPage() {
           {loading ? (
             <SettingSkeleton />
           ) : (
-            <Card sx={{ backgroundColor: isDarkMode ? '#1E293B' : undefined, color: isDarkMode ? '#F8FAFC' : undefined, border: isDarkMode ? '1px solid #334155' : undefined }}>
+            <Card>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                   <Box sx={{ color: 'primary.main' }}>

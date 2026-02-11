@@ -40,7 +40,7 @@ export default function Loading() {
           size={80}
           thickness={2}
           sx={{
-            color: '#6366F1',
+            color: 'primary.main',
             position: 'absolute',
             left: 0,
             animationDuration: '1.5s',
@@ -61,9 +61,10 @@ export default function Loading() {
             alignItems: 'center',
             justifyContent: 'center',
             animation: `${pulse} 2s infinite ease-in-out`,
+            color: 'primary.main',
           }}
         >
-          <FaBook size={32} color="#6366F1" />
+          <FaBook size={32} />
         </Box>
       </Box>
       <Typography 

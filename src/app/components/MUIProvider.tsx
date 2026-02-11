@@ -6,7 +6,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { useTheme as useAppTheme } from '../context/ThemeContext';
 
 const createShadows = (isDark: boolean): Shadows => {
-  const shadowColor = isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)';
+  const shadowColor = isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.1)';
   return [
     'none',
     `0 1px 2px ${shadowColor}`, // 1
@@ -50,9 +50,9 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
         palette: {
           mode: isDarkMode ? 'dark' : 'light',
           primary: {
-            main: '#6366F1',
-            light: '#818CF8',
-            dark: '#4F46E5',
+            main: isDarkMode ? '#818CF8' : '#6366F1',
+            light: isDarkMode ? '#A5B4FC' : '#818CF8',
+            dark: isDarkMode ? '#6366F1' : '#4F46E5',
             contrastText: '#FFFFFF',
           },
           secondary: {
@@ -86,15 +86,15 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
             contrastText: '#FFFFFF',
           },
           background: {
-            default: isDarkMode ? '#0F172A' : '#FAFAFA',
-            paper: isDarkMode ? '#1E293B' : '#FFFFFF',
+            default: isDarkMode ? '#09090b' : '#FAFAFA',
+            paper: isDarkMode ? '#18181b' : '#FFFFFF',
           },
           text: {
-            primary: isDarkMode ? '#F8FAFC' : '#111827',
-            secondary: isDarkMode ? '#94A3B8' : '#6B7280',
-            disabled: isDarkMode ? '#64748B' : '#9CA3AF',
+            primary: isDarkMode ? '#fafafa' : '#111827',
+            secondary: isDarkMode ? '#a1a1aa' : '#6B7280',
+            disabled: isDarkMode ? '#71717a' : '#9CA3AF',
           },
-          divider: isDarkMode ? '#334155' : '#E5E7EB',
+          divider: isDarkMode ? '#27272a' : '#E5E7EB',
         },
         shadows: createShadows(isDarkMode),
         shape: {
@@ -157,14 +157,14 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
           MuiCssBaseline: {
             styleOverrides: {
               body: {
-                scrollbarColor: isDarkMode ? '#334155 transparent' : '#D1D5DB transparent',
+                scrollbarColor: isDarkMode ? '#27272a transparent' : '#D1D5DB transparent',
                 '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
                   width: 8,
                   height: 8,
                 },
                 '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
                   borderRadius: 4,
-                  backgroundColor: isDarkMode ? '#334155' : '#D1D5DB',
+                  backgroundColor: isDarkMode ? '#27272a' : '#D1D5DB',
                 },
                 '&::-webkit-scrollbar-track, & *::-webkit-scrollbar-track': {
                   backgroundColor: 'transparent',
@@ -200,12 +200,12 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
             styleOverrides: {
               root: {
                 borderRadius: 12,
-                border: `1px solid ${isDarkMode ? '#334155' : '#E5E7EB'}`,
+                border: `1px solid ${isDarkMode ? '#27272a' : '#E5E7EB'}`,
                 boxShadow: 'none',
                 transition: 'box-shadow 200ms ease, transform 200ms ease',
                 '&:hover': {
                   boxShadow: isDarkMode
-                    ? '0 4px 6px rgba(0,0,0,0.3)'
+                    ? '0 4px 6px rgba(0,0,0,0.6)'
                     : '0 4px 6px -1px rgba(0,0,0,0.1)',
                 },
               },
@@ -215,7 +215,7 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
             styleOverrides: {
               root: {
                 borderRadius: 12,
-                border: `1px solid ${isDarkMode ? '#334155' : '#E5E7EB'}`,
+                border: `1px solid ${isDarkMode ? '#27272a' : '#E5E7EB'}`,
                 boxShadow: 'none',
               },
             },
@@ -228,15 +228,15 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
               root: {
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 8,
-                  backgroundColor: isDarkMode ? '#1E293B' : '#FFFFFF',
+                  backgroundColor: isDarkMode ? '#18181b' : '#FFFFFF',
                   '& fieldset': {
-                    borderColor: isDarkMode ? '#334155' : '#E5E7EB',
+                    borderColor: isDarkMode ? '#27272a' : '#E5E7EB',
                   },
                   '&:hover fieldset': {
-                    borderColor: '#6366F1',
+                    borderColor: 'primary.main',
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: '#6366F1',
+                    borderColor: 'primary.main',
                   },
                 },
               },
@@ -246,7 +246,7 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
             styleOverrides: {
               paper: {
                 borderRadius: 16,
-                border: `1px solid ${isDarkMode ? '#334155' : '#E5E7EB'}`,
+                border: `1px solid ${isDarkMode ? '#27272a' : '#E5E7EB'}`,
               },
             },
           },
@@ -263,7 +263,7 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
                   transform: 'translateX(20px)',
                   color: '#FFFFFF',
                   '& + .MuiSwitch-track': {
-                    backgroundColor: isDarkMode ? '#6E57F8' : '#6366F1',
+                    backgroundColor: 'primary.main',
                     opacity: 1,
                   },
                 },
@@ -274,7 +274,7 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
               },
               track: {
                 borderRadius: 12,
-                backgroundColor: isDarkMode ? '#475569' : '#D1D5DB',
+                backgroundColor: isDarkMode ? '#3f3f46' : '#D1D5DB',
                 opacity: 1,
               },
             },
