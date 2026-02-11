@@ -225,7 +225,7 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
               variant: 'outlined',
             },
             styleOverrides: {
-              root: {
+              root: ({ theme }: any) => ({
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 8,
                   backgroundColor: isDarkMode ? '#18181b' : '#FFFFFF',
@@ -233,13 +233,13 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
                     borderColor: isDarkMode ? '#27272a' : '#E5E7EB',
                   },
                   '&:hover fieldset': {
-                    borderColor: 'primary.main',
+                    borderColor: theme.palette.primary.main,
                   },
                   '&.Mui-focused fieldset': {
-                    borderColor: 'primary.main',
+                    borderColor: theme.palette.primary.main,
                   },
                 },
-              },
+              }),
             },
           },
           MuiDialog: {
@@ -257,17 +257,17 @@ export default function MUIProvider({ children }: { children: React.ReactNode })
                 height: 24,
                 padding: 0,
               },
-              switchBase: {
+              switchBase: ({ theme }: any) => ({
                 padding: 2,
                 '&.Mui-checked': {
                   transform: 'translateX(20px)',
                   color: '#FFFFFF',
                   '& + .MuiSwitch-track': {
-                    backgroundColor: 'primary.main',
+                    backgroundColor: theme.palette.primary.main,
                     opacity: 1,
                   },
                 },
-              },
+              }),
               thumb: {
                 width: 20,
                 height: 20,

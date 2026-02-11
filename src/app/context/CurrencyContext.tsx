@@ -3,7 +3,7 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 const CURRENCY_STORAGE_KEY = 'expense-tracker-currency';
-const DEFAULT_CURRENCY = 'USD';
+const DEFAULT_CURRENCY = 'INR';
 
 const FALLBACK_CURRENCIES = [
   'USD', 'EUR', 'GBP', 'JPY', 'CNY', 'INR', 'AUD', 'CAD', 'CHF', 'SEK',
