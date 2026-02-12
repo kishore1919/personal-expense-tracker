@@ -636,6 +636,7 @@ export default function BookDetailPage() {
                     Date {sortBy === 'createdAt' && (sortDir === 'asc' ? <FiChevronDown style={{ transform: 'rotate(180deg)' }} /> : <FiChevronDown />)}
                   </Box>
                 </TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Time</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Details</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
                 <TableCell sx={{ fontWeight: 600 }}>Mode</TableCell>
@@ -656,13 +657,13 @@ export default function BookDetailPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={9} align="center">
                       <Skeleton height={40} />
                     </TableCell>
                   </TableRow>
                 ))
               ) : filteredExpenses.length === 0 ? (
-                <TableRow><TableCell colSpan={8} align="center">No expenses found.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} align="center">No expenses found.</TableCell></TableRow>
               ) : (
                 displayedExpenses.map((row) => {
                   const { date } = formatDate(row.createdAt);
@@ -683,6 +684,9 @@ export default function BookDetailPage() {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" fontWeight={500}>{date}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">{formatDate(row.createdAt).time}</Typography>
                       </TableCell>
                       <TableCell><Typography variant="body2">{row.description}</Typography></TableCell>
                       <TableCell><Typography variant="body2">{row.category}</Typography></TableCell>
