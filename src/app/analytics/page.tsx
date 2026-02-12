@@ -157,8 +157,13 @@ export default function AnalyticsPage() {
                     width: 48,
                     height: 48,
                     borderRadius: 2,
-                    bgcolor: stat.color,
-                    color: 'white',
+                    bgcolor: (theme) => {
+                      const baseColor = stat.color.split('.')[0];
+                      return theme.palette.mode === 'dark' 
+                        ? `rgba(${baseColor === 'primary' ? '129, 140, 248' : baseColor === 'secondary' ? '161, 161, 170' : baseColor === 'success' ? '16, 185, 129' : '239, 68, 68'}, 0.1)`
+                        : theme.palette[baseColor as 'primary'|'secondary'|'success'|'error'].light;
+                    },
+                    color: stat.color,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -253,8 +258,8 @@ export default function AnalyticsPage() {
                       height: 40,
                       flexShrink: 0,
                       borderRadius: 2,
-                      bgcolor: 'primary.main',
-                      color: 'white',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(129, 140, 248, 0.1)' : 'primary.light',
+                      color: 'primary.main',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -282,8 +287,8 @@ export default function AnalyticsPage() {
                       height: 40,
                       flexShrink: 0,
                       borderRadius: 2,
-                      bgcolor: 'secondary.main',
-                      color: 'white',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(161, 161, 170, 0.1)' : 'secondary.light',
+                      color: 'secondary.main',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -311,8 +316,8 @@ export default function AnalyticsPage() {
                       height: 40,
                       flexShrink: 0,
                       borderRadius: 2,
-                      bgcolor: 'error.main',
-                      color: 'white',
+                      bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(239, 68, 68, 0.1)' : 'error.light',
+                      color: 'error.main',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',

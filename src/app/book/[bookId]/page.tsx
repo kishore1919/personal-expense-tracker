@@ -387,7 +387,7 @@ export default function BookDetailPage() {
               value={durationFilter}
               onChange={(e) => setDurationFilter(e.target.value as 'all' | '7' | '30' | '365')}
               displayEmpty
-              sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }}
+              sx={{ bgcolor: 'background.default' }}
             >
               <MenuItem value={'all'}>Duration: All Time</MenuItem>
               <MenuItem value={'7'}>Last 7 days</MenuItem>
@@ -400,7 +400,7 @@ export default function BookDetailPage() {
             <Select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as 'all' | 'in' | 'out')}
-              sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }}
+              sx={{ bgcolor: 'background.default' }}
             >
               <MenuItem value={'all'}>Types: All</MenuItem>
               <MenuItem value={'in'}>Income</MenuItem>
@@ -412,7 +412,7 @@ export default function BookDetailPage() {
             <Select 
               value={paymentModeFilter} 
               onChange={(e) => setPaymentModeFilter(e.target.value)} 
-              sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }}
+              sx={{ bgcolor: 'background.default' }}
             >
               <MenuItem value={'all'}>Payment Modes: All</MenuItem>
               {Array.from(new Set(expenses.map(e => e.paymentMode || 'Online'))).map(pm => (
@@ -425,7 +425,7 @@ export default function BookDetailPage() {
             <Select 
               value={categoryFilter} 
               onChange={(e) => setCategoryFilter(e.target.value)} 
-              sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' }}
+              sx={{ bgcolor: 'background.default' }}
             >
               <MenuItem value={'all'}>Categories: All</MenuItem>
               {Array.from(new Set(expenses.map(e => e.category || 'General'))).map(cat => (
@@ -458,9 +458,9 @@ export default function BookDetailPage() {
           placeholder="Search remark, desc or amount..."
           size="small"
           fullWidth
-          sx={{ maxWidth: { md: 500 }, '& .MuiOutlinedInput-root': { bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : 'white' } }}
+          sx={{ maxWidth: { md: 500 }, '& .MuiOutlinedInput-root': { bgcolor: 'background.default' } }}
           InputProps={{
-            startAdornment: <InputAdornment position="start"><FiSearch color="#999" /></InputAdornment>
+            startAdornment: <InputAdornment position="start"><FiSearch color="inherit" style={{ opacity: 0.5 }} /></InputAdornment>
           }}
         />
         <Box sx={{ display: 'flex', gap: 1.5, width: { xs: '100%', md: 'auto' } }}>
@@ -470,7 +470,7 @@ export default function BookDetailPage() {
             startIcon={<FiPlus />}
             fullWidth
             onClick={() => { setEditingExpense(null); setModalInitialType('in'); setIsModalOpen(true); }}
-            sx={{ textTransform: 'none', fontWeight: 600, bgcolor: '#00875A' }}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
           >
             Cash In
           </Button>
@@ -480,7 +480,7 @@ export default function BookDetailPage() {
             startIcon={<FiMinus />}
             fullWidth
             onClick={() => { setEditingExpense(null); setModalInitialType('out'); setIsModalOpen(true); }}
-            sx={{ textTransform: 'none', fontWeight: 600, bgcolor: '#DE350B' }}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
           >
             Cash Out
           </Button>
@@ -490,13 +490,14 @@ export default function BookDetailPage() {
       {/* --- Summary Cards --- */}
       <Grid container spacing={2} sx={{ mb: 4 }}>
         {[
-          { label: 'Cash In', amount: cashIn, color: '#00875A', icon: <FiPlus size={24} />, bg: '#E3FCEF' },
-          { label: 'Cash Out', amount: cashOut, color: '#DE350B', icon: <FiMinus size={24} />, bg: '#FFEBE6' },
-          { label: 'Net Balance', amount: netBalance, color: '#4361EE', icon: <Typography sx={{ fontWeight: 900, fontSize: 20 }}>=</Typography>, bg: '#eff2ff' },
+          { label: 'Cash In', amount: cashIn, color: 'success.main', icon: <FiPlus size={24} />, bg: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(16, 185, 129, 0.1)' : 'success.light' },
+          { label: 'Cash Out', amount: cashOut, color: 'error.main', icon: <FiMinus size={24} />, bg: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(239, 68, 68, 0.1)' : 'error.light' },
+          { label: 'Net Balance', amount: netBalance, color: 'primary.main', icon: <Typography sx={{ fontWeight: 900, fontSize: 20 }}>=</Typography>, bg: (theme: any) => theme.palette.mode === 'dark' ? 'rgba(129, 140, 248, 0.1)' : 'primary.light' },
         ].map((stat, idx) => (
           <Grid size={{ xs: 12, sm: 4 }} key={idx}>
             <Paper elevation={0} sx={{ 
-              border: (theme) => `1px solid ${theme.palette.mode === 'dark' ? '#334155' : '#e0e0e0'}` , 
+              border: '1px solid',
+              borderColor: 'divider',
               p: 2,
               display: 'flex', 
               alignItems: 'center', 
@@ -567,7 +568,7 @@ export default function BookDetailPage() {
                 <Paper key={row.id} sx={{ 
                   p: 2, 
                   border: theme => `1px solid ${isSelected ? theme.palette.primary.main : theme.palette.divider}`,
-                  bgcolor: theme => isSelected ? (theme.palette.mode === 'dark' ? 'rgba(99, 102, 241, 0.1)' : '#f5f6ff') : 'background.paper'
+                  bgcolor: theme => isSelected ? (theme.palette.mode === 'dark' ? 'rgba(129, 140, 248, 0.1)' : 'action.selected') : 'background.paper'
                 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -620,7 +621,7 @@ export default function BookDetailPage() {
       ) : (
         <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
           <Table sx={{ minWidth: 650 }}>
-            <TableHead sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? '#071427' : '#F4F5F7' }}>
+            <TableHead sx={{ bgcolor: 'background.default' }}>
               <TableRow>
                 <TableCell padding="checkbox">
                   <Checkbox 
@@ -715,16 +716,18 @@ export default function BookDetailPage() {
            bottom: { xs: 80, md: 24 }, 
            left: '50%', 
            transform: 'translateX(-50%)', 
-           bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0B1220' : 'white', 
+           bgcolor: 'background.paper', 
            p: 2, 
            borderRadius: 2, 
-           boxShadow: 3, 
+           boxShadow: 6, 
            display: 'flex', 
            gap: 2, 
            alignItems: 'center', 
            zIndex: 10,
            width: { xs: '90%', sm: 'auto' },
-           justifyContent: 'center'
+           justifyContent: 'center',
+           border: '1px solid',
+           borderColor: 'divider'
          }}>
            <Typography variant="body2" sx={{ display: { xs: 'none', sm: 'block' } }}>{selectedIds.length} items selected</Typography>
            <Button variant="contained" color="error" size="small" onClick={() => setDeleteTarget(selectedIds)}>Delete ({selectedIds.length})</Button>

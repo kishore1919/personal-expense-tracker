@@ -12,6 +12,7 @@ A simple, intuitive, and accessible personal expense tracker application that al
     *   Expenses are stored and synchronized in real-time using Firestore.
 *   **Modern Personal Dashboard UI:**
     *   A modern, intuitive dashboard with clean design and clear visual hierarchy.
+    *   Global loading states with a clean pulse animation for seamless page transitions.
     *   Responsive design for web and mobile with collapsible sidebar.
     *   An elegant empty state to guide new users.
     *   Skeleton loading states for better perceived performance.
@@ -40,6 +41,7 @@ A simple, intuitive, and accessible personal expense tracker application that al
 *   **Typography:** Refined scale using Manrope (body) and Space Grotesk (headings)
 *   **Mobile Experience:**
     *   Bottom navigation with iOS safe area support
+    *   Clean pulse loading animation for better feedback
     *   Larger touch targets (min 44px)
     *   Responsive grid layouts
 
@@ -118,6 +120,7 @@ src/app/
 │   └── page.tsx
 ├── firebase.ts
 ├── globals.css
+├── loading.tsx
 ├── layout.tsx
 └── page.tsx
 ```

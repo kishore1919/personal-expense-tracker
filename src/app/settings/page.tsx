@@ -27,6 +27,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   FiUser,
@@ -37,6 +39,8 @@ import {
   FiGlobe,
   FiTrash2,
   FiTag,
+  FiChevronLeft,
+  FiChevronRight,
 } from 'react-icons/fi';
 import { collection, getDocs, addDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -62,12 +66,15 @@ const SettingSkeleton = () => (
 
 const CategoryManager: React.FC = () => {
   const [user] = useAuthState(auth);
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; createdAt?: Date }>>([]);
   const [newCategory, setNewCategory] = useState('');
   const [loadingCats, setLoadingCats] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteCatTarget, setDeleteCatTarget] = useState<string | null>(null);
   const [isDeletingCat, setIsDeletingCat] = useState(false);
+  const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState<'core' | 'custom'>('core');
+  const pageSize = 5;
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -80,8 +87,16 @@ const CategoryManager: React.FC = () => {
         );
         const querySnapshot = await getDocs(q);
         const cats = querySnapshot.docs
-          .map(d => ({ id: d.id, name: d.data().name }))
-          .sort((a, b) => a.name.localeCompare(b.name));
+          .map(d => {
+            const data = d.data();
+            return { 
+              id: d.id, 
+              name: data.name,
+              createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt ? new Date(data.createdAt) : undefined)
+            };
+          })
+          .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+          
         setCategories(cats);
         setError(null);
       } catch (err) {
@@ -106,12 +121,15 @@ const CategoryManager: React.FC = () => {
     }
 
     try {
+      const createdAt = new Date();
       const docRef = await addDoc(collection(db, 'categories'), {
         name: name,
-        userId: user.uid
+        userId: user.uid,
+        createdAt: createdAt
       });
-      setCategories((prev) => [...prev, { id: docRef.id, name: name }].sort((a,b)=>a.name.localeCompare(b.name)));
+      setCategories((prev) => [{ id: docRef.id, name: name, createdAt }, ...prev]);
       setNewCategory('');
+      setPage(1);
       setError(null);
     } catch (err) {
       console.error('Error adding category:', err);
@@ -130,6 +148,10 @@ const CategoryManager: React.FC = () => {
     try {
       await deleteDoc(doc(db, 'categories', deleteCatTarget));
       setCategories((prev) => prev.filter(c => c.id !== deleteCatTarget));
+      // Adjust page if current page becomes empty after deletion
+      if (totalFiltered > 0 && (totalFiltered - 1) <= (page - 1) * pageSize) {
+        setPage(p => Math.max(1, p - 1));
+      }
       setError(null);
     } catch (err) {
       console.error('Error deleting category:', err);
@@ -141,11 +163,28 @@ const CategoryManager: React.FC = () => {
     }
   };
 
-  // Combine core and user categories for display
-  const allCategories = [
-    ...CORE_CATEGORIES.map(name => ({ id: `core-${name}`, name, isCore: true })),
-    ...categories.map(c => ({ ...c, isCore: false }))
-  ].sort((a, b) => a.name.localeCompare(b.name));
+  // Combine and filter categories
+  const filteredCategories = React.useMemo(() => {
+    const result = filter === 'core'
+      ? CORE_CATEGORIES.map(name => ({ id: `core-${name}`, name, isCore: true, createdAt: new Date(0) }))
+      : categories.map(c => ({ ...c, isCore: false }));
+
+    return result.sort((a, b) => {
+      const dateA = a.createdAt?.getTime() || 0;
+      const dateB = b.createdAt?.getTime() || 0;
+      if (dateA !== dateB) return dateB - dateA;
+      return a.name.localeCompare(b.name);
+    });
+  }, [categories, filter]);
+
+  // Pagination logic
+  const totalFiltered = filteredCategories.length;
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
+  const displayedCategories = filteredCategories.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
 
   return (
     <Box>
@@ -165,16 +204,28 @@ const CategoryManager: React.FC = () => {
             flex: 1,
             '& .MuiOutlinedInput-root': {
               borderRadius: 8,
-              backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined,
-              '& fieldset': { borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined },
-              '&:hover fieldset': { borderColor: '#6366F1' },
+              backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : undefined,
+              '& fieldset': { borderColor: (theme) => theme.palette.mode === 'dark' ? 'divider' : undefined },
+              '&:hover fieldset': { borderColor: 'primary.main' },
             },
-            '& .MuiInputBase-input::placeholder': { color: (theme) => theme.palette.mode === 'dark' ? '#64748B' : undefined }
+            '& .MuiInputBase-input::placeholder': { color: (theme) => theme.palette.mode === 'dark' ? 'text.secondary' : undefined }
           }}
         />
-        <Button type="submit" variant="contained" disabled={!newCategory.trim()} sx={{ width: 92, borderRadius: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined, color: (theme) => theme.palette.mode === 'dark' ? '#94A3B8' : undefined, border: (theme) => theme.palette.mode === 'dark' ? '1px solid #334155' : undefined }}>
+        <Button type="submit" variant="contained" disabled={!newCategory.trim()} sx={{ width: 92, borderRadius: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : undefined, color: (theme) => theme.palette.mode === 'dark' ? 'text.secondary' : undefined, border: (theme) => theme.palette.mode === 'dark' ? '1px solid' : undefined, borderColor: 'divider' }}>
           Add
         </Button>
+      </Box>
+
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+        <Tabs 
+          value={filter} 
+          onChange={(_, newValue) => setFilter(newValue)}
+          variant="fullWidth"
+          sx={{ minHeight: 40, '& .MuiTab-root': { py: 1, minHeight: 40, textTransform: 'none', fontWeight: 600 } }}
+        >
+          <Tab label="Core" value="core" />
+          <Tab label="Custom" value="custom" />
+        </Tabs>
       </Box>
 
       {loadingCats ? (
@@ -184,11 +235,11 @@ const CategoryManager: React.FC = () => {
           ))}
         </Box>
       ) : (
-        <Paper variant="outlined" sx={{ backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined, borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined, borderRadius: 2, overflow: 'hidden' }}>
+        <Paper variant="outlined" sx={{ backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : undefined, borderColor: (theme) => theme.palette.mode === 'dark' ? 'divider' : undefined, borderRadius: 2, overflow: 'hidden' }}>
           <List disablePadding>
-            {allCategories.map((c, index) => (
+            {displayedCategories.map((c, index) => (
               <React.Fragment key={c.id}>
-                {index > 0 && <Divider sx={{ borderColor: (theme) => theme.palette.mode === 'dark' ? '#334155' : undefined }} />}
+                {index > 0 && <Divider sx={{ borderColor: (theme) => theme.palette.mode === 'dark' ? 'divider' : undefined }} />}
                 <ListItem
                   secondaryAction={
                     !c.isCore && (
@@ -212,7 +263,7 @@ const CategoryManager: React.FC = () => {
                     px: 2,
                     display: 'flex',
                     alignItems: 'center',
-                    backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#0F172A' : undefined,
+                    backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'background.default' : undefined,
                   }}
                 >
                   <Box
@@ -235,6 +286,32 @@ const CategoryManager: React.FC = () => {
             ))}
           </List>
         </Paper>
+      )}
+
+      {/* Pagination Controls */}
+      {!loadingCats && totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, px: 1 }}>
+          <Typography variant="caption" color="text.secondary">
+            Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, totalFiltered)} of {totalFiltered}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <IconButton 
+              size="small" 
+              disabled={page === 1} 
+              onClick={() => setPage(p => p - 1)}
+            >
+              <FiChevronLeft size={18} />
+            </IconButton>
+            <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', px: 1 }}>{page} / {totalPages}</Typography>
+            <IconButton 
+              size="small" 
+              disabled={page === totalPages} 
+              onClick={() => setPage(p => p + 1)}
+            >
+              <FiChevronRight size={18} />
+            </IconButton>
+          </Box>
+        </Box>
       )}
 
       <Dialog
@@ -324,7 +401,7 @@ export default function SettingsPage() {
           {loading ? (
             <SettingSkeleton />
           ) : (
-            <Card sx={{ height: '100%', backgroundColor: isDarkMode ? '#1E293B' : undefined, color: isDarkMode ? '#F8FAFC' : undefined, border: isDarkMode ? '1px solid #334155' : undefined, boxShadow: isDarkMode ? 'none' : undefined }}>
+            <Card sx={{ height: '100%' }}>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                   <Box sx={{ color: 'primary.main' }}>
@@ -338,7 +415,7 @@ export default function SettingsPage() {
                 <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                   {settingsItems.map((item, index) => (
                     <React.Fragment key={item.label}>
-                      {index > 0 && <Divider sx={{ my: 2, borderColor: isDarkMode ? '#334155' : undefined }} />}
+                      {index > 0 && <Divider sx={{ my: 2 }} />}
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.5 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           <Box sx={{ color: 'text.secondary' }}>{item.icon}</Box>
@@ -445,7 +522,7 @@ export default function SettingsPage() {
           {loading ? (
             <SettingSkeleton />
           ) : (
-            <Card sx={{ backgroundColor: isDarkMode ? '#1E293B' : undefined, color: isDarkMode ? '#F8FAFC' : undefined, border: isDarkMode ? '1px solid #334155' : undefined }}>
+            <Card>
               <CardContent sx={{ p: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                   <Box sx={{ color: 'primary.main' }}>
