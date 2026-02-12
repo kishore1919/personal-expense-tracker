@@ -620,6 +620,15 @@ export default function AddExpenseModal({
                 fullWidth
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                SelectProps={{
+                  MenuProps: {
+                    PaperProps: {
+                      sx: {
+                        maxHeight: 250,
+                      },
+                    },
+                  },
+                }}
               >
                 {availableCategories.map((cat) => (
                   <MenuItem key={cat} value={cat}>
