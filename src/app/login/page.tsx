@@ -1,45 +1,55 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback } from 'react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
 import { FaBook } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { Button, Typography, Box, Alert, Card, CardContent } from '@mui/material';
+import { usePublicRoute } from '../hooks/useAuth';
+import Loading from '../components/Loading';
 
-export default function Login() {
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  'auth/popup-closed-by-user': '',
+  'auth/cancelled-popup-request': '',
+  'auth/popup-blocked': 'Popup was blocked. Please allow popups for this site.',
+};
+
+function getErrorMessage(code: string | undefined): string {
+  if (!code) return 'Failed to sign in. Please try again.';
+  return AUTH_ERROR_MESSAGES[code] || 'Failed to sign in with Google. Please try again.';
+}
+
+export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const { loading } = usePublicRoute();
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = useCallback(async () => {
     setError(null);
     setIsLoading(true);
+
     try {
       await signInWithPopup(auth, googleProvider);
-      router.push('/');
+      // Router redirect is handled by usePublicRoute hook
     } catch (err: unknown) {
-      const fbErr = err as { code?: string } | undefined;
-      if (fbErr?.code === 'auth/popup-closed-by-user') {
-        // User closed the popup, don't show an error
-      } else {
-        setError('Failed to sign in with Google. Please try again.');
-        console.error(err);
+      const fbErr = err as { code?: string };
+      const message = getErrorMessage(fbErr?.code);
+      if (message) {
+        setError(message);
       }
+      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
-    <Card
-      sx={{
-        maxWidth: 420,
-        mx: 'auto',
-        borderRadius: 3,
-      }}
-    >
+    <Card sx={{ borderRadius: 3 }}>
       <CardContent sx={{ p: 4 }}>
         {/* Logo and Title */}
         <Box sx={{ mb: 4, textAlign: 'center' }}>
@@ -67,7 +77,11 @@ export default function Login() {
           </Typography>
         </Box>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
         <Button
           variant="outlined"

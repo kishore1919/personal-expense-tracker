@@ -399,7 +399,17 @@ export default function BookDetailPage() {
         gap: 2
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton onClick={() => router.back()} size="small" sx={{ ml: -1 }}>
+          <IconButton 
+            onClick={() => router.back()} 
+            size="small" 
+            sx={{ 
+              ml: -1.5,
+              p: 2.5,
+              '& .MuiSvgIcon-root, & svg': {
+                fontSize: '1.25rem'
+              }
+            }}
+          >
             <FiChevronLeft />
           </IconButton>
           <Typography variant="h5" fontWeight={700} noWrap sx={{ maxWidth: { xs: '200px', sm: '100%' } }}>

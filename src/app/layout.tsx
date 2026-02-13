@@ -1,101 +1,43 @@
-'use client';
-
-import './globals.css';
-import React from 'react';
-import { usePathname } from 'next/navigation';
+import type { Metadata } from 'next';
 import { Manrope, Space_Grotesk } from 'next/font/google';
 import { Box } from '@mui/material';
-import Sidebar from './components/Sidebar';
 import { CurrencyProvider } from './context/CurrencyContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { SidebarProvider, useSidebar } from './context/SidebarContext';
+import { SidebarProvider } from './context/SidebarContext';
 import MUIProvider from './components/MUIProvider';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from './firebase';
-import { useRouter } from 'next/navigation';
-import Loading from './components/Loading';
+import { ProtectedLayout } from './components/ProtectedLayout';
+import './globals.css';
 
 const bodyFont = Manrope({
   subsets: ['latin'],
   variable: '--font-body',
   weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
 });
 
 const headingFont = Space_Grotesk({
   subsets: ['latin'],
   variable: '--font-heading',
   weight: ['500', '600', '700'],
+  display: 'swap',
 });
 
-function AppLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const [user, loading] = useAuthState(auth);
-  const isAuthPage = pathname === '/login';
-  const { sidebarWidth } = useSidebar();
+export const metadata: Metadata = {
+  title: 'Expense Pilot - Personal Expense Tracker',
+  description: 'Track and manage your personal expenses efficiently',
+};
 
-  React.useEffect(() => {
-    if (!loading) {
-      if (!user && !isAuthPage) {
-        router.push('/login');
-      } else if (user && isAuthPage) {
-        router.push('/');
-      }
-    }
-  }, [user, loading, isAuthPage, router]);
-
-  if (loading) {
-    return <Loading />;
-  }
-
-  // Prevent showing protected content while redirecting
-  if (!user && !isAuthPage) {
-    return <Loading />;
-  }
-
-  return (
-    <>
-      {!isAuthPage && user && <Sidebar />}
-      <Box
-        component="main"
-        sx={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100vh',
-          ml: (isAuthPage || !user) ? 0 : { xs: 0, md: `${sidebarWidth}px` },
-          transition: 'margin-left 200ms ease',
-          pb: { xs: '80px', md: 0 },
-        }}
-      >
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            justifyContent: isAuthPage ? 'center' : 'flex-start',
-            alignItems: isAuthPage ? 'center' : 'flex-start',
-            p: isAuthPage ? 3 : { xs: 2, sm: 3, md: 4 },
-          }}
-        >
-          <Box
-            sx={{
-              width: '100%',
-              maxWidth: isAuthPage ? '420px' : '1200px',
-              mx: 'auto',
-            }}
-          >
-            {children}
-          </Box>
-        </Box>
-      </Box>
-    </>
-  );
-}
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning className={`${bodyFont.variable} ${headingFont.variable}`}>
+      <body 
+        suppressHydrationWarning 
+        className={`${bodyFont.variable} ${headingFont.variable} antialiased`}
+      >
         <ThemeProvider>
           <MUIProvider>
             <CurrencyProvider>
@@ -108,7 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     transition: 'background-color 200ms ease',
                   }}
                 >
-                  <AppLayout>{children}</AppLayout>
+                  <ProtectedLayout>{children}</ProtectedLayout>
                 </Box>
               </SidebarProvider>
             </CurrencyProvider>
