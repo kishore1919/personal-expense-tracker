@@ -68,39 +68,24 @@ export default function BookAnalyticsPage() {
   const [bookName, setBookName] = useState('');
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timeRange, setTimeRange] = useState<'today' | 'yesterday' | '7d' | '30d' | '90d' | '1y' | 'thisMonth' | 'lastMonth' | 'all' | 'custom'>('all');
+  const [timeRange, setTimeRange] = useState<'today' | 'yesterday' | 'thisMonth' | 'lastMonth' | 'all' | 'custom'>('all');
   const [customRange, setCustomRange] = useState<{ start: string; end: string }>({ 
     start: new Date().toISOString().split('T')[0], 
     end: new Date().toISOString().split('T')[0] 
   });
-  const [expenseType, setExpenseType] = useState<'all' | 'in' | 'out'>('all');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [typeAnchorEl, setTypeAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
-  };
-
-  const handleOpenTypeMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setTypeAnchorEl(event.currentTarget);
   };
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
   };
 
-  const handleCloseTypeMenu = () => {
-    setTypeAnchorEl(null);
-  };
-
   const handleRangeChange = (val: typeof timeRange) => {
     setTimeRange(val);
     handleCloseMenu();
-  };
-
-  const handleTypeChange = (val: typeof expenseType) => {
-    setExpenseType(val);
-    handleCloseTypeMenu();
   };
 
   useEffect(() => {
@@ -201,13 +186,8 @@ export default function BookAnalyticsPage() {
       }
     }
 
-    // Apply Type
-    if (expenseType !== 'all') {
-      base = base.filter(e => e.type === expenseType);
-    }
-
     return base;
-  }, [expenses, timeRange, expenseType, customRange]);
+  }, [expenses, timeRange, customRange]);
 
   const stats = useMemo(() => {
     const totalIn = filteredExpenses.reduce((sum, e) => sum + (e.type === 'in' ? e.amount : 0), 0);
@@ -323,7 +303,17 @@ export default function BookAnalyticsPage() {
       {/* Header */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, mt: 2, flexWrap: 'wrap', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton onClick={() => router.back()} size="small" sx={{ ml: -1 }}>
+          <IconButton 
+            onClick={() => router.back()} 
+            size="small" 
+            sx={{ 
+              ml: -1.5,
+              p: 2.5,
+              '& .MuiSvgIcon-root, & svg': {
+                fontSize: '1.25rem'
+              }
+            }}
+          >
             <FiChevronLeft />
           </IconButton>
           <Typography variant="h5" fontWeight={700}>
@@ -352,10 +342,6 @@ export default function BookAnalyticsPage() {
                 case 'all': return 'All Time';
                 case 'today': return 'Today';
                 case 'yesterday': return 'Yesterday';
-                case '7d': return 'Last 7 Days';
-                case '30d': return 'Last 30 Days';
-                case '90d': return 'Last 90 Days';
-                case '1y': return 'Last 1 Year';
                 case 'thisMonth': return 'This Month';
                 case 'lastMonth': return 'Last Month';
                 case 'custom':
@@ -363,23 +349,6 @@ export default function BookAnalyticsPage() {
                 default: return 'All Time';
               }
             })()}
-          </Button>
-
-          {/* Type Filter trigger button */}
-          <Button
-            variant="outlined"
-            onClick={handleOpenTypeMenu}
-            endIcon={<FiChevronDown />}
-            sx={{ 
-              textTransform: 'none', 
-              borderRadius: 2,
-              borderColor: 'divider',
-              color: 'text.primary',
-              px: { xs: 1, sm: 2 },
-              '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' }
-            }}
-          >
-            Types: {expenseType === 'all' ? 'All' : expenseType === 'in' ? 'Income' : 'Expense'}
           </Button>
 
           {/* Duration Menu */}
@@ -395,12 +364,8 @@ export default function BookAnalyticsPage() {
               { label: 'All Time', value: 'all' },
               { label: 'Today', value: 'today' },
               { label: 'Yesterday', value: 'yesterday' },
-              { label: 'Last 7 Days', value: '7d' },
-              { label: 'Last 30 Days', value: '30d' },
               { label: 'This Month', value: 'thisMonth' },
               { label: 'Last Month', value: 'lastMonth' },
-              { label: 'Last 90 Days', value: '90d' },
-              { label: 'Last 1 Year', value: '1y' },
             ].map((option) => (
               <MenuItem 
                 key={option.value} 
@@ -480,35 +445,6 @@ export default function BookAnalyticsPage() {
               <Button size="small" onClick={() => handleRangeChange('all')} sx={{ textTransform: 'none' }}>Clear</Button>
               <Button size="small" variant="contained" onClick={handleCloseMenu} sx={{ textTransform: 'none' }}>Done</Button>
             </Box>
-          </Menu>
-
-          {/* Type Menu */}
-          <Menu
-            anchorEl={typeAnchorEl}
-            open={Boolean(typeAnchorEl)}
-            onClose={handleCloseTypeMenu}
-            PaperProps={{
-              sx: { width: 180, borderRadius: 2, mt: 1, boxShadow: theme.shadows[4] }
-            }}
-          >
-            {[
-              { label: 'All', value: 'all' },
-              { label: 'Income', value: 'in' },
-              { label: 'Expense', value: 'out' },
-            ].map((option) => (
-              <MenuItem 
-                key={option.value} 
-                onClick={() => handleTypeChange(option.value as typeof expenseType)}
-                sx={{ py: 0.5 }}
-              >
-                <FormControlLabel
-                  value={option.value}
-                  control={<Radio size="small" checked={expenseType === option.value} />}
-                  label={option.label}
-                  sx={{ width: '100%', m: 0 }}
-                />
-              </MenuItem>
-            ))}
           </Menu>
         </Box>
       </Box>
