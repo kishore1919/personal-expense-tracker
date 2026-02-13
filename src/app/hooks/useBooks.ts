@@ -102,7 +102,7 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
       });
 
       setBooks((prev) => [
-        { id: docRef.id, name: name.trim(), createdAt: 'Just now' },
+        { id: docRef.id, name: name.trim(), createdAt: 'Just now', createdAtRaw: new Date(), net: calculateNet ? 0 : 0 },
         ...prev,
       ]);
     } catch (err) {

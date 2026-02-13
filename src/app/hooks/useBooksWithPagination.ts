@@ -118,9 +118,10 @@ export function useBooksWithPagination(
     if (!user) return;
     
     try {
+      const createdAt = new Date();
       const docRef = await addDoc(collection(db, 'books'), {
         name: bookName.trim(),
-        createdAt: new Date(),
+        createdAt,
         userId: user.uid,
       });
       
@@ -128,6 +129,8 @@ export function useBooksWithPagination(
         { 
           id: docRef.id, 
           name: bookName.trim(), 
+          createdAt: createdAt as unknown as string,
+          createdAtRaw: createdAt,
           updatedAtString: 'Just now', 
           netBalance: 0 
         },
@@ -186,11 +189,23 @@ export function useBooksWithPagination(
     let result = books.filter((book) =>
       book.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
-    
+
     if (sortBy === 'name') {
       result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'last-updated') {
+      const getTime = (createdAt: unknown): number => {
+        if (!createdAt) return 0;
+        if (createdAt instanceof Date) return createdAt.getTime();
+        if (typeof createdAt === 'object' && 'toDate' in createdAt) {
+          return (createdAt as { toDate: () => Date }).toDate().getTime();
+        }
+        if (typeof createdAt === 'number') return createdAt;
+        return 0;
+      };
+
+      result = [...result].sort((a, b) => getTime(b.createdAt) - getTime(a.createdAt));
     }
-    
+
     return result;
   }, [books, searchQuery, sortBy]);
 

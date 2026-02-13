@@ -36,6 +36,7 @@ export default function BooksPage() {
   const [pageSize, setPageSize] = useState<PageSize>(10);
   const [deleteTarget, setDeleteTarget] = useState<string | string[] | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const {
     displayedBooks,
@@ -79,8 +80,14 @@ export default function BooksPage() {
   }, [router]);
 
   const handleAddBook = useCallback(async (bookName: string) => {
-    await addBook(bookName);
-    setIsModalOpen(false);
+    try {
+      setAddError(null);
+      await addBook(bookName);
+      setIsModalOpen(false);
+    } catch (err: any) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setAddError(msg);
+    }
   }, [addBook]);
 
   const handleConfirmDelete = useCallback(async () => {
@@ -159,6 +166,7 @@ export default function BooksPage() {
       </Box>
 
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+      {addError && <Alert severity="error" sx={{ mb: 3 }}>{addError}</Alert>}
 
       {/* Pagination Header */}
       <BooksPagination.Header
