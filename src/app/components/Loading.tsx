@@ -1,3 +1,7 @@
+/**
+ * Loading Component - Loading spinner with app branding.
+ * Displayed during initial app load and authentication checks.
+ */
 'use client';
 
 import React from 'react';

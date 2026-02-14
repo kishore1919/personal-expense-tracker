@@ -1,3 +1,8 @@
+/**
+ * LoginPage Component - Authentication page with Google sign-in.
+ * Provides Google OAuth login for user authentication.
+ * Redirects authenticated users to the home page.
+ */
 'use client';
 
 import { useState, useCallback } from 'react';

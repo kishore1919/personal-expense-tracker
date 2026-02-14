@@ -1,3 +1,7 @@
+/**
+ * Loading.tsx - Next.js loading UI for page navigation.
+ * Displays a loading spinner while the next page loads.
+ */
 'use client';
 
 import React from 'react';

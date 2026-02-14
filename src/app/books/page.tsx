@@ -1,3 +1,11 @@
+/**
+ * BooksPage Component - Full page for managing expense books.
+ * Provides advanced features including:
+ * - Pagination for large book lists
+ * - Search and sort functionality
+ * - Multi-select with bulk delete
+ * - Quick add suggestions
+ */
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -56,24 +64,26 @@ export default function BooksPage() {
     pageSize,
   });
 
-  // Reset page and selection when filters change
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchQuery(value);
+  // Keep pagination/selection consistent whenever list controls change.
+  const resetListState = useCallback(() => {
     setPage(1);
     setSelectedIds([]);
   }, []);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    resetListState();
+  }, [resetListState]);
 
   const handleSortChange = useCallback((value: SortOption) => {
     setSortBy(value);
-    setPage(1);
-    setSelectedIds([]);
-  }, []);
+    resetListState();
+  }, [resetListState]);
 
   const handlePageSizeChange = useCallback((value: PageSize) => {
     setPageSize(value);
-    setPage(1);
-    setSelectedIds([]);
-  }, []);
+    resetListState();
+  }, [resetListState]);
 
   const handleBookClick = useCallback((bookId: string) => {
     router.push(`/book/${bookId}`);

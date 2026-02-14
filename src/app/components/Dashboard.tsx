@@ -1,3 +1,7 @@
+/**
+ * Dashboard Component - Main dashboard page showing expense overview and books.
+ * This is the main landing page of the application after login.
+ */
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
@@ -15,6 +19,10 @@ import { useCurrency } from '@/app/context/CurrencyContext';
 import { useProtectedRoute } from '@/app/hooks/useAuth';
 import type { Book } from '@/app/types';
 
+/**
+ * Calculates dashboard statistics from books array.
+ * Computes total books count, total net worth, and books created this month.
+ */
 function calculateStats(books: Book[]) {
   const now = new Date();
   
@@ -35,6 +43,10 @@ function calculateStats(books: Book[]) {
   };
 }
 
+/**
+ * Main Dashboard component displaying expense overview and book management.
+ * Requires authentication to access.
+ */
 export default function Dashboard() {
   const router = useRouter();
   const { formatCurrency } = useCurrency();
