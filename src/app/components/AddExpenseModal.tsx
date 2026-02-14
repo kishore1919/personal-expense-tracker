@@ -1,3 +1,27 @@
+/**
+ * AddExpenseModal Component - Modal dialog for adding or editing expense entries.
+ * 
+ * This component provides a comprehensive form for creating or editing expense/income entries.
+ * Features include:
+ * - Toggle between Cash In (income) and Cash Out (expense)
+ * - Calculator-like amount input supporting expressions (e.g., "10+3", "50*10%")
+ * - Date and time selection
+ * - Category selection (with user-defined categories from Firestore)
+ * - Payment mode selection
+ * - Real-time balance preview (current and projected)
+ * - Form validation with helpful error messages
+ * 
+ * @component
+ * @module AddExpenseModal
+ * 
+ * @example
+ * <AddExpenseModal
+ *   isOpen={isModalOpen}
+ *   onClose={() => setIsModalOpen(false)}
+ *   onAddExpense={handleAddExpense}
+ *   initialType="out"
+ * />
+ */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -25,6 +49,16 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from '../firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
+/**
+ * Props for AddExpenseModal component
+ * @interface AddExpenseModalProps
+ * @property {boolean} isOpen - Whether the modal is visible
+ * @property {() => void} onClose - Callback when modal should close
+ * @property {'in' | 'out} [initialType] - Initial entry type
+ * @property {number} [currentBalance] - Current balance for preview
+ * @property {Object} [initialExpense] - Existing expense for edit mode
+ * @property {Function} onAddExpense - Callback with expense data
+ */
 interface AddExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -51,16 +85,73 @@ interface AddExpenseModalProps {
   }, keepOpen?: boolean) => Promise<void> | void;
 }
 
+/**
+ * Default expense categories provided to all users
+ * @constant {string[]}
+ */
 const CORE_CATEGORIES = ['Food', 'Travel', 'Medical', 'Shopping', 'Bills', 'Misc'];
-const MAX_AMOUNT = 99_99_99_999; // 99,99,99,999
+
+/**
+ * Maximum allowed amount (99,99,99,999)
+ * @constant {number}
+ */
+const MAX_AMOUNT = 99_99_99_999;
+
+/**
+ * Maximum decimal places allowed in amounts
+ * @constant {number}
+ */
 const MAX_DECIMAL_PLACES = 2;
+
+/**
+ * Regex to extract numeric tokens from expressions
+ * @constant {RegExp}
+ */
 const NUMERIC_TOKEN_REGEX = /(?:\d+\.\d*|\.\d+|\d+)/g;
+
+/**
+ * Allowed characters in amount input field
+ * @constant {RegExp}
+ */
 const ALLOWED_AMOUNT_INPUT = /^[0-9+\-*/%.()\s]*$/;
 
+/**
+ * Gets the current local date and time as ISO-like strings.
+ * Used for default date/time values in the form.
+ * 
+ * @param {Date} [d= new Date()] - Date object to convert
+ * @returns {{ date: string, time: string }} Formatted date and time strings
+ */
+function getLocalDateTime(d: Date = new Date()) {
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const yyyy = d.getFullYear();
+  const mm = pad(d.getMonth() + 1);
+  const dd = pad(d.getDate());
+  const hh = pad(d.getHours());
+  const min = pad(d.getMinutes());
+  return {
+    date: `${yyyy}-${mm}-${dd}`,
+    time: `${hh}:${min}`,
+  };
+}
+
+// Lightweight expression evaluator for calculator-like amount input.
+/**
+ * Evaluates mathematical expressions in the amount field.
+ * Supports: +, -, *, /, %, parentheses, and decimal numbers.
+ * 
+ * @param {string} input - Mathematical expression string
+ * @returns {number | null} Evaluated result or null if invalid
+ * 
+ * @example
+ * evaluateAmountExpression('10+3');    // 13
+ * evaluateAmountExpression('50*10%');   // 5
+ * evaluateAmountExpression('(10+5)*2'); // 30
+ */
 function evaluateAmountExpression(input: string): number | null {
   const source = input.replace(/\s+/g, '');
   if (!source) return null;
-
+ 
   let index = 0;
 
   const peek = () => source[index];
@@ -171,6 +262,13 @@ function evaluateAmountExpression(input: string): number | null {
   return result;
 }
 
+/**
+ * Checks if the expression exceeds the maximum allowed amount.
+ * 
+ * @param {string} input - Expression to check
+ * @param {number | null} [evaluatedResult] - Pre-evaluated result
+ * @returns {boolean} True if amount exceeds limit
+ */
 function exceedsAmountLimit(input: string, evaluatedResult?: number | null): boolean {
   const compact = input.replace(/\s+/g, '');
   if (!compact) return false;
@@ -187,6 +285,12 @@ function exceedsAmountLimit(input: string, evaluatedResult?: number | null): boo
   return evaluated !== null && Math.abs(evaluated) > MAX_AMOUNT;
 }
 
+/**
+ * Checks if the expression has too many decimal places.
+ * 
+ * @param {string} input - Expression to check
+ * @returns {boolean} True if decimal precision is exceeded
+ */
 function exceedsDecimalPrecision(input: string): boolean {
   const compact = input.replace(/\s+/g, '');
   if (!compact) return false;
@@ -199,6 +303,13 @@ function exceedsDecimalPrecision(input: string): boolean {
   });
 }
 
+/**
+ * Main component for adding or editing expense entries.
+ * Provides a comprehensive form with real-time validation and balance preview.
+ * 
+ * @param {AddExpenseModalProps} props - Component props
+ * @returns {JSX.Element} Modal dialog component
+ */
 export default function AddExpenseModal({
   isOpen,
   onClose,
@@ -207,35 +318,28 @@ export default function AddExpenseModal({
   currentBalance = 0,
   initialExpense,
 }: AddExpenseModalProps) {
+  // Form state
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'in' | 'out'>(initialType ?? 'out');
-  // Helper to get local date and time in ISO format (yyyy-mm-dd and hh:mm)
-  function getLocalDateTime(d: Date = new Date()) {
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const yyyy = d.getFullYear();
-    const mm = pad(d.getMonth() + 1);
-    const dd = pad(d.getDate());
-    const hh = pad(d.getHours());
-    const min = pad(d.getMinutes());
-    return {
-      date: `${yyyy}-${mm}-${dd}`,
-      time: `${hh}:${min}`,
-    };
-  }
-
   const [date, setDate] = useState(() => getLocalDateTime().date);
   const [time, setTime] = useState(() => getLocalDateTime().time);
   const [remarks, setRemarks] = useState('');
   const [category, setCategory] = useState('Misc');
   const [paymentMode, setPaymentMode] = useState('Online');
+  
+  // Data state
   const [availableCategories, setAvailableCategories] = useState<string[]>(CORE_CATEGORIES);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  // Auth and theme
   const [user] = useAuthState(auth);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { currency, formatCurrency } = useCurrency();
+  
+  // Computed values
   const parsedAmount = React.useMemo(() => evaluateAmountExpression(amount), [amount]);
   const isEditMode = Boolean(initialExpense);
   const exceedsDecimalLimit = React.useMemo(() => exceedsDecimalPrecision(amount), [amount]);
@@ -243,6 +347,8 @@ export default function AddExpenseModal({
     () => exceedsAmountLimit(amount, parsedAmount),
     [amount, parsedAmount]
   );
+  
+  // Calculate balance before this entry (for edit mode)
   const balanceBeforeEntry = React.useMemo(() => {
     if (!initialExpense) return currentBalance;
     const previousSignedAmount = (initialExpense.type ?? 'out') === 'in'
@@ -261,6 +367,7 @@ export default function AddExpenseModal({
     }
   }, [balanceBeforeEntry, parsedAmount, type]);
 
+  // Fetch user-defined categories from Firestore
   useEffect(() => {
     const fetchCategories = async () => {
       if (!user) return;
@@ -292,6 +399,7 @@ export default function AddExpenseModal({
     }
   }, [isOpen, user]);
 
+  // Reset form when modal opens/closes or initial expense changes
   useEffect(() => {
     if (!isOpen) return;
 
@@ -326,6 +434,12 @@ export default function AddExpenseModal({
     setErrorMessage(null);
   }, [isOpen, initialType, initialExpense]);
 
+  /**
+   * Handles form submission and saves the expense entry.
+   * Validates all fields before saving.
+   * 
+   * @param {boolean} [keepOpen=false] - Whether to keep modal open after saving
+   */
   const handleSave = async (keepOpen = false) => {
     setErrorMessage(null);
     if (!description || !amount) {
@@ -390,11 +504,19 @@ export default function AddExpenseModal({
     }
   };
 
+  /**
+   * Handles form submit event.
+   * Prevents default and triggers save with keepOpen=false.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await handleSave(false);
   }; 
 
+  /**
+   * Handles amount input changes with validation.
+   * Filters out invalid characters and validates limits.
+   */
   const handleAmountChange = (value: string) => {
     if (!ALLOWED_AMOUNT_INPUT.test(value)) return;
     if (exceedsDecimalPrecision(value)) return;
@@ -404,6 +526,9 @@ export default function AddExpenseModal({
     if (errorMessage) setErrorMessage(null);
   };
 
+  /**
+   * Resets form state and closes the modal.
+   */
   const handleClose = () => {
     setDescription('');
     setAmount('');

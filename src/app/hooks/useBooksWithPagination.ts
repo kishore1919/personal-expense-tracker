@@ -1,3 +1,10 @@
+/**
+ * Custom hook for managing books with pagination, sorting, and search functionality.
+ * Provides comprehensive book management including CRUD operations and filtering.
+ * 
+ * @interface UseBooksWithPaginationOptions - Configuration options for pagination and filtering
+ * @interface UseBooksWithPaginationReturn - Return type with data and helper functions
+ */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { 
@@ -13,6 +20,14 @@ import {
 import { auth, db } from '@/app/firebase';
 import type { Book, SortOption, PageSize } from '@/app/types';
 
+/**
+ * Options for configuring the useBooksWithPagination hook
+ * @interface UseBooksWithPaginationOptions
+ * @property {string} searchQuery - Current search query for filtering books
+ * @property {SortOption} sortBy - Sort option ('last-updated' or 'name')
+ * @property {number} page - Current page number
+ * @property {PageSize} pageSize - Number of items per page
+ */
 interface UseBooksWithPaginationOptions {
   searchQuery: string;
   sortBy: SortOption;
@@ -20,6 +35,21 @@ interface UseBooksWithPaginationOptions {
   pageSize: PageSize;
 }
 
+/**
+ * Return type for the useBooksWithPagination hook
+ * @interface UseBooksWithPaginationReturn
+ * @property {Book[]} books - All fetched books
+ * @property {Book[]} displayedBooks - Books filtered and sliced for current page
+ * @property {boolean} loading - Loading state indicator
+ * @property {string | null} error - Error message if any
+ * @property {number} totalFiltered - Total number of filtered books
+ * @property {number} totalPages - Total number of pages
+ * @property {number} startIndex - Start index of current page
+ * @property {number} endIndex - End index of current page
+ * @property {(name: string) => Promise<void>} addBook - Function to create a new book
+ * @property {(target: string | string[]) => Promise<boolean>} deleteBooks - Function to delete books
+ * @property {boolean} isDeleting - Deletion in progress indicator
+ */
 interface UseBooksWithPaginationReturn {
   books: Book[];
   displayedBooks: Book[];
@@ -34,6 +64,63 @@ interface UseBooksWithPaginationReturn {
   isDeleting: boolean;
 }
 
+/**
+ * Extracts creation timestamp in milliseconds from various date formats.
+ * Handles Firestore Timestamp, Date objects, and numbers.
+ * 
+ * @param {unknown} createdAt - The createdAt value to parse
+ * @returns {number} Timestamp in milliseconds, or 0 if invalid
+ */
+function getCreatedAtMillis(createdAt: unknown): number {
+  if (!createdAt) return 0;
+  if (createdAt instanceof Date) return createdAt.getTime();
+  if (typeof createdAt === 'number') return createdAt;
+  if (typeof createdAt === 'object' && 'toDate' in createdAt) {
+    return (createdAt as { toDate: () => Date }).toDate().getTime();
+  }
+  return 0;
+}
+
+/**
+ * Calculates net balance from an array of expenses.
+ * Positive amounts (type 'in') are added, negative amounts (type 'out') are subtracted.
+ * 
+ * @param {Array<{amount?: unknown, type?: unknown}>} expenses - Array of expense objects
+ * @returns {number} Net balance (income - expenses)
+ */
+function calculateNetBalance(expenses: Array<{ amount?: unknown; type?: unknown }>): number {
+  return expenses.reduce((total, expense) => {
+    const amount = Number(expense.amount);
+    const safeAmount = Number.isFinite(amount) ? amount : 0;
+    return expense.type === 'in' ? total + safeAmount : total - safeAmount;
+  }, 0);
+}
+
+/**
+ * Custom hook for managing books with advanced features:
+ * - Pagination for large datasets
+ * - Search filtering by book name
+ * - Sorting by name or last updated
+ * - Batch deletion with expense cleanup
+ * - Net balance calculation per book
+ * 
+ * @param {UseBooksWithPaginationOptions} options - Configuration options
+ * @returns {UseBooksWithPaginationReturn} Book data, pagination info, and helper functions
+ * 
+ * @example
+ * const {
+ *   displayedBooks,
+ *   loading,
+ *   totalPages,
+ *   addBook,
+ *   deleteBooks
+ * } = useBooksWithPagination({
+ *   searchQuery: '',
+ *   sortBy: 'last-updated',
+ *   page: 1,
+ *   pageSize: 10
+ * });
+ */
 export function useBooksWithPagination(
   options: UseBooksWithPaginationOptions
 ): UseBooksWithPaginationReturn {
@@ -44,6 +131,11 @@ export function useBooksWithPagination(
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  /**
+   * Fetches all books from Firestore for the authenticated user.
+   * Calculates net balance for each book by summing expenses.
+   * Sorts books by creation date (newest first) initially.
+   */
   const fetchBooks = useCallback(async () => {
     if (!user) return;
 
@@ -65,18 +157,9 @@ export function useBooksWithPagination(
           const expensesSnapshot = await getDocs(
             collection(db, `books/${bookDoc.id}/expenses`)
           );
-          
-          let netBalance = 0;
-          
-          expensesSnapshot.docs.forEach((expenseDoc) => {
-            const expenseData = expenseDoc.data();
-            const amount = expenseData.amount || 0;
-            if (expenseData.type === 'in') {
-              netBalance += amount;
-            } else {
-              netBalance -= amount;
-            }
-          });
+          const netBalance = calculateNetBalance(
+            expensesSnapshot.docs.map((expenseDoc) => expenseDoc.data())
+          );
 
           return {
             id: bookDoc.id,
@@ -89,15 +172,8 @@ export function useBooksWithPagination(
       );
 
       booksData.sort((a, b) => {
-        const getTime = (createdAt: unknown): number => {
-          if (createdAt && typeof createdAt === 'object' && 'toDate' in createdAt) {
-            return (createdAt as { toDate: () => Date }).toDate().getTime();
-          }
-          return 0;
-        };
-        
-        const dateA = getTime(a.createdAt);
-        const dateB = getTime(b.createdAt);
+        const dateA = getCreatedAtMillis(a.createdAt);
+        const dateB = getCreatedAtMillis(b.createdAt);
         return dateB - dateA;
       });
 
@@ -110,17 +186,26 @@ export function useBooksWithPagination(
     }
   }, [user]);
 
+  // Fetch books on mount and when fetchBooks changes
   useEffect(() => {
     fetchBooks();
   }, [fetchBooks]);
 
+  /**
+   * Creates a new book in Firestore and optimistically updates local state.
+   * The new book is added at the beginning of the list.
+   * 
+   * @param {string} bookName - The name of the book to create
+   * @throws {Error} If user is not authenticated or creation fails
+   */
   const addBook = useCallback(async (bookName: string) => {
     if (!user) return;
     
     try {
       const createdAt = new Date();
+      const trimmedName = bookName.trim();
       const docRef = await addDoc(collection(db, 'books'), {
-        name: bookName.trim(),
+        name: trimmedName,
         createdAt,
         userId: user.uid,
       });
@@ -128,8 +213,8 @@ export function useBooksWithPagination(
       setBooks((prev) => [
         { 
           id: docRef.id, 
-          name: bookName.trim(), 
-          createdAt: createdAt as unknown as string,
+          name: trimmedName,
+          createdAt: createdAt.toLocaleDateString(),
           createdAtRaw: createdAt,
           updatedAtString: 'Just now', 
           netBalance: 0 
@@ -142,6 +227,14 @@ export function useBooksWithPagination(
     }
   }, [user]);
 
+  /**
+   * Deletes one or more books from Firestore.
+   * Also deletes all associated expenses for each book.
+   * Uses batched writes for efficient deletion of many expenses.
+   * 
+   * @param {string | string[]} target - Single book ID or array of book IDs to delete
+   * @returns {Promise<boolean>} True if deletion was successful, false otherwise
+   */
   const deleteBooks = useCallback(async (target: string | string[]): Promise<boolean> => {
     const idsToDelete = (Array.isArray(target) ? target : [target]).filter(
       (id): id is string => typeof id === 'string'
@@ -160,6 +253,7 @@ export function useBooksWithPagination(
           collection(db, 'books', bookId, 'expenses')
         );
         const expenseRefs = expensesSnap.docs.map((d) => d.ref);
+        // Firestore write batches support up to 500 operations.
         const chunkSize = 499;
 
         for (let i = 0; i < expenseRefs.length; i += chunkSize) {
@@ -185,6 +279,10 @@ export function useBooksWithPagination(
     }
   }, []);
 
+  /**
+   * Filters books by search query and sorts based on the selected option.
+   * Uses memoization to avoid recalculating on every render.
+   */
   const filteredAndSortedBooks = useMemo(() => {
     let result = books.filter((book) =>
       book.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -193,38 +291,23 @@ export function useBooksWithPagination(
     if (sortBy === 'name') {
       result = [...result].sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy === 'last-updated') {
-      const getTime = (createdAt: unknown): number => {
-        if (!createdAt) return 0;
-        if (createdAt instanceof Date) return createdAt.getTime();
-        if (typeof createdAt === 'object' && 'toDate' in createdAt) {
-          return (createdAt as { toDate: () => Date }).toDate().getTime();
-        }
-        if (typeof createdAt === 'number') return createdAt;
-        return 0;
-      };
-
-      result = [...result].sort((a, b) => getTime(b.createdAt) - getTime(a.createdAt));
+      result = [...result].sort((a, b) => getCreatedAtMillis(b.createdAt) - getCreatedAtMillis(a.createdAt));
     }
 
     return result;
   }, [books, searchQuery, sortBy]);
 
+  // Calculate pagination values
   const totalFiltered = filteredAndSortedBooks.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
   const startIndex = totalFiltered === 0 ? 0 : (page - 1) * pageSize + 1;
   const endIndex = Math.min(page * pageSize, totalFiltered);
   
+  // Slice books for current page display
   const displayedBooks = filteredAndSortedBooks.slice(
     (page - 1) * pageSize, 
     page * pageSize
   );
-
-  // Clamp page when totalPages changes
-  useEffect(() => {
-    if (page > totalPages) {
-      // This would need to be handled by the caller
-    }
-  }, [page, totalPages]);
 
   return {
     books,

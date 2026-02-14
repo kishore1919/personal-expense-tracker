@@ -1,3 +1,10 @@
+/**
+ * ProtectedLayout Component - Layout wrapper for route protection.
+ * Handles authentication state and renders appropriate layout:
+ * - Loading state while checking auth
+ * - Sidebar + main content for authenticated users
+ * - Centered content for auth pages (login)
+ */
 'use client';
 
 import { usePathname } from 'next/navigation';

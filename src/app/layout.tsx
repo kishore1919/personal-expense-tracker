@@ -1,3 +1,8 @@
+/**
+ * RootLayout Component - Main application layout.
+ * Wraps all pages with providers for theme, currency, sidebar, and authentication.
+ * Configures fonts, metadata, and global styles.
+ */
 import type { Metadata } from 'next';
 import { Manrope, Space_Grotesk } from 'next/font/google';
 import { Box } from '@mui/material';

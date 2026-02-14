@@ -1,3 +1,19 @@
+/**
+ * AddBookModal Component - Modal dialog for creating new expense books.
+ * 
+ * This component provides a simple form for creating new expense books.
+ * Books are used to organize expenses by category, project, or time period.
+ * 
+ * @component
+ * @module AddBookModal
+ * 
+ * @example
+ * <AddBookModal
+ *   isOpen={isModalOpen}
+ *   onClose={() => setIsModalOpen(false)}
+ *   onAddBook={handleAddBook}
+ * />
+ */
 'use client';
 
 import React, { useState } from 'react';
@@ -14,16 +30,35 @@ import {
 } from '@mui/material';
 import { FiX, FiBook } from 'react-icons/fi';
 
+/**
+ * Props for AddBookModal component
+ * @interface AddBookModalProps
+ * @property {boolean} isOpen - Whether the modal is visible
+ * @property {() => void} onClose - Callback when modal should close
+ * @property {(bookName: string) => void} onAddBook - Callback with new book name
+ */
 interface AddBookModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddBook: (bookName: string) => void;
 }
 
+/**
+ * Modal dialog for creating new expense books.
+ * Displays a form with name input and helpful description.
+ * 
+ * @param {AddBookModalProps} props - Component props
+ * @returns {JSX.Element} Modal dialog component
+ */
 export default function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModalProps) {
+  // Form state
   const [bookName, setBookName] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Handles form submission.
+   * Validates the book name and calls the onAddBook callback.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!bookName.trim()) {
@@ -35,6 +70,9 @@ export default function AddBookModal({ isOpen, onClose, onAddBook }: AddBookModa
     setError(null);
   };
 
+  /**
+   * Resets form state and closes the modal.
+   */
   const handleClose = () => {
     setBookName('');
     setError(null);

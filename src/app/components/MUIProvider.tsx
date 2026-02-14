@@ -1,3 +1,8 @@
+/**
+ * MUIProvider Component - Material-UI theme provider wrapper.
+ * Configures the MUI theme with custom colors, typography, and component styles.
+ * Supports both light and dark modes based on app theme context.
+ */
 'use client';
 
 import React, { useMemo, useEffect, useState } from 'react';
