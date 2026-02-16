@@ -1,5 +1,5 @@
-import InvestmentsPageClient from './InvestmentsPageClient';
+import InvestmentsOverviewClient from './InvestmentsOverviewClient';
 
 export default function InvestmentsPage() {
-  return <InvestmentsPageClient />;
+  return <InvestmentsOverviewClient />;
 }

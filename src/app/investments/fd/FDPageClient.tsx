@@ -24,19 +24,17 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Container,
+  InputAdornment,
 } from '@mui/material';
 import {
   FiPlus,
   FiEdit2,
   FiTrash2,
   FiTrendingUp,
-  FiTrendingDown,
-  FiDollarSign,
-  FiCalendar,
   FiPercent,
   FiX,
   FiArrowUp,
-  FiArrowDown,
 } from 'react-icons/fi';
 import {
   collection,
@@ -48,10 +46,11 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import { auth, db } from '../firebase';
-import { useCurrency } from '../context/CurrencyContext';
+import { auth, db } from '../../firebase';
+import { useCurrency } from '../../context/CurrencyContext';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import Loading from '../components/Loading';
+import Loading from '../../components/Loading';
+import Link from 'next/link';
 
 interface FixedDeposit {
   id: string;
@@ -66,7 +65,7 @@ interface FixedDeposit {
   notes?: string;
 }
 
-export default function InvestmentsPage() {
+export default function FDPageClient() {
   const [user] = useAuthState(auth);
   const [fixedDeposits, setFixedDeposits] = useState<FixedDeposit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +74,8 @@ export default function InvestmentsPage() {
   const [editingFD, setEditingFD] = useState<FixedDeposit | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FixedDeposit | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, getCurrencySymbol } = useCurrency();
+  const currencySymbol = getCurrencySymbol();
 
   // Form state
   const [fdNumber, setFdNumber] = useState('');
@@ -276,36 +276,49 @@ export default function InvestmentsPage() {
   }
 
   return (
-    <Box sx={{ pb: 10 }}>
-      {/* Header */}
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-            <Box
-              sx={{
-                width: 48,
-                height: 48,
-                borderRadius: 2,
-                bgcolor: 'primary.main',
-                color: 'primary.contrastText',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <FiDollarSign size={24} />
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Back Button and Header */}
+      <Box sx={{ mb: 4 }}>
+        <Button
+          component={Link}
+          href="/investments"
+          startIcon={<FiArrowLeft />}
+          sx={{ mb: 2, textTransform: 'none' }}
+        >
+          Back to Investments
+        </Button>
+        
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box
+                sx={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 2,
+                  bgcolor: 'success.main',
+                  color: 'success.contrastText',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.5rem',
+                  fontWeight: 600,
+                }}
+              >
+                {currencySymbol}
+              </Box>
+              <Box>
+                <Typography variant="h4" fontWeight={600}>
+                  Fixed Deposits
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Track your FDs and monitor maturity returns
+                </Typography>
+              </Box>
             </Box>
-            <Box>
-              <Typography variant="h4" fontWeight={600}>
-                Fixed Deposits
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Track your fixed deposits and maturity amounts
-              </Typography>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Box>
 
       {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -341,11 +354,7 @@ export default function InvestmentsPage() {
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <FiArrowUp color="green" size={24} />
-                <Typography 
-                  variant="h4" 
-                  fontWeight={600} 
-                  color="success.main"
-                >
+                <Typography variant="h4" fontWeight={600} color="success.main">
                   {formatCurrency(totalInterestEarned)}
                 </Typography>
               </Box>
@@ -373,9 +382,14 @@ export default function InvestmentsPage() {
       <Card>
         <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h5" fontWeight={600}>
-              Your Fixed Deposits
-            </Typography>
+            <Box>
+              <Typography variant="h5" fontWeight={600}>
+                Your Fixed Deposits
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {fixedDeposits.length} FD{fixedDeposits.length !== 1 ? 's' : ''} tracked
+              </Typography>
+            </Box>
             <Button
               variant="contained"
               startIcon={<FiPlus />}
@@ -394,7 +408,24 @@ export default function InvestmentsPage() {
                 bgcolor: 'background.default',
               }}
             >
-              <FiDollarSign size={48} style={{ opacity: 0.3, marginBottom: 16 }} />
+              <Box
+                sx={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '50%',
+                  bgcolor: 'action.hover',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2rem',
+                  fontWeight: 600,
+                  color: 'text.secondary',
+                  mb: 2,
+                  mx: 'auto',
+                }}
+              >
+                {currencySymbol}
+              </Box>
               <Typography variant="h6" gutterBottom>
                 No fixed deposits yet
               </Typography>
@@ -410,19 +441,19 @@ export default function InvestmentsPage() {
               </Button>
             </Paper>
           ) : (
-            <TableContainer>
-              <Table>
+            <TableContainer sx={{ maxHeight: 500 }}>
+              <Table stickyHeader size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>FD Number</TableCell>
-                    <TableCell>Bank Name</TableCell>
-                    <TableCell align="right">Principal</TableCell>
-                    <TableCell align="right">Interest Rate</TableCell>
-                    <TableCell>Tenure</TableCell>
-                    <TableCell align="right">Maturity Value</TableCell>
-                    <TableCell>Maturity Date</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell align="right">Actions</TableCell>
+                    <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }}>FD Number</TableCell>
+                    <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }}>Bank Name</TableCell>
+                    <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }} align="right">Principal</TableCell>
+                    <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }} align="right">Interest Rate</TableCell>
+                    <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }}>Tenure</TableCell>
+                    <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }} align="right">Maturity Value</TableCell>
+                    <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }}>Maturity Date</TableCell>
+                    <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }} align="right">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -431,46 +462,43 @@ export default function InvestmentsPage() {
                     const interestEarned = fd.maturityAmount - fd.principalAmount;
 
                     return (
-                      <TableRow key={fd.id} hover>
+                      <TableRow key={fd.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                         <TableCell>
-                          <Typography fontWeight={500}>{fd.fdNumber || '-'}</Typography>
+                          <Typography variant="body2" fontWeight={500}>{fd.fdNumber || '-'}</Typography>
                         </TableCell>
                         <TableCell>
-                          <Typography fontWeight={500}>{fd.bankName}</Typography>
+                          <Typography variant="body2" fontWeight={500}>{fd.bankName}</Typography>
                           {fd.notes && (
-                            <Typography variant="body2" color="text.secondary">
-                              {fd.notes.substring(0, 30)}{fd.notes.length > 30 ? '...' : ''}
+                            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', maxWidth: 120 }}>
+                              {fd.notes}
                             </Typography>
                           )}
                         </TableCell>
                         <TableCell align="right">
-                          {formatCurrency(fd.principalAmount)}
+                          <Typography variant="body2">{formatCurrency(fd.principalAmount)}</Typography>
                         </TableCell>
                         <TableCell align="right">
                           <Chip 
-                            icon={<FiPercent size={14} />}
                             label={`${fd.interestRate}%`}
                             size="small"
                             color="primary"
                             variant="outlined"
+                            sx={{ fontSize: '0.7rem' }}
                           />
                         </TableCell>
                         <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <FiCalendar size={14} />
-                            {fd.tenureMonths} months
-                          </Box>
+                          <Typography variant="body2">{fd.tenureMonths} months</Typography>
                         </TableCell>
                         <TableCell align="right">
-                          <Typography fontWeight={600} color="primary.main">
+                          <Typography variant="body2" fontWeight={600} color="primary.main">
                             {formatCurrency(fd.maturityAmount)}
                           </Typography>
-                          <Typography variant="body2" color="success.main">
+                          <Typography variant="caption" color="success.main">
                             +{formatCurrency(interestEarned)}
                           </Typography>
                         </TableCell>
                         <TableCell>
-                          {fd.maturityDate.toLocaleDateString()}
+                          <Typography variant="body2">{fd.maturityDate.toLocaleDateString()}</Typography>
                         </TableCell>
                         <TableCell>
                           <Chip
@@ -483,16 +511,15 @@ export default function InvestmentsPage() {
                           <IconButton
                             size="small"
                             onClick={() => handleOpenModal(fd)}
-                            sx={{ mr: 1 }}
                           >
-                            <FiEdit2 size={18} />
+                            <FiEdit2 size={16} />
                           </IconButton>
                           <IconButton
                             size="small"
                             onClick={() => setDeleteTarget(fd)}
                             color="error"
                           >
-                            <FiTrash2 size={18} />
+                            <FiTrash2 size={16} />
                           </IconButton>
                         </TableCell>
                       </TableRow>
@@ -544,7 +571,7 @@ export default function InvestmentsPage() {
               placeholder="Amount invested"
               required
               InputProps={{
-                startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>,
+                startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
               }}
             />
 
@@ -558,7 +585,7 @@ export default function InvestmentsPage() {
                 placeholder="e.g., 7.5"
                 required
                 InputProps={{
-                  endAdornment: <FiPercent size={16} style={{ opacity: 0.5 }} />,
+                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
                 }}
               />
 
@@ -592,7 +619,7 @@ export default function InvestmentsPage() {
                 fullWidth
                 placeholder="Auto-calculated"
                 InputProps={{
-                  startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>,
+                  startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
                 }}
               />
               <Button 
@@ -659,6 +686,6 @@ export default function InvestmentsPage() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </Container>
   );
 }
