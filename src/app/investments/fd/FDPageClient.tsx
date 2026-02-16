@@ -35,6 +35,7 @@ import {
   FiPercent,
   FiX,
   FiArrowUp,
+  FiArrowLeft,
 } from 'react-icons/fi';
 import {
   collection,
