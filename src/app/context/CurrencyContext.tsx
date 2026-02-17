@@ -69,6 +69,7 @@ interface CurrencyContextValue {
   currency: string;
   setCurrency: (nextCurrency: string) => void;
   formatCurrency: (amount: number) => string;
+  getCurrencySymbol: () => string;
   currencyOptions: CurrencyOption[];
 }
 
@@ -208,10 +209,45 @@ export const CurrencyProvider = ({ children }: { children: React.ReactNode }) =>
     [currency]
   );
 
+  /**
+   * Gets the currency symbol for the current currency.
+   * Extracts the symbol from a formatted currency string.
+   * 
+   * @returns {string} Currency symbol (e.g., '$', '₹', '€')
+   * 
+   * @example
+   * getCurrencySymbol(); // "₹"
+   */
+  const getCurrencySymbol = useCallback(() => {
+    try {
+      const formatted = new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency,
+        maximumFractionDigits: 0,
+      }).format(0);
+      
+      // Extract just the symbol by removing numbers and whitespace
+      return formatted.replace(/[\d\s.,]/g, '').trim();
+    } catch {
+      // Fallback to common symbols
+      const symbols: Record<string, string> = {
+        'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CNY': '¥',
+        'INR': '₹', 'AUD': 'A$', 'CAD': 'C$', 'CHF': 'Fr', 'SEK': 'kr',
+        'NOK': 'kr', 'NZD': 'NZ$', 'SGD': 'S$', 'HKD': 'HK$', 'KRW': '₩',
+        'MXN': '$', 'BRL': 'R$', 'ZAR': 'R', 'AED': 'د.إ', 'SAR': '﷼',
+        'THB': '฿', 'MYR': 'RM', 'IDR': 'Rp', 'TRY': '₺', 'PLN': 'zł',
+        'CZK': 'Kč', 'HUF': 'Ft', 'RON': 'lei', 'DKK': 'kr', 'ILS': '₪',
+        'PHP': '₱', 'VND': '₫', 'PKR': '₨', 'EGP': 'E£', 'NGN': '₦',
+        'KWD': 'د.ك', 'QAR': '﷼', 'BHD': 'د.ب', 'CLP': '$', 'COP': '$',
+      };
+      return symbols[currency] || currency;
+    }
+  }, [currency]);
+
   // Memoized context value to prevent unnecessary re-renders
   const value = useMemo(
-    () => ({ currency, setCurrency, formatCurrency, currencyOptions }),
-    [currency, setCurrency, formatCurrency, currencyOptions]
+    () => ({ currency, setCurrency, formatCurrency, getCurrencySymbol, currencyOptions }),
+    [currency, setCurrency, formatCurrency, getCurrencySymbol, currencyOptions]
   );
 
   return <CurrencyContext.Provider value={value}>{children}</CurrencyContext.Provider>;
