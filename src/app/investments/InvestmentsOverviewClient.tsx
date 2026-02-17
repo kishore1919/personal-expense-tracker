@@ -98,6 +98,8 @@ export default function InvestmentsOverviewPage() {
             <Card
               sx={{
                 height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
                 transition: 'all 0.2s ease',
                 cursor: 'pointer',
                 '&:hover': {
@@ -108,7 +110,7 @@ export default function InvestmentsOverviewPage() {
               component={Link}
               href={option.path}
             >
-              <CardContent sx={{ p: 4 }}>
+              <CardContent sx={{ p: 4, flexGrow: 1 }}>
                 <Box
                   sx={{
                     width: 64,
@@ -124,19 +126,20 @@ export default function InvestmentsOverviewPage() {
                 >
                   {option.icon}
                 </Box>
-                
+
                 <Typography variant="h5" fontWeight={600} gutterBottom>
                   {option.title}
                 </Typography>
-                
+
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
                   {option.description}
                 </Typography>
-                
+
                 <Button
                   variant="outlined"
                   endIcon={<FiArrowRight />}
                   sx={{
+                    mt: 'auto',
                     textTransform: 'none',
                     borderColor: option.color,
                     color: option.color,

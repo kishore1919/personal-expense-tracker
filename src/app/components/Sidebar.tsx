@@ -36,7 +36,7 @@ import {
   FiLogOut,
   FiTarget,
   FiTrendingUp,
-  FiDollarSign,
+  FiCreditCard,
 } from 'react-icons/fi';
 import { FaBook } from 'react-icons/fa';
 import { useSidebar } from '../context/SidebarContext';
@@ -52,8 +52,8 @@ const menuItems = [
   { icon: FiGrid, name: 'Dashboard', path: '/' },
   { icon: FiBookOpen, name: 'My Books', path: '/books' },
   { icon: FiTarget, name: 'Budget', path: '/budget' },
-  // { icon: FiTrendingUp, name: 'Investments', path: '/investments' },
-  { icon: FiDollarSign, name: 'Loans', path: '/loans' },
+  { icon: FiTrendingUp, name: 'Investments', path: '/investments' },
+  { icon: FiCreditCard, name: 'Loans', path: '/loans' },
   { icon: FiSettings, name: 'Settings', path: '/settings' },
 ];
 
