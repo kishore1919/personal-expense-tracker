@@ -14,12 +14,8 @@ import {
   FiArrowLeft,
 } from 'react-icons/fi';
 import Link from 'next/link';
-import { useCurrency } from '../../context/CurrencyContext';
 
 export default function StocksPage() {
-  const { getCurrencySymbol } = useCurrency();
-  const currencySymbol = getCurrencySymbol();
-
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Button
@@ -60,7 +56,7 @@ export default function StocksPage() {
           </Typography>
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-            You'll be able to:
+            You&apos;ll be able to:
           </Typography>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 4, maxWidth: 400, mx: 'auto', textAlign: 'left' }}>

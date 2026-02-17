@@ -9,8 +9,6 @@ import {
   FiTrash2,
   FiEdit2,
   FiDollarSign,
-  FiPercent,
-  FiCreditCard,
   FiCheckCircle,
   FiAlertCircle,
   FiTrendingUp,

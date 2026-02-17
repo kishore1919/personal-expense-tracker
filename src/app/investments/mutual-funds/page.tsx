@@ -14,12 +14,8 @@ import {
   FiArrowLeft,
 } from 'react-icons/fi';
 import Link from 'next/link';
-import { useCurrency } from '../../context/CurrencyContext';
 
 export default function MutualFundsPage() {
-  const { getCurrencySymbol } = useCurrency();
-  const currencySymbol = getCurrencySymbol();
-
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Button
@@ -55,12 +51,12 @@ export default function MutualFundsPage() {
           </Typography>
 
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3, maxWidth: 600, mx: 'auto' }}>
-            Track your mutual fund investments, monitor NAV values, and analyze portfolio performance. 
+            Track your mutual fund investments, monitor NAV values, and analyze portfolio performance.
             This feature is coming soon!
           </Typography>
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-            You'll be able to:
+            You&apos;ll be able to:
           </Typography>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 4, maxWidth: 400, mx: 'auto', textAlign: 'left' }}>
