@@ -7,7 +7,20 @@
     "build": "next build",
     "export": "next export",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:chrome": "playwright test --project=chromium",
+    "test:e2e:firefox": "playwright test --project=firefox",
+    "test:e2e:webkit": "playwright test --project=webkit",
+    "test:e2e:report": "playwright show-report",
+    "emulator:start": "firebase emulators:start --only auth,firestore --project expense-tracker-test",
+    "emulator:stop": "firebase emulators:stop",
+    "emulator:exec": "firebase emulators:exec --only auth,firestore --project expense-tracker-test",
+    "test:ci": "firebase emulators:exec --only auth,firestore --project expense-tracker-test \"playwright test\"",
+    "test:dev": "NEXT_PUBLIC_FIREBASE_EMULATOR=true playwright test --headed"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -23,13 +36,16 @@
     "recharts": "^3.7.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "baseline-browser-mapping": "^2.9.19",
+    "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.8",
+    "firebase-tools": "^15.6.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -121,3 +121,52 @@ export interface PaginationState {
   startIndex: number;
   endIndex: number;
 }
+
+/**
+ * Represents a loan entity.
+ */
+export interface Loan {
+  id: string;
+  name: string;
+  lender: string;
+  amount: number;
+  paidAmount: number;
+  interestRate: number;
+  monthlyPayment: number;
+  isActive: boolean;
+  createdAt?: { toDate?: () => Date } | Date;
+  userId?: string;
+}
+
+/**
+ * Represents a fixed deposit investment.
+ */
+export interface FixedDeposit {
+  id: string;
+  fdNumber: string;
+  bankName: string;
+  principalAmount: number;
+  interestRate: number;
+  tenureMonths: number;
+  startDate: Date;
+  maturityDate: Date;
+  maturityAmount: number;
+  notes?: string;
+  userId?: string;
+}
+
+/**
+ * Represents a budget for a book or category.
+ */
+export interface Budget {
+  id: string;
+  bookId: string;
+  bookName: string;
+  amount: number;
+  spent: number;
+  period: 'monthly' | 'weekly' | 'yearly';
+  budgetType: 'book' | 'category';
+  category?: string;
+  createdAt: Date;
+  userId?: string;
+}
