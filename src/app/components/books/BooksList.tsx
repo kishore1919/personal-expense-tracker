@@ -1,8 +1,8 @@
 'use client';
 
-import { Paper, Box, Typography, Checkbox, Skeleton, IconButton } from '@mui/material';
+import { Paper, Box, Typography, Checkbox, Skeleton, IconButton, Tooltip } from '@mui/material';
 import { FiArrowRight } from 'react-icons/fi';
-import { FaBook } from 'react-icons/fa';
+import { FaBook, FaArchive, FaBoxOpen } from 'react-icons/fa';
 import type { Book } from '@/app/types';
 
 interface BooksListProps {
@@ -12,6 +12,8 @@ interface BooksListProps {
   onSelectBook: (bookId: string, checked: boolean) => void;
   onBookClick: (bookId: string) => void;
   formatCurrency: (amount: number) => string;
+  onToggleArchive?: (bookId: string, archived: boolean) => void;
+  showArchived?: boolean;
 }
 
 function ListSkeleton() {
@@ -45,12 +47,16 @@ function BookListItem({
   onSelect,
   onClick,
   formatCurrency,
+  onToggleArchive,
+  showArchived,
 }: {
   book: Book;
   isSelected: boolean;
   onSelect: (checked: boolean) => void;
   onClick: () => void;
   formatCurrency: (amount: number) => string;
+  onToggleArchive?: (bookId: string, archived: boolean) => void;
+  showArchived?: boolean;
 }) {
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
@@ -64,6 +70,15 @@ function BookListItem({
   const handleActionClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
+
+  const handleArchiveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onToggleArchive) {
+      onToggleArchive(book.id, !book.archived);
+    }
+  };
+
+  const isArchived = book.archived ?? false;
 
   return (
     <Paper
@@ -131,12 +146,34 @@ function BookListItem({
         >
           {formatCurrency(Math.abs(book.netBalance ?? 0))}
         </Typography>
+        {isArchived && (
+          <Typography variant="caption" color="text.secondary" display="block">
+            Archived
+          </Typography>
+        )}
       </Box>
 
-      <Box sx={{ display: 'flex', alignItems: 'center' }} onClick={handleActionClick}>
-        <IconButton 
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }} onClick={handleActionClick}>
+        {onToggleArchive && (
+          <Tooltip title={isArchived ? 'Unarchive' : 'Archive'}>
+            <IconButton
+              size="small"
+              color="default"
+              onClick={handleArchiveClick}
+              sx={{
+                bgcolor: isArchived ? 'warning.light' : 'grey.100',
+                '&:hover': {
+                  bgcolor: isArchived ? 'warning.main' : 'grey.200',
+                },
+              }}
+            >
+              {isArchived ? <FaBoxOpen size={14} /> : <FaArchive size={14} />}
+            </IconButton>
+          </Tooltip>
+        )}
+        <IconButton
           onClick={onClick}
-          size="small" 
+          size="small"
           color="primary"
         >
           <FiArrowRight size={18} />
@@ -153,6 +190,8 @@ export function BooksList({
   onSelectBook,
   onBookClick,
   formatCurrency,
+  onToggleArchive,
+  showArchived,
 }: BooksListProps) {
   if (loading) {
     return (
@@ -181,6 +220,8 @@ export function BooksList({
           onSelect={(checked) => onSelectBook(book.id, checked)}
           onClick={() => onBookClick(book.id)}
           formatCurrency={formatCurrency}
+          onToggleArchive={onToggleArchive}
+          showArchived={showArchived}
         />
       ))}
     </Box>

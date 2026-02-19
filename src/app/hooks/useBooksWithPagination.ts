@@ -7,15 +7,16 @@
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { 
-  collection, 
-  getDocs, 
-  addDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  writeBatch, 
-  where 
+import {
+  collection,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  query,
+  writeBatch,
+  where,
+  updateDoc
 } from 'firebase/firestore';
 import { auth, db } from '@/app/firebase';
 import type { Book, SortOption, PageSize } from '@/app/types';
@@ -27,12 +28,14 @@ import type { Book, SortOption, PageSize } from '@/app/types';
  * @property {SortOption} sortBy - Sort option ('last-updated' or 'name')
  * @property {number} page - Current page number
  * @property {PageSize} pageSize - Number of items per page
+ * @property {boolean} [showArchived] - Whether to show archived books (default: false)
  */
 interface UseBooksWithPaginationOptions {
   searchQuery: string;
   sortBy: SortOption;
   page: number;
   pageSize: PageSize;
+  showArchived?: boolean;
 }
 
 /**
@@ -49,6 +52,7 @@ interface UseBooksWithPaginationOptions {
  * @property {(name: string) => Promise<void>} addBook - Function to create a new book
  * @property {(target: string | string[]) => Promise<boolean>} deleteBooks - Function to delete books
  * @property {boolean} isDeleting - Deletion in progress indicator
+ * @property {(bookId: string, archived: boolean) => Promise<boolean>} toggleArchive - Function to toggle archive status
  */
 interface UseBooksWithPaginationReturn {
   books: Book[];
@@ -62,6 +66,7 @@ interface UseBooksWithPaginationReturn {
   addBook: (name: string) => Promise<void>;
   deleteBooks: (target: string | string[]) => Promise<boolean>;
   isDeleting: boolean;
+  toggleArchive: (bookId: string, archived: boolean) => Promise<boolean>;
 }
 
 /**
@@ -124,7 +129,7 @@ function calculateNetBalance(expenses: Array<{ amount?: unknown; type?: unknown 
 export function useBooksWithPagination(
   options: UseBooksWithPaginationOptions
 ): UseBooksWithPaginationReturn {
-  const { searchQuery, sortBy, page, pageSize } = options;
+  const { searchQuery, sortBy, page, pageSize, showArchived = false } = options;
   const [user] = useAuthState(auth);
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
@@ -167,6 +172,7 @@ export function useBooksWithPagination(
             createdAt: bookData.createdAt,
             updatedAtString: 'Updated recently',
             netBalance,
+            archived: bookData.archived ?? false,
           } as Book;
         })
       );
@@ -280,13 +286,51 @@ export function useBooksWithPagination(
   }, []);
 
   /**
+   * Toggles the archive status of a book in Firestore.
+   * Archived books are hidden from default views but can be restored.
+   *
+   * @param {string} bookId - The ID of the book to archive/unarchive
+   * @param {boolean} archived - The new archive status (true = archive, false = unarchive)
+   * @returns {Promise<boolean>} True if update was successful, false otherwise
+   */
+  const toggleArchive = useCallback(async (bookId: string, archived: boolean): Promise<boolean> => {
+    if (!bookId) {
+      setError('Invalid book ID.');
+      return false;
+    }
+
+    try {
+      const bookRef = doc(db, 'books', bookId);
+      await updateDoc(bookRef, { archived });
+
+      setBooks((prev) =>
+        prev.map((book) =>
+          book.id === bookId ? { ...book, archived } : book
+        )
+      );
+      setError(null);
+      return true;
+    } catch (err) {
+      console.error('Error toggling archive status:', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Failed to update archive status: ${msg}`);
+      return false;
+    }
+  }, []);
+
+  /**
    * Filters books by search query and sorts based on the selected option.
    * Uses memoization to avoid recalculating on every render.
+   * By default, filters out archived books unless showArchived is true.
    */
   const filteredAndSortedBooks = useMemo(() => {
-    let result = books.filter((book) =>
-      book.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    let result = books.filter((book) => {
+      // Filter out archived books by default
+      if (!showArchived && book.archived) {
+        return false;
+      }
+      return book.name.toLowerCase().includes(searchQuery.toLowerCase());
+    });
 
     if (sortBy === 'name') {
       result = [...result].sort((a, b) => a.name.localeCompare(b.name));
@@ -295,7 +339,7 @@ export function useBooksWithPagination(
     }
 
     return result;
-  }, [books, searchQuery, sortBy]);
+  }, [books, searchQuery, sortBy, showArchived]);
 
   // Calculate pagination values
   const totalFiltered = filteredAndSortedBooks.length;
@@ -321,5 +365,6 @@ export function useBooksWithPagination(
     addBook,
     deleteBooks,
     isDeleting,
+    toggleArchive,
   };
 }

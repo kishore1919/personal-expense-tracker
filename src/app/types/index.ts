@@ -13,7 +13,7 @@ import type { Timestamp } from 'firebase/firestore';
 /**
  * Represents an expense book (a collection of expenses).
  * Books are user-created containers for organizing expenses by category, project, or time period.
- * 
+ *
  * @interface Book
  * @property {string} id - Unique Firestore document ID
  * @property {string} name - Display name of the book
@@ -23,6 +23,7 @@ import type { Timestamp } from 'firebase/firestore';
  * @property {number} [net] - Net balance (income - expenses) - alternative naming
  * @property {number} [netBalance] - Net balance (income - expenses) - primary naming
  * @property {string} [userId] - Owner user ID (for Firestore queries)
+ * @property {boolean} [archived] - Whether the book is archived (hidden from default views)
  */
 export interface Book {
   id: string;
@@ -33,6 +34,7 @@ export interface Book {
   net?: number;
   netBalance?: number;
   userId?: string;
+  archived?: boolean;
 }
 
 /**

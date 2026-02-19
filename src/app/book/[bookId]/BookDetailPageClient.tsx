@@ -1,17 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  FiChevronLeft, 
+import {
+  FiChevronLeft,
   FiEdit2,
-  FiPlus, 
-  FiMinus, 
-  FiSearch, 
+  FiPlus,
+  FiMinus,
+  FiSearch,
   FiDownload,
   FiChevronDown,
   FiChevronRight,
   FiFilter,
-  FiBarChart2
+  FiBarChart2,
+  FiArchive
 } from 'react-icons/fi';
 import {
   Button,
@@ -108,6 +109,7 @@ export default function BookDetailPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | string[] | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [isArchived, setIsArchived] = useState(false);
 
   // Filter / Search / Sort / Pagination state
   const [durationFilter, setDurationFilter] = useState<'today' | 'yesterday' | 'thisMonth' | 'lastMonth' | 'all' | 'custom'>('all');
@@ -150,6 +152,7 @@ export default function BookDetailPage() {
             return;
           }
           setBookName(data.name);
+          setIsArchived(data.archived ?? false);
         } else {
           router.push('/');
           return;
@@ -259,6 +262,19 @@ export default function BookDetailPage() {
     } finally {
       setIsDeleting(false);
       setDeleteTarget(null);
+    }
+  };
+
+  const handleToggleArchive = async () => {
+    if (!bookId || typeof bookId !== 'string') return;
+    try {
+      const newArchivedStatus = !isArchived;
+      await updateDoc(doc(db, 'books', bookId), { archived: newArchivedStatus });
+      setIsArchived(newArchivedStatus);
+      setError(null);
+    } catch (e) {
+      console.error('Error toggling archive:', e);
+      setError(`Failed to ${isArchived ? 'unarchive' : 'archive'} book.`);
     }
   };
 
@@ -418,28 +434,38 @@ export default function BookDetailPage() {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' } }}>
-           <Button 
-             variant="outlined" 
-             startIcon={<FiBarChart2 />} 
-             onClick={() => router.push(`/book/${bookId}/analytics`)} 
+           <Button
+             variant="outlined"
+             startIcon={<FiArchive />}
+             onClick={handleToggleArchive}
+             color={isArchived ? 'warning' : 'inherit'}
+             fullWidth={isMobile}
+             sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.primary' }}
+           >
+             {isArchived ? 'Archived' : 'Archive'}
+           </Button>
+           <Button
+             variant="outlined"
+             startIcon={<FiBarChart2 />}
+             onClick={() => router.push(`/book/${bookId}/analytics`)}
              fullWidth={isMobile}
              sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.primary' }}
            >
              Analytics
            </Button>
-           <Button 
-             variant="outlined" 
-             startIcon={<FiDownload />} 
-             onClick={exportCSV} 
+           <Button
+             variant="outlined"
+             startIcon={<FiDownload />}
+             onClick={exportCSV}
              fullWidth={isMobile}
              sx={{ textTransform: 'none', borderColor: 'divider', color: 'text.primary' }}
            >
              Export
            </Button>
-           <Button 
-             variant="outlined" 
-             startIcon={<FiFilter />} 
-             onClick={() => setShowFilters(!showFilters)} 
+           <Button
+             variant="outlined"
+             startIcon={<FiFilter />}
+             onClick={() => setShowFilters(!showFilters)}
              color={showFilters ? 'primary' : 'inherit'}
              sx={{ display: { md: 'none' }, minWidth: 'auto' }}
            >
