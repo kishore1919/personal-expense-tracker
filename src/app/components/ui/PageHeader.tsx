@@ -15,20 +15,37 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, subtitle, action }: PageHeaderProps) {
   return (
-    <Box sx={{ mb: 4 }}>
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'flex-start', 
-        flexWrap: 'wrap', 
-        gap: 2 
+    <Box sx={{ mb: { xs: 3, sm: 4 } }}>
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        flexWrap: 'wrap',
+        gap: { xs: 2, sm: 3 },
+        flexDirection: { xs: 'column', sm: 'row' },
       }}>
-        <Box>
-          <Typography variant="h4" fontWeight={600} gutterBottom>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography 
+            variant="h4" 
+            fontWeight={600} 
+            gutterBottom
+            sx={{
+              fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+              lineHeight: 1.2,
+              wordBreak: 'break-word',
+            }}
+          >
             {title}
           </Typography>
           {subtitle && (
-            <Typography variant="body1" color="text.secondary">
+            <Typography 
+              variant="body1" 
+              color="text.secondary"
+              sx={{
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                lineHeight: 1.5,
+              }}
+            >
               {subtitle}
             </Typography>
           )}
@@ -39,6 +56,15 @@ export function PageHeader({ title, subtitle, action }: PageHeaderProps) {
             onClick={action.onClick}
             startIcon={action.icon}
             size="large"
+            fullWidth
+            sx={{
+              textTransform: 'none',
+              fontWeight: 600,
+              px: { xs: 2, sm: 3 },
+              py: { xs: 1, sm: 1.25 },
+              display: { sm: 'inline-block' },
+              width: { sm: 'auto' },
+            }}
           >
             {action.label}
           </Button>

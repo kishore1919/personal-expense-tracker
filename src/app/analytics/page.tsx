@@ -59,9 +59,9 @@ export default function AnalyticsPage() {
         setLoading(true);
         const q = query(collection(db, 'books'), where('userId', '==', user.uid));
         const booksSnapshot = await getDocs(q);
-        const booksData = booksSnapshot.docs.map(doc => ({ 
-          id: doc.id, 
-          name: doc.data().name 
+        const booksData = booksSnapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name
         }));
         setTotalBooks(booksData.length);
 
@@ -74,7 +74,7 @@ export default function AnalyticsPage() {
           expensesSnapshot.forEach((doc) => {
             const expense = doc.data() as Expense;
             const amount = expense.amount || 0;
-            
+
             if (expense.type === 'out') {
               totalOutAmount += amount;
               expenseCount++;
@@ -129,37 +129,51 @@ export default function AnalyticsPage() {
     return <Loading />;
   }
 
-
-
   const spendingPercent = totalExpenses > 0 ? Math.min(Math.max(Math.round((totalExpenses / monthlyBudget) * 100), 0), 100) : 0;
   const healthPercent = totalExpenses > 0 ? Math.min(Math.max(Math.round(((monthlyBudget - totalExpenses) / monthlyBudget) * 100), 0), 100) : 100;
 
   return (
-    <Box sx={{ pb: 10 }}>
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <Typography variant="h4" gutterBottom>
+    <Box sx={{ pb: { xs: 10, sm: 10, md: 4 } }}>
+      {/* Header Card */}
+      <Card sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography 
+            variant="h4" 
+            gutterBottom
+            sx={{
+              fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+              fontWeight: 600,
+            }}
+          >
             Analytics
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography 
+            variant="body1" 
+            color="text.secondary"
+            sx={{
+              fontSize: { xs: '0.875rem', sm: '1rem' },
+              lineHeight: 1.5,
+            }}
+          >
             Track your financial insights and spending patterns.
           </Typography>
         </CardContent>
       </Card>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      {/* Stats Grid */}
+      <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: { xs: 3, sm: 4 } }}>
         {stats.map((stat, index) => (
-          <Grid size={{ xs: 12, sm: 6, xl: 3 }} key={index}>
+          <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={index}>
             <Card>
-              <CardContent>
+              <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                 <Box
                   sx={{
-                    width: 48,
-                    height: 48,
+                    width: { xs: 44, sm: 48 },
+                    height: { xs: 44, sm: 48 },
                     borderRadius: 2,
                     bgcolor: (theme) => {
                       const baseColor = stat.color.split('.')[0];
-                      return theme.palette.mode === 'dark' 
+                      return theme.palette.mode === 'dark'
                         ? `rgba(${baseColor === 'primary' ? '129, 140, 248' : baseColor === 'secondary' ? '161, 161, 170' : baseColor === 'success' ? '16, 185, 129' : '239, 68, 68'}, 0.1)`
                         : theme.palette[baseColor as 'primary'|'secondary'|'success'|'error'].light;
                     },
@@ -170,48 +184,103 @@ export default function AnalyticsPage() {
                     mb: 2,
                   }}
                 >
-                  <stat.icon size={24} />
+                  <stat.icon size={20} />
                 </Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  gutterBottom
+                  sx={{
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    lineHeight: 1.4,
+                  }}
+                >
                   {stat.title}
                 </Typography>
-                <Typography variant="h4">{stat.value}</Typography>
+                <Typography 
+                  variant="h4"
+                  sx={{
+                    fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+                    fontWeight: 600,
+                    lineHeight: 1.2,
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {stat.value}
+                </Typography>
               </CardContent>
             </Card>
           </Grid>
         ))}
       </Grid>
 
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, xl: 6 }}>
+      {/* Main Content Grid */}
+      <Grid container spacing={{ xs: 2, sm: 3 }}>
+        {/* Expense Overview */}
+        <Grid size={{ xs: 12, lg: 6 }}>
           <Card>
-            <CardContent>
-              <Typography variant="h5" sx={{ mb: 4, fontWeight: '500' }}>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  mb: { xs: 3, sm: 4 }, 
+                  fontWeight: 500,
+                  fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
+                }}
+              >
                 Expense Overview
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 3, sm: 4 } }}>
                 <Box>
-                  <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
+                  <Box sx={{ 
+                    mb: 1, 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                  }}>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    >
                       Spending Activity
                     </Typography>
-                    <Typography variant="body2" fontWeight="600">
+                    <Typography 
+                      variant="body2" 
+                      fontWeight="600"
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    >
                       {totalExpenses > 0 ? 'Active' : 'No Activity'}
                     </Typography>
                   </Box>
                   <LinearProgress
                     variant="determinate"
                     value={spendingPercent}
-                    sx={{ height: 12, borderRadius: 6 }}
+                    sx={{ height: { xs: 10, sm: 12 }, borderRadius: 6 }}
                   />
                 </Box>
 
                 <Box>
-                  <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
+                  <Box sx={{ 
+                    mb: 1, 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                  }}>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    >
                       Book Organization
                     </Typography>
-                    <Typography variant="body2" fontWeight="600">
+                    <Typography 
+                      variant="body2" 
+                      fontWeight="600"
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    >
                       {totalBooks > 0 ? `${totalBooks} Books` : 'No Books'}
                     </Typography>
                   </Box>
@@ -219,16 +288,30 @@ export default function AnalyticsPage() {
                     variant="determinate"
                     value={totalBooks > 0 ? Math.min(totalBooks * 20, 100) : 0}
                     color="secondary"
-                    sx={{ height: 12, borderRadius: 6 }}
+                    sx={{ height: { xs: 10, sm: 12 }, borderRadius: 6 }}
                   />
                 </Box>
 
                 <Box>
-                  <Box sx={{ mb: 1, display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" color="text.secondary">
+                  <Box sx={{ 
+                    mb: 1, 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                  }}>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    >
                       Budget Health
                     </Typography>
-                    <Typography variant="body2" fontWeight="600">
+                    <Typography 
+                      variant="body2" 
+                      fontWeight="600"
+                      sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+                    >
                       {totalExpenses > 0 ? 'Good' : 'N/A'}
                     </Typography>
                   </Box>
@@ -236,7 +319,7 @@ export default function AnalyticsPage() {
                     variant="determinate"
                     value={healthPercent}
                     color="warning"
-                    sx={{ height: 12, borderRadius: 6 }}
+                    sx={{ height: { xs: 10, sm: 12 }, borderRadius: 6 }}
                   />
                 </Box>
               </Box>
@@ -244,18 +327,33 @@ export default function AnalyticsPage() {
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, xl: 6 }}>
+        {/* Quick Insights */}
+        <Grid size={{ xs: 12, lg: 6 }}>
           <Card>
-            <CardContent>
-              <Typography variant="h5" sx={{ mb: 4, fontWeight: '500' }}>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  mb: { xs: 3, sm: 4 }, 
+                  fontWeight: 500,
+                  fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
+                }}
+              >
                 Quick Insights
               </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Paper sx={{ p: 3, display: 'flex', gap: 3 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 3 } }}>
+                <Paper 
+                  sx={{ 
+                    p: { xs: 2, sm: 3 }, 
+                    display: 'flex', 
+                    gap: { xs: 2, sm: 3 },
+                    flexDirection: { xs: 'row', sm: 'row' },
+                  }}
+                >
                   <Box
                     sx={{
-                      width: 40,
-                      height: 40,
+                      width: { xs: 36, sm: 40 },
+                      height: { xs: 36, sm: 40 },
                       flexShrink: 0,
                       borderRadius: 2,
                       bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(129, 140, 248, 0.1)' : 'primary.light',
@@ -265,13 +363,25 @@ export default function AnalyticsPage() {
                       justifyContent: 'center',
                     }}
                   >
-                    <FiTrendingUp />
+                    <FiTrendingUp size={18} />
                   </Box>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight="600">
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography 
+                      variant="subtitle2" 
+                      fontWeight="600"
+                      sx={{ fontSize: { xs: '0.875rem', sm: '1rem' }, mb: 0.5 }}
+                    >
                       Spending Trend
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ 
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        lineHeight: 1.5,
+                        wordBreak: 'break-word',
+                      }}
+                    >
                       {totalExpenses > 0
                         ? `You've recorded ${formatCurrency(totalExpenses)} in total expenses across ${totalBooks} book${totalBooks !== 1 ? 's' : ''}.`
                         : 'Start adding expenses to see your spending trends.'
@@ -280,11 +390,17 @@ export default function AnalyticsPage() {
                   </Box>
                 </Paper>
 
-                <Paper sx={{ p: 3, display: 'flex', gap: 3 }}>
+                <Paper 
+                  sx={{ 
+                    p: { xs: 2, sm: 3 }, 
+                    display: 'flex', 
+                    gap: { xs: 2, sm: 3 },
+                  }}
+                >
                   <Box
                     sx={{
-                      width: 40,
-                      height: 40,
+                      width: { xs: 36, sm: 40 },
+                      height: { xs: 36, sm: 40 },
                       flexShrink: 0,
                       borderRadius: 2,
                       bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(161, 161, 170, 0.1)' : 'secondary.light',
@@ -294,13 +410,25 @@ export default function AnalyticsPage() {
                       justifyContent: 'center',
                     }}
                   >
-                    <FiDollarSign />
+                    <FiDollarSign size={18} />
                   </Box>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight="600">
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography 
+                      variant="subtitle2" 
+                      fontWeight="600"
+                      sx={{ fontSize: { xs: '0.875rem', sm: '1rem' }, mb: 0.5 }}
+                    >
                       Average Transaction
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ 
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        lineHeight: 1.5,
+                        wordBreak: 'break-word',
+                      }}
+                    >
                       {averageExpense > 0
                         ? `Your average expense is ${formatCurrency(averageExpense)} per transaction.`
                         : 'Add expenses to calculate your average transaction amount.'
@@ -309,11 +437,17 @@ export default function AnalyticsPage() {
                   </Box>
                 </Paper>
 
-                <Paper sx={{ p: 3, display: 'flex', gap: 3 }}>
+                <Paper 
+                  sx={{ 
+                    p: { xs: 2, sm: 3 }, 
+                    display: 'flex', 
+                    gap: { xs: 2, sm: 3 },
+                  }}
+                >
                   <Box
                     sx={{
-                      width: 40,
-                      height: 40,
+                      width: { xs: 36, sm: 40 },
+                      height: { xs: 36, sm: 40 },
                       flexShrink: 0,
                       borderRadius: 2,
                       bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(239, 68, 68, 0.1)' : 'error.light',
@@ -323,13 +457,25 @@ export default function AnalyticsPage() {
                       justifyContent: 'center',
                     }}
                   >
-                    <FiTrendingDown />
+                    <FiTrendingDown size={18} />
                   </Box>
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight="600">
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography 
+                      variant="subtitle2" 
+                      fontWeight="600"
+                      sx={{ fontSize: { xs: '0.875rem', sm: '1rem' }, mb: 0.5 }}
+                    >
                       Top Expense
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ 
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        lineHeight: 1.5,
+                        wordBreak: 'break-word',
+                      }}
+                    >
                       {highestExpense > 0
                         ? `Your highest single expense was ${formatCurrency(highestExpense)}.`
                         : 'No expenses recorded yet.'

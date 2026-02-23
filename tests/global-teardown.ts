@@ -28,7 +28,7 @@ export default async function globalTeardown() {
         resolve();
       }, 5000);
     });
-  } catch (e) {
+  } catch {
     // Emulator might not be running, ignore error
     console.log('ℹ️  Emulator already stopped or not running');
   }

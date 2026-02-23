@@ -52,7 +52,6 @@ export default function BooksPage() {
     displayedBooks,
     loading,
     error,
-    totalFiltered,
     totalPages,
     startIndex,
     endIndex,
@@ -226,7 +225,6 @@ export default function BooksPage() {
         onBookClick={handleBookClick}
         formatCurrency={formatCurrency}
         onToggleArchive={toggleArchive}
-        showArchived={false}
       />
 
       {/* Selection Toolbar */}

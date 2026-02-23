@@ -275,42 +275,63 @@ export default function FDPageClient() {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
       {/* Back Button and Header */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: { xs: 3, sm: 4 } }}>
         <Button
           component={Link}
           href="/investments"
           startIcon={<FiArrowLeft />}
-          sx={{ mb: 2, textTransform: 'none' }}
+          sx={{ 
+            mb: { xs: 2, sm: 3 }, 
+            textTransform: 'none',
+            fontWeight: 600,
+            px: { xs: 2, sm: 3 },
+          }}
         >
           Back to Investments
         </Button>
-        
+
         <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, sm: 3 } }}>
               <Box
                 sx={{
-                  width: 48,
-                  height: 48,
+                  width: { xs: 42, sm: 48 },
+                  height: { xs: 42, sm: 48 },
                   borderRadius: 2,
                   bgcolor: 'success.main',
                   color: 'success.contrastText',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1.5rem',
+                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
                   fontWeight: 600,
+                  flexShrink: 0,
                 }}
               >
                 {currencySymbol}
               </Box>
-              <Box>
-                <Typography variant="h4" fontWeight={600}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography 
+                  variant="h4" 
+                  fontWeight={600}
+                  sx={{
+                    fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
+                    lineHeight: 1.2,
+                    wordBreak: 'break-word',
+                  }}
+                >
                   Fixed Deposits
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    lineHeight: 1.4,
+                  }}
+                >
                   Track your FDs and monitor maturity returns
                 </Typography>
               </Box>
@@ -320,14 +341,27 @@ export default function FDPageClient() {
       </Box>
 
       {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: { xs: 3, sm: 4 } }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
-            <CardContent>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography 
+                variant="body2" 
+                color="text.secondary" 
+                gutterBottom
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+              >
                 Total Principal
               </Typography>
-              <Typography variant="h4" fontWeight={600}>
+              <Typography 
+                variant="h4" 
+                fontWeight={600}
+                sx={{
+                  fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
+                  wordBreak: 'break-word',
+                  lineHeight: 1.2,
+                }}
+              >
                 {formatCurrency(totalPrincipal)}
               </Typography>
             </CardContent>
@@ -335,11 +369,25 @@ export default function FDPageClient() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
-            <CardContent>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography 
+                variant="body2" 
+                color="text.secondary" 
+                gutterBottom
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+              >
                 Maturity Value
               </Typography>
-              <Typography variant="h4" fontWeight={600} color="primary.main">
+              <Typography 
+                variant="h4" 
+                fontWeight={600} 
+                color="primary.main"
+                sx={{
+                  fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
+                  wordBreak: 'break-word',
+                  lineHeight: 1.2,
+                }}
+              >
                 {formatCurrency(totalMaturityValue)}
               </Typography>
             </CardContent>
@@ -347,13 +395,27 @@ export default function FDPageClient() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
-            <CardContent>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography 
+                variant="body2" 
+                color="text.secondary" 
+                gutterBottom
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+              >
                 Interest Earned
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <FiArrowUp color="green" size={24} />
-                <Typography variant="h4" fontWeight={600} color="success.main">
+                <FiArrowUp color="green" size={20} />
+                <Typography 
+                  variant="h4" 
+                  fontWeight={600} 
+                  color="success.main"
+                  sx={{
+                    fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
+                    wordBreak: 'break-word',
+                    lineHeight: 1.2,
+                  }}
+                >
                   {formatCurrency(totalInterestEarned)}
                 </Typography>
               </Box>
@@ -362,13 +424,25 @@ export default function FDPageClient() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
-            <CardContent>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography 
+                variant="body2" 
+                color="text.secondary" 
+                gutterBottom
+                sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+              >
                 Average Rate
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <FiPercent size={20} />
-                <Typography variant="h4" fontWeight={600}>
+                <FiPercent size={18} />
+                <Typography 
+                  variant="h4" 
+                  fontWeight={600}
+                  sx={{
+                    fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' },
+                    lineHeight: 1.2,
+                  }}
+                >
                   {averageRate.toFixed(2)}%
                 </Typography>
               </Box>

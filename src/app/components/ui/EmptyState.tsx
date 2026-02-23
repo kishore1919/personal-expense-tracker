@@ -22,8 +22,8 @@ export function EmptyState({
     <Card
       sx={{
         textAlign: 'center',
-        py: 8,
-        px: 3,
+        py: { xs: 4, sm: 6, md: 8 },
+        px: { xs: 2, sm: 3 },
         border: '2px dashed',
         borderColor: 'divider',
         bgcolor: 'transparent',
@@ -32,8 +32,8 @@ export function EmptyState({
       <CardContent>
         <Box
           sx={{
-            width: 80,
-            height: 80,
+            width: { xs: 64, sm: 72, md: 80 },
+            height: { xs: 64, sm: 72, md: 80 },
             borderRadius: 3,
             bgcolor: 'primary.main',
             color: 'primary.contrastText',
@@ -41,15 +41,34 @@ export function EmptyState({
             alignItems: 'center',
             justifyContent: 'center',
             mx: 'auto',
-            mb: 3,
+            mb: { xs: 2, sm: 3 },
           }}
         >
-          <FaBook size={32} />
+          <FaBook size={28} />
         </Box>
-        <Typography variant="h5" gutterBottom fontWeight={600}>
+        <Typography 
+          variant="h5" 
+          gutterBottom 
+          fontWeight={600}
+          sx={{
+            fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
+            px: { xs: 1, sm: 0 },
+          }}
+        >
           {title}
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 400, mx: 'auto' }}>
+        <Typography 
+          variant="body1" 
+          color="text.secondary" 
+          sx={{ 
+            mb: { xs: 3, sm: 4 }, 
+            maxWidth: 400, 
+            mx: 'auto',
+            px: { xs: 2, sm: 0 },
+            fontSize: { xs: '0.875rem', sm: '1rem' },
+            lineHeight: 1.6,
+          }}
+        >
           {description}
         </Typography>
         <Button
@@ -57,6 +76,15 @@ export function EmptyState({
           onClick={onCreate}
           startIcon={<FiPlus />}
           size="large"
+          fullWidth
+          sx={{
+            textTransform: 'none',
+            fontWeight: 600,
+            px: { xs: 3, sm: 4 },
+            py: { xs: 1, sm: 1.25 },
+            display: { sm: 'inline-block' },
+            width: { sm: 'auto' },
+          }}
         >
           {buttonText}
         </Button>

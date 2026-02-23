@@ -41,11 +41,9 @@ export default function ArchivedBooksPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const {
-    books,
     displayedBooks,
     loading,
     error,
-    totalFiltered,
     totalPages,
     startIndex,
     endIndex,
@@ -276,7 +274,6 @@ export default function ArchivedBooksPage() {
               onBookClick={handleBookClick}
               formatCurrency={formatCurrency}
               onToggleArchive={handleUnarchive}
-              showArchived={true}
             />
           </Paper>
         </>

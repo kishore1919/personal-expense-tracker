@@ -90,10 +90,7 @@ test.describe('Expense Workflow', () => {
     income.amount = 5000;
     await bookDetailPage.addExpense(income);
     await page.waitForTimeout(500);
-    
-    // Get initial cash in
-    const initialCashIn = await bookDetailPage.getTotalCashIn();
-    
+
     // Add expense
     const expense = generateTestExpense('out');
     expense.amount = 2000;

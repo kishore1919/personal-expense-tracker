@@ -105,7 +105,7 @@ export default function Dashboard() {
       )}
 
       {/* Primary Stats Grid */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             title="Net Worth"
@@ -137,27 +137,25 @@ export default function Dashboard() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 3 }}>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               {loading ? (
-                <>
-                  <LinearProgress sx={{ mt: 2 }} />
-                </>
+                <LinearProgress sx={{ mt: 2 }} />
               ) : (
                 <>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: 'info.main', color: 'white', display: 'flex' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 }, mb: 1 }}>
+                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: 'info.main', color: 'white', display: 'flex', flexShrink: 0 }}>
                       <FiTarget size={16} />
                     </Box>
-                    <Typography variant="body2" color="text.secondary" fontWeight={500}>Budget Usage</Typography>
+                    <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, lineHeight: 1.4 }}>Budget Usage</Typography>
                   </Box>
-                  <Typography variant="h4" fontWeight={600}>{budgetProgress}%</Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={budgetProgress} 
+                  <Typography variant="h4" fontWeight={600} sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' }, lineHeight: 1.2 }}>{budgetProgress}%</Typography>
+                  <LinearProgress
+                    variant="determinate"
+                    value={budgetProgress}
                     color={budgetProgress > 90 ? 'error' : budgetProgress > 70 ? 'warning' : 'primary'}
-                    sx={{ mt: 1, height: 6, borderRadius: 3 }}
+                    sx={{ mt: 1, height: { xs: 5, sm: 6 }, borderRadius: 3 }}
                   />
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
                     {formatCurrency(overview.totalSpent)} of {formatCurrency(overview.totalBudget)}
                   </Typography>
                 </>

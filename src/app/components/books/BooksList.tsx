@@ -13,7 +13,6 @@ interface BooksListProps {
   onBookClick: (bookId: string) => void;
   formatCurrency: (amount: number) => string;
   onToggleArchive?: (bookId: string, archived: boolean) => void;
-  showArchived?: boolean;
 }
 
 function ListSkeleton() {
@@ -48,7 +47,6 @@ function BookListItem({
   onClick,
   formatCurrency,
   onToggleArchive,
-  showArchived,
 }: {
   book: Book;
   isSelected: boolean;
@@ -56,7 +54,6 @@ function BookListItem({
   onClick: () => void;
   formatCurrency: (amount: number) => string;
   onToggleArchive?: (bookId: string, archived: boolean) => void;
-  showArchived?: boolean;
 }) {
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
@@ -191,7 +188,6 @@ export function BooksList({
   onBookClick,
   formatCurrency,
   onToggleArchive,
-  showArchived,
 }: BooksListProps) {
   if (loading) {
     return (
@@ -221,7 +217,6 @@ export function BooksList({
           onClick={() => onBookClick(book.id)}
           formatCurrency={formatCurrency}
           onToggleArchive={onToggleArchive}
-          showArchived={showArchived}
         />
       ))}
     </Box>

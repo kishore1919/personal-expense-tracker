@@ -431,30 +431,44 @@ export default function BudgetPage() {
   }
 
   return (
-    <Box sx={{ pb: 10 }}>
+    <Box sx={{ pb: { xs: 10, sm: 10, md: 4 } }}>
       {/* Header */}
-      <Card sx={{ mb: 4 }}>
-        <CardContent sx={{ p: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Card sx={{ mb: { xs: 2, sm: 3, md: 4 } }}>
+        <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 } }}>
             <Box
               sx={{
-                width: 36,
-                height: 36,
+                width: { xs: 32, sm: 36 },
+                height: { xs: 32, sm: 36 },
                 borderRadius: 1.5,
                 bgcolor: 'primary.main',
                 color: 'primary.contrastText',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
-              <FiTarget size={18} />
+              <FiTarget size={16} />
             </Box>
-            <Box>
-              <Typography variant="h5" fontWeight={600}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography 
+                variant="h5" 
+                fontWeight={600}
+                sx={{
+                  fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
+                  lineHeight: 1.2,
+                }}
+              >
                 Budget
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography 
+                variant="caption" 
+                color="text.secondary"
+                sx={{
+                  fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                }}
+              >
                 Manage your spending limits
               </Typography>
             </Box>
@@ -463,14 +477,26 @@ export default function BudgetPage() {
       </Card>
 
       {/* Summary Cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
+      <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mb: { xs: 2, sm: 3 } }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 2 }}>
-              <Typography variant="body2" color="text.secondary">
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, mb: 1 }}
+              >
                 Total Budget
               </Typography>
-              <Typography variant="h5" fontWeight={600}>
+              <Typography 
+                variant="h5" 
+                fontWeight={600}
+                sx={{
+                  fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
+                  wordBreak: 'break-word',
+                  lineHeight: 1.2,
+                }}
+              >
                 {formatCurrency(totalBudget)}
               </Typography>
             </CardContent>
@@ -478,11 +504,24 @@ export default function BudgetPage() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 2 }}>
-              <Typography variant="body2" color="text.secondary">
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, mb: 1 }}
+              >
                 Total Spent
               </Typography>
-              <Typography variant="h5" fontWeight={600} color="primary.main">
+              <Typography 
+                variant="h5" 
+                fontWeight={600} 
+                color="primary.main"
+                sx={{
+                  fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
+                  wordBreak: 'break-word',
+                  lineHeight: 1.2,
+                }}
+              >
                 {formatCurrency(totalSpent)}
               </Typography>
             </CardContent>
@@ -490,14 +529,23 @@ export default function BudgetPage() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 2 }}>
-              <Typography variant="body2" color="text.secondary">
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, mb: 1 }}
+              >
                 Remaining
               </Typography>
-              <Typography 
-                variant="h5" 
-                fontWeight={600} 
+              <Typography
+                variant="h5"
+                fontWeight={600}
                 color={totalBudget - totalSpent >= 0 ? 'success.main' : 'error.main'}
+                sx={{
+                  fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
+                  wordBreak: 'break-word',
+                  lineHeight: 1.2,
+                }}
               >
                 {formatCurrency(totalBudget - totalSpent)}
               </Typography>
@@ -506,12 +554,23 @@ export default function BudgetPage() {
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: 2 }}>
-              <Typography variant="body2" color="text.secondary">
+            <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, mb: 1 }}
+              >
                 Budget Usage
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="h5" fontWeight={600}>
+                <Typography 
+                  variant="h5" 
+                  fontWeight={600}
+                  sx={{
+                    fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
+                    lineHeight: 1.2,
+                  }}
+                >
                   {overallPercent}%
                 </Typography>
                 {totalSpent > totalBudget ? (
@@ -524,7 +583,7 @@ export default function BudgetPage() {
                 variant="determinate"
                 value={overallPercent}
                 color={overallPercent >= 100 ? 'error' : overallPercent >= 80 ? 'warning' : 'primary'}
-                sx={{ mt: 0.5, height: 6, borderRadius: 3 }}
+                sx={{ mt: 0.5, height: { xs: 5, sm: 6 }, borderRadius: 3 }}
               />
             </CardContent>
           </Card>
@@ -533,9 +592,22 @@ export default function BudgetPage() {
 
       {/* Budgets List */}
       <Card>
-        <CardContent sx={{ p: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6" fontWeight={600}>
+        <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            mb: { xs: 2, sm: 2.5 },
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 2, sm: 0 },
+          }}>
+            <Typography 
+              variant="h6" 
+              fontWeight={600}
+              sx={{
+                fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
+              }}
+            >
               Budgets
             </Typography>
             <Button
@@ -543,6 +615,14 @@ export default function BudgetPage() {
               size="small"
               startIcon={<FiPlus />}
               onClick={() => handleOpenModal()}
+              fullWidth
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                px: { xs: 2, sm: 3 },
+                display: { xs: 'block', sm: 'inline-block' },
+                width: { sm: 'auto' },
+              }}
             >
               Add Budget
             </Button>
@@ -552,135 +632,288 @@ export default function BudgetPage() {
             <Paper
               variant="outlined"
               sx={{
-                p: 2,
+                p: { xs: 3, sm: 4 },
                 textAlign: 'center',
                 bgcolor: 'background.default',
               }}
             >
-              <Typography variant="body2" color="text.secondary">
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
+              >
                 No budgets created yet.
               </Typography>
             </Paper>
           ) : (
-            <TableContainer>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Book</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Budget</TableCell>
-                    <TableCell>Spent</TableCell>
-                    <TableCell>Remaining</TableCell>
-                    <TableCell>Progress</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {budgets.map((budget) => {
-                    const remaining = budget.amount - budget.spent;
-                    const percent = budget.amount > 0 ? Math.min(Math.round((budget.spent / budget.amount) * 100), 100) : 0;
-                    const status = getBudgetStatus(budget.spent, budget.amount);
+            <>
+              {/* Mobile Card View */}
+              <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                {budgets.map((budget) => {
+                  const remaining = budget.amount - budget.spent;
+                  const percent = budget.amount > 0 ? Math.min(Math.round((budget.spent / budget.amount) * 100), 100) : 0;
+                  const status = getBudgetStatus(budget.spent, budget.amount);
 
-                    return (
-                      <TableRow key={budget.id} hover>
-                        <TableCell>
-                          <Typography fontWeight={500}>{budget.bookName}</Typography>
-                          <Chip 
-                            label={budget.period} 
-                            size="small" 
-                            sx={{ mt: 0.5, textTransform: 'capitalize' }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {budget.budgetType === 'category' && budget.category ? (
-                            <Chip 
-                              label={budget.category} 
-                              size="small" 
-                              color="primary"
-                            />
-                          ) : (
-                            <Chip 
-                              label="All Expenses" 
-                              size="small" 
-                              variant="outlined"
-                            />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Typography>{formatCurrency(budget.amount)}</Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Typography>{formatCurrency(budget.spent)}</Typography>
-                        </TableCell>
-                        <TableCell>
+                  return (
+                    <Paper
+                      key={budget.id}
+                      variant="outlined"
+                      sx={{
+                        p: { xs: 2, sm: 2.5 },
+                        mb: 2,
+                        borderRadius: 2,
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Typography 
-                            color={remaining >= 0 ? 'success.main' : 'error.main'}
-                            fontWeight={500}
+                            fontWeight={600}
+                            sx={{
+                              fontSize: { xs: '0.9375rem', sm: '1rem' },
+                              wordBreak: 'break-word',
+                            }}
                           >
-                            {formatCurrency(remaining)}
+                            {budget.bookName}
                           </Typography>
-                        </TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <LinearProgress
-                              variant="determinate"
-                              value={percent}
-                              color={status.color as 'primary' | 'secondary' | 'error' | 'warning' | 'success' | 'info'}
-                              sx={{ width: 100, height: 8, borderRadius: 4 }}
+                          <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                            <Chip
+                              label={budget.period}
+                              size="small"
+                              sx={{ textTransform: 'capitalize', fontSize: '0.7rem' }}
                             />
-                            <Typography variant="body2" fontWeight={500} sx={{ minWidth: 40 }}>
-                              {percent}%
-                            </Typography>
+                            {budget.budgetType === 'category' && budget.category ? (
+                              <Chip
+                                label={budget.category}
+                                size="small"
+                                color="primary"
+                                sx={{ fontSize: '0.7rem' }}
+                              />
+                            ) : (
+                              <Chip
+                                label="All"
+                                size="small"
+                                variant="outlined"
+                                sx={{ fontSize: '0.7rem' }}
+                              />
+                            )}
                           </Box>
-                        </TableCell>
-                        <TableCell>
-                          <Chip
-                            icon={status.icon}
-                            label={status.label}
-                            color={status.color as 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
                           <IconButton
                             size="small"
                             onClick={() => handleOpenModal(budget)}
-                            sx={{ mr: 1 }}
+                            sx={{ p: 1 }}
                           >
-                            <FiEdit2 size={18} />
+                            <FiEdit2 size={16} />
                           </IconButton>
                           <IconButton
                             size="small"
                             onClick={() => setDeleteTarget(budget)}
                             color="error"
+                            sx={{ p: 1 }}
                           >
-                            <FiTrash2 size={18} />
+                            <FiTrash2 size={16} />
                           </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                        </Box>
+                      </Box>
+
+                      {/* Budget Stats Grid */}
+                      <Grid container spacing={1.5} sx={{ mb: 2 }}>
+                        <Grid size={6}>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Budget</Typography>
+                          <Typography fontWeight={600} sx={{ fontSize: { xs: '0.875rem', sm: '0.9375rem' } }}>
+                            {formatCurrency(budget.amount)}
+                          </Typography>
+                        </Grid>
+                        <Grid size={6}>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Spent</Typography>
+                          <Typography fontWeight={600} sx={{ fontSize: { xs: '0.875rem', sm: '0.9375rem' } }}>
+                            {formatCurrency(budget.spent)}
+                          </Typography>
+                        </Grid>
+                        <Grid size={6}>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Remaining</Typography>
+                          <Typography 
+                            fontWeight={600} 
+                            color={remaining >= 0 ? 'success.main' : 'error.main'}
+                            sx={{ fontSize: { xs: '0.875rem', sm: '0.9375rem' } }}
+                          >
+                            {formatCurrency(remaining)}
+                          </Typography>
+                        </Grid>
+                        <Grid size={6}>
+                          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Progress</Typography>
+                          <Typography fontWeight={600} sx={{ fontSize: { xs: '0.875rem', sm: '0.9375rem' } }}>
+                            {percent}%
+                          </Typography>
+                        </Grid>
+                      </Grid>
+
+                      {/* Progress Bar */}
+                      <LinearProgress
+                        variant="determinate"
+                        value={percent}
+                        color={status.color as 'primary' | 'secondary' | 'error' | 'warning' | 'success' | 'info'}
+                        sx={{ height: 8, borderRadius: 4, mb: 1.5 }}
+                      />
+
+                      {/* Status Chip */}
+                      <Chip
+                        icon={status.icon}
+                        label={status.label}
+                        color={status.color as 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
+                        size="small"
+                        sx={{ fontSize: '0.75rem' }}
+                      />
+                    </Paper>
+                  );
+                })}
+              </Box>
+
+              {/* Desktop Table View */}
+              <TableContainer sx={{ display: { xs: 'none', md: 'block' } }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600 }}>Book</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Budget</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Spent</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Remaining</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Progress</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {budgets.map((budget) => {
+                      const remaining = budget.amount - budget.spent;
+                      const percent = budget.amount > 0 ? Math.min(Math.round((budget.spent / budget.amount) * 100), 100) : 0;
+                      const status = getBudgetStatus(budget.spent, budget.amount);
+
+                      return (
+                        <TableRow key={budget.id} hover>
+                          <TableCell>
+                            <Typography fontWeight={500}>{budget.bookName}</Typography>
+                            <Chip
+                              label={budget.period}
+                              size="small"
+                              sx={{ mt: 0.5, textTransform: 'capitalize', fontSize: '0.7rem' }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            {budget.budgetType === 'category' && budget.category ? (
+                              <Chip
+                                label={budget.category}
+                                size="small"
+                                color="primary"
+                                sx={{ fontSize: '0.7rem' }}
+                              />
+                            ) : (
+                              <Chip
+                                label="All Expenses"
+                                size="small"
+                                variant="outlined"
+                                sx={{ fontSize: '0.7rem' }}
+                              />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Typography sx={{ fontSize: '0.875rem' }}>{formatCurrency(budget.amount)}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography sx={{ fontSize: '0.875rem' }}>{formatCurrency(budget.spent)}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography
+                              color={remaining >= 0 ? 'success.main' : 'error.main'}
+                              fontWeight={500}
+                              sx={{ fontSize: '0.875rem' }}
+                            >
+                              {formatCurrency(remaining)}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <LinearProgress
+                                variant="determinate"
+                                value={percent}
+                                color={status.color as 'primary' | 'secondary' | 'error' | 'warning' | 'success' | 'info'}
+                                sx={{ width: 100, height: 8, borderRadius: 4 }}
+                              />
+                              <Typography variant="body2" fontWeight={500} sx={{ minWidth: 40, fontSize: '0.875rem' }}>
+                                {percent}%
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              icon={status.icon}
+                              label={status.label}
+                              color={status.color as 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
+                              size="small"
+                              sx={{ fontSize: '0.75rem' }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleOpenModal(budget)}
+                                sx={{ p: 1 }}
+                              >
+                                <FiEdit2 size={16} />
+                              </IconButton>
+                              <IconButton
+                                size="small"
+                                onClick={() => setDeleteTarget(budget)}
+                                color="error"
+                                sx={{ p: 1 }}
+                              >
+                                <FiTrash2 size={16} />
+                              </IconButton>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* Add/Edit Budget Modal */}
-      <Dialog open={isModalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-        <DialogTitle>
+      <Dialog
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        maxWidth="sm"
+        fullWidth
+        fullScreen
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: { xs: 0, sm: 2 },
+          },
+          display: { sm: 'block' },
+        }}
+      >
+        <DialogTitle sx={{ 
+          p: { xs: 2, sm: 2.5 }, 
+          fontSize: { xs: '1.125rem', sm: '1.25rem' },
+          fontWeight: 600,
+        }}>
           {editingBudget ? 'Edit Budget' : 'Add Budget'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ p: { xs: 2, sm: 2.5 }, pt: { xs: 1, sm: 2 } }}>
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 2, fontSize: { xs: '0.875rem', sm: '0.9375rem' } }}>
               {error}
             </Alert>
           )}
-          
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 2.5 }, mt: 1 }}>
             {/* Budget Type Selector - only show when adding new budget */}
             {!editingBudget && (
               <FormControl fullWidth>
@@ -692,6 +925,11 @@ export default function BudgetPage() {
                     setSelectedCategory('');
                   }}
                   label="Budget Type"
+                  sx={{ 
+                    '& .MuiSelect-select': {
+                      fontSize: { xs: '0.9375rem', sm: '1rem' },
+                    },
+                  }}
                 >
                   <MenuItem value="book">Book Budget (All Expenses)</MenuItem>
                   <MenuItem value="category">Category Budget (Specific Category)</MenuItem>
@@ -707,6 +945,11 @@ export default function BudgetPage() {
                   value={selectedBook}
                   onChange={(e) => setSelectedBook(e.target.value)}
                   label="Select Book"
+                  sx={{ 
+                    '& .MuiSelect-select': {
+                      fontSize: { xs: '0.9375rem', sm: '1rem' },
+                    },
+                  }}
                 >
                   {/* For book budgets, only show books without existing book budgets */}
                   {/* For category budgets, show all books */}
@@ -719,14 +962,14 @@ export default function BudgetPage() {
               </FormControl>
             ) : (
               <Box sx={{ p: 2, bgcolor: 'background.default', borderRadius: 2 }}>
-                <Typography variant="body2" color="text.secondary">Book</Typography>
-                <Typography fontWeight={500}>{editingBudget.bookName}</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>Book</Typography>
+                <Typography fontWeight={500} sx={{ fontSize: { xs: '0.9375rem', sm: '1rem' } }}>{editingBudget.bookName}</Typography>
                 {editingBudget.budgetType === 'category' && editingBudget.category && (
-                  <Chip 
-                    label={editingBudget.category} 
-                    size="small" 
+                  <Chip
+                    label={editingBudget.category}
+                    size="small"
                     color="primary"
-                    sx={{ mt: 0.5 }}
+                    sx={{ mt: 0.5, fontSize: '0.75rem' }}
                   />
                 )}
               </Box>
@@ -740,6 +983,11 @@ export default function BudgetPage() {
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   label="Select Category"
+                  sx={{ 
+                    '& .MuiSelect-select': {
+                      fontSize: { xs: '0.9375rem', sm: '1rem' },
+                    },
+                  }}
                 >
                   {categories.map((category) => (
                     <MenuItem key={category} value={category}>
@@ -757,6 +1005,11 @@ export default function BudgetPage() {
               onChange={handleAmountChange}
               fullWidth
               placeholder={`Enter amount in ${currency}`}
+              sx={{
+                '& .MuiInputBase-input': {
+                  fontSize: { xs: '0.9375rem', sm: '1rem' },
+                },
+              }}
             />
 
             <FormControl fullWidth>
@@ -765,6 +1018,11 @@ export default function BudgetPage() {
                 value={budgetPeriod}
                 onChange={(e) => setBudgetPeriod(e.target.value as 'monthly' | 'weekly' | 'yearly')}
                 label="Budget Period"
+                sx={{ 
+                  '& .MuiSelect-select': {
+                    fontSize: { xs: '0.9375rem', sm: '1rem' },
+                  },
+                }}
               >
                 <MenuItem value="monthly">Monthly</MenuItem>
                 <MenuItem value="weekly">Weekly</MenuItem>
@@ -773,14 +1031,35 @@ export default function BudgetPage() {
             </FormControl>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={handleCloseModal}>
+        <DialogActions sx={{
+          p: { xs: 2, sm: 2.5 },
+          gap: { xs: 1, sm: 1.5 },
+          flexDirection: { xs: 'column-reverse', sm: 'row' },
+        }}>
+          <Button
+            onClick={handleCloseModal}
+            fullWidth
+            sx={{
+              fontSize: { xs: '0.9375rem', sm: '1rem' },
+              fontWeight: 500,
+              display: { sm: 'inline-block' },
+              width: { sm: 'auto' },
+            }}
+          >
             Cancel
           </Button>
-          <Button 
-            onClick={handleSaveBudget} 
+          <Button
+            onClick={handleSaveBudget}
             variant="contained"
             disabled={!selectedBook || !budgetAmount}
+            fullWidth
+            sx={{
+              fontSize: { xs: '0.9375rem', sm: '1rem' },
+              fontWeight: 600,
+              px: { xs: 3, sm: 4 },
+              display: { sm: 'inline-block' },
+              width: { sm: 'auto' },
+            }}
           >
             {editingBudget ? 'Update' : 'Create'} Budget
           </Button>
@@ -791,26 +1070,61 @@ export default function BudgetPage() {
       <Dialog
         open={deleteTarget !== null}
         onClose={() => !isDeleting && setDeleteTarget(null)}
+        fullScreen
+        sx={{
+          '& .MuiDialog-paper': {
+            borderRadius: { xs: 0, sm: 2 },
+          },
+          display: { sm: 'block' },
+        }}
       >
-        <DialogTitle>Confirm Deletion</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete the budget for &quot;{deleteTarget?.bookName}&quot;? 
+        <DialogTitle sx={{ 
+          p: { xs: 2, sm: 2.5 },
+          fontSize: { xs: '1.125rem', sm: '1.25rem' },
+          fontWeight: 600,
+        }}>
+          Confirm Deletion
+        </DialogTitle>
+        <DialogContent sx={{ p: { xs: 2, sm: 2.5 }, pt: { xs: 1, sm: 2 } }}>
+          <Typography sx={{ 
+            fontSize: { xs: '0.9375rem', sm: '1rem' },
+            lineHeight: 1.6,
+          }}>
+            Are you sure you want to delete the budget for &quot;{deleteTarget?.bookName}&quot;?
             This action cannot be undone.
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button 
-            onClick={() => setDeleteTarget(null)} 
+        <DialogActions sx={{
+          p: { xs: 2, sm: 2.5 },
+          gap: { xs: 1, sm: 1.5 },
+          flexDirection: { xs: 'column-reverse', sm: 'row' },
+        }}>
+          <Button
+            onClick={() => setDeleteTarget(null)}
             disabled={isDeleting}
+            fullWidth
+            sx={{
+              fontSize: { xs: '0.9375rem', sm: '1rem' },
+              fontWeight: 500,
+              display: { sm: 'inline-block' },
+              width: { sm: 'auto' },
+            }}
           >
             Cancel
           </Button>
-          <Button 
-            onClick={handleDeleteBudget} 
-            color="error" 
+          <Button
+            onClick={handleDeleteBudget}
+            color="error"
             variant="contained"
             disabled={isDeleting}
+            fullWidth
+            sx={{
+              fontSize: { xs: '0.9375rem', sm: '1rem' },
+              fontWeight: 600,
+              px: { xs: 3, sm: 4 },
+              display: { sm: 'inline-block' },
+              width: { sm: 'auto' },
+            }}
           >
             {isDeleting ? 'Deleting...' : 'Delete'}
           </Button>
