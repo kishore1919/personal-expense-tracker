@@ -479,10 +479,22 @@ export default function LoansPage() {
               fullWidth
               sx={{
                 textTransform: 'none',
-                fontWeight: 600,
-                px: { xs: 2, sm: 3 },
-                display: { sm: 'inline-block' },
+                fontWeight: 700,
+                borderRadius: 2,
+                px: { xs: 3, sm: 4 },
+                height: 40,
                 width: { sm: 'auto' },
+                boxShadow: (theme) => theme.palette.mode === 'dark'
+                  ? '0 4px 12px rgba(0, 0, 0, 0.4)'
+                  : '0 4px 12px rgba(99, 102, 241, 0.2)',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: (theme) => theme.palette.mode === 'dark'
+                    ? '0 6px 16px rgba(0, 0, 0, 0.6)'
+                    : '0 6px 16px rgba(99, 102, 241, 0.3)',
+                  bgcolor: 'primary.dark',
+                },
+                transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
               Add Loan
@@ -525,7 +537,7 @@ export default function LoansPage() {
                 {/* Header with name and actions */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography 
+                    <Typography
                       fontWeight={600}
                       sx={{
                         fontSize: { xs: '0.9375rem', sm: '1rem' },
@@ -534,7 +546,7 @@ export default function LoansPage() {
                     >
                       {loan.name}
                     </Typography>
-                    <Typography 
+                    <Typography
                       color="text.secondary"
                       sx={{
                         fontSize: { xs: '0.75rem', sm: '0.875rem' },
@@ -569,11 +581,11 @@ export default function LoansPage() {
                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Progress</Typography>
                     <Typography variant="caption" fontWeight={600} sx={{ fontSize: '0.7rem' }}>{progress.toFixed(0)}%</Typography>
                   </Box>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={progress} 
-                    color={isPaidOff ? "success" : "primary"} 
-                    sx={{ height: 6, borderRadius: 3 }} 
+                  <LinearProgress
+                    variant="determinate"
+                    value={progress}
+                    color={isPaidOff ? "success" : "primary"}
+                    sx={{ height: 6, borderRadius: 3 }}
                   />
                 </Box>
 
@@ -609,8 +621,8 @@ export default function LoansPage() {
                 <Grid container spacing={1.5} sx={{ mb: 1.5 }}>
                   <Grid size={6}>
                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Months Left</Typography>
-                    <Typography 
-                      fontWeight={600} 
+                    <Typography
+                      fontWeight={600}
                       color={monthsLeft === '∞' ? 'error.main' : 'text.primary'}
                       sx={{ fontSize: { xs: '0.8125rem', sm: '0.875rem' } }}
                     >
@@ -619,8 +631,8 @@ export default function LoansPage() {
                   </Grid>
                   <Grid size={6}>
                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Interest</Typography>
-                    <Typography 
-                      fontWeight={600} 
+                    <Typography
+                      fontWeight={600}
                       color="warning.main"
                       sx={{ fontSize: { xs: '0.8125rem', sm: '0.875rem' } }}
                     >
@@ -630,15 +642,15 @@ export default function LoansPage() {
                 </Grid>
 
                 {/* Total Due */}
-                <Box sx={{ 
-                  p: 1.5, 
-                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(239, 68, 68, 0.05)', 
+                <Box sx={{
+                  p: 1.5,
+                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(239, 68, 68, 0.05)',
                   borderRadius: 1.5,
                   mb: 1.5,
                 }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Total Due</Typography>
-                  <Typography 
-                    fontWeight={700} 
+                  <Typography
+                    fontWeight={700}
                     color="error.main"
                     sx={{ fontSize: { xs: '0.9375rem', sm: '1rem' } }}
                   >
@@ -647,8 +659,8 @@ export default function LoansPage() {
                 </Box>
 
                 {/* Status Chip */}
-                <Chip 
-                  label={isPaidOff ? "Paid Off" : (loan.isActive ? "Active" : "Closed")} 
+                <Chip
+                  label={isPaidOff ? "Paid Off" : (loan.isActive ? "Active" : "Closed")}
                   color={isPaidOff ? "success" : loan.isActive ? "primary" : "default"}
                   size="small"
                   sx={{ fontSize: '0.75rem' }}
@@ -767,8 +779,8 @@ export default function LoansPage() {
           display: { sm: 'block' },
         }}
       >
-        <DialogTitle sx={{ 
-          p: { xs: 2, sm: 2.5 }, 
+        <DialogTitle sx={{
+          p: { xs: 2, sm: 2.5 },
           fontSize: { xs: '1.125rem', sm: '1.25rem' },
           fontWeight: 600,
         }}>
@@ -776,29 +788,29 @@ export default function LoansPage() {
         </DialogTitle>
         <DialogContent sx={{ p: { xs: 2, sm: 2.5 }, pt: { xs: 1, sm: 2 } }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 2.5 }, pt: 1 }}>
-            <TextField 
-              label="Loan Name / Purpose" 
-              fullWidth 
-              value={formData.name} 
+            <TextField
+              label="Loan Name / Purpose"
+              fullWidth
+              value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               sx={{ '& .MuiInputBase-input': { fontSize: { xs: '0.9375rem', sm: '1rem' } } }}
             />
-            <TextField 
-              label="Lender" 
-              fullWidth 
-              value={formData.lender} 
+            <TextField
+              label="Lender"
+              fullWidth
+              value={formData.lender}
               onChange={(e) => setFormData({ ...formData, lender: e.target.value })}
               sx={{ '& .MuiInputBase-input': { fontSize: { xs: '0.9375rem', sm: '1rem' } } }}
             />
             <Grid container spacing={{ xs: 1.5, sm: 2 }}>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField 
-                  label="Total Amount" 
-                  type="number" 
-                  fullWidth 
-                  value={formData.amount} 
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })} 
-                  InputProps={{ 
+                <TextField
+                  label="Total Amount"
+                  type="number"
+                  fullWidth
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  InputProps={{
                     startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
                     sx: { fontSize: { xs: '0.9375rem', sm: '1rem' } },
                   }}
@@ -806,13 +818,13 @@ export default function LoansPage() {
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField 
-                  label="Paid So Far" 
-                  type="number" 
-                  fullWidth 
-                  value={formData.paidAmount} 
-                  onChange={(e) => setFormData({ ...formData, paidAmount: e.target.value })} 
-                  InputProps={{ 
+                <TextField
+                  label="Paid So Far"
+                  type="number"
+                  fullWidth
+                  value={formData.paidAmount}
+                  onChange={(e) => setFormData({ ...formData, paidAmount: e.target.value })}
+                  InputProps={{
                     startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
                     sx: { fontSize: { xs: '0.9375rem', sm: '1rem' } },
                   }}
@@ -820,34 +832,34 @@ export default function LoansPage() {
                 />
               </Grid>
             </Grid>
-            <TextField 
-              label="Interest Rate (%)" 
-              type="number" 
-              fullWidth 
-              value={formData.interestRate} 
-              onChange={(e) => setFormData({ ...formData, interestRate: e.target.value })} 
-              InputProps={{ 
+            <TextField
+              label="Interest Rate (%)"
+              type="number"
+              fullWidth
+              value={formData.interestRate}
+              onChange={(e) => setFormData({ ...formData, interestRate: e.target.value })}
+              InputProps={{
                 endAdornment: <InputAdornment position="end">%</InputAdornment>,
                 sx: { fontSize: { xs: '0.9375rem', sm: '1rem' } },
               }}
               helperText="Annual rate"
-              sx={{ 
+              sx={{
                 '& .MuiInputBase-input': { fontSize: { xs: '0.9375rem', sm: '1rem' } },
                 '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.8125rem' } },
               }}
             />
-            <TextField 
-              label="Monthly EMI" 
-              type="number" 
-              fullWidth 
-              value={formData.monthlyPayment} 
-              onChange={(e) => setFormData({ ...formData, monthlyPayment: e.target.value })} 
-              InputProps={{ 
+            <TextField
+              label="Monthly EMI"
+              type="number"
+              fullWidth
+              value={formData.monthlyPayment}
+              onChange={(e) => setFormData({ ...formData, monthlyPayment: e.target.value })}
+              InputProps={{
                 startAdornment: <InputAdornment position="start">{currencySymbol}</InputAdornment>,
                 sx: { fontSize: { xs: '0.9375rem', sm: '1rem' } },
               }}
               helperText="Fixed monthly payment for accurate months/interest estimates"
-              sx={{ 
+              sx={{
                 '& .MuiInputBase-input': { fontSize: { xs: '0.9375rem', sm: '1rem' } },
                 '& .MuiFormHelperText-root': { fontSize: { xs: '0.75rem', sm: '0.8125rem' } },
               }}
@@ -960,7 +972,7 @@ export default function LoansPage() {
           display: { sm: 'block' },
         }}
       >
-        <DialogTitle sx={{ 
+        <DialogTitle sx={{
           p: { xs: 2, sm: 2.5 },
           fontSize: { xs: '1.125rem', sm: '1.25rem' },
           fontWeight: 600,

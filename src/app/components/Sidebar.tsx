@@ -38,6 +38,7 @@ import {
   FiTarget,
   FiTrendingUp,
   FiCreditCard,
+  FiClock,
   FiMenu,
   FiX,
 } from 'react-icons/fi';
@@ -57,6 +58,7 @@ const menuItems = [
   { icon: FiTarget, name: 'Budget', path: '/budget' },
   { icon: FiTrendingUp, name: 'Investments', path: '/investments' },
   { icon: FiCreditCard, name: 'Loans', path: '/loans' },
+  { icon: FiClock, name: 'Subscriptions', path: '/subscriptions' },
   { icon: FiSettings, name: 'Settings', path: '/settings' },
 ];
 

@@ -172,3 +172,18 @@ export interface Budget {
   createdAt: Date;
   userId?: string;
 }
+
+/**
+ * Represents a subscription entity.
+ */
+export interface Subscription {
+  id: string;
+  name: string;
+  amount: number;
+  billingCycle: 'weekly' | 'monthly' | 'yearly';
+  startDate: string;
+  category: string;
+  status: 'active' | 'paused' | 'cancelled';
+  userId?: string;
+  createdAt?: { toDate?: () => Date } | Date;
+}

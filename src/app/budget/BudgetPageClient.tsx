@@ -114,7 +114,7 @@ export default function BudgetPage() {
     if (!user) return;
     try {
       setLoading(true);
-      
+
       // Fetch books
       const booksQuery = query(collection(db, 'books'), where('userId', '==', user.uid));
       const booksSnapshot = await getDocs(booksQuery);
@@ -134,7 +134,7 @@ export default function BudgetPage() {
       // Fetch budgets
       const budgetsQuery = query(collection(db, 'budgets'), where('userId', '==', user.uid));
       const budgetsSnapshot = await getDocs(budgetsQuery);
-      
+
       const budgetsData: Budget[] = [];
 
       // Group budgets by bookId and fetch each book's expenses once to avoid N+1 queries
@@ -166,10 +166,10 @@ export default function BudgetPage() {
           const day = (cur.getDay() + 6) % 7; // Monday as start
           const start = new Date(cur);
           start.setDate(cur.getDate() - day);
-          start.setHours(0,0,0,0);
+          start.setHours(0, 0, 0, 0);
           const end = new Date(start);
           end.setDate(start.getDate() + 6);
-          end.setHours(23,59,59,999);
+          end.setHours(23, 59, 59, 999);
           return { start, end };
         }
         if (period === 'yearly') {
@@ -241,7 +241,7 @@ export default function BudgetPage() {
     const cleanValue = value.replace(/[^0-9.]/g, '');
     // Split into integer and decimal parts
     const parts = cleanValue.split('.');
-    
+
     // Indian number format: first comma after 3 digits from right, then every 2 digits
     // e.g., 100000 -> 1,00,000 (1 lakh), 10000000 -> 1,00,00,000 (1 crore)
     const integerPart = parts[0];
@@ -251,7 +251,7 @@ export default function BudgetPage() {
       const formattedOther = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ',');
       parts[0] = formattedOther + ',' + lastThree;
     }
-    
+
     // Join back
     return parts.join('.');
   };
@@ -265,13 +265,13 @@ export default function BudgetPage() {
     const rawValue = e.target.value;
     // Allow only numbers, commas, and decimal point
     const formattedValue = formatNumberWithCommas(rawValue);
-    
+
     // Hard stop at 10 crores (10,00,00,000)
     const numericValue = parseFormattedNumber(formattedValue);
     if (numericValue > 100000000) {
       return; // Don't update state if exceeding 10 crores
     }
-    
+
     setBudgetAmount(formattedValue);
   };
 
@@ -341,7 +341,7 @@ export default function BudgetPage() {
           period: budgetPeriod,
           updatedAt: new Date(),
         };
-        
+
         // Only update budgetType and category if they changed (for backward compatibility)
         if (budgetType !== editingBudget.budgetType) {
           updateData.budgetType = budgetType;
@@ -349,13 +349,13 @@ export default function BudgetPage() {
         if (budgetType === 'category' && selectedCategory !== editingBudget.category) {
           updateData.category = selectedCategory;
         }
-        
+
         await updateDoc(doc(db, 'budgets', editingBudget.id), updateData);
       } else {
         // Check for existing budget based on type
         if (budgetType === 'book') {
           // For book budgets, check if any book budget exists for this book
-          const existingBookBudget = budgets.find(b => 
+          const existingBookBudget = budgets.find(b =>
             b.bookId === selectedBook && b.budgetType === 'book'
           );
           if (existingBookBudget) {
@@ -364,9 +364,9 @@ export default function BudgetPage() {
           }
         } else {
           // For category budgets, check if this specific category budget exists
-          const existingCategoryBudget = budgets.find(b => 
-            b.bookId === selectedBook && 
-            b.budgetType === 'category' && 
+          const existingCategoryBudget = budgets.find(b =>
+            b.bookId === selectedBook &&
+            b.budgetType === 'category' &&
             b.category === selectedCategory
           );
           if (existingCategoryBudget) {
@@ -384,12 +384,12 @@ export default function BudgetPage() {
           budgetType,
           createdAt: new Date(),
         };
-        
+
         // Add category for category budgets
         if (budgetType === 'category') {
           budgetData.category = selectedCategory;
         }
-        
+
         await addDoc(collection(db, 'budgets'), budgetData);
       }
 
@@ -452,8 +452,8 @@ export default function BudgetPage() {
               <FiTarget size={16} />
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography 
-                variant="h5" 
+              <Typography
+                variant="h5"
                 fontWeight={600}
                 sx={{
                   fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
@@ -462,8 +462,8 @@ export default function BudgetPage() {
               >
                 Budget
               </Typography>
-              <Typography 
-                variant="caption" 
+              <Typography
+                variant="caption"
                 color="text.secondary"
                 sx={{
                   fontSize: { xs: '0.7rem', sm: '0.75rem' },
@@ -481,15 +481,15 @@ export default function BudgetPage() {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-              <Typography 
-                variant="body2" 
+              <Typography
+                variant="body2"
                 color="text.secondary"
                 sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, mb: 1 }}
               >
                 Total Budget
               </Typography>
-              <Typography 
-                variant="h5" 
+              <Typography
+                variant="h5"
                 fontWeight={600}
                 sx={{
                   fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
@@ -505,16 +505,16 @@ export default function BudgetPage() {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-              <Typography 
-                variant="body2" 
+              <Typography
+                variant="body2"
                 color="text.secondary"
                 sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, mb: 1 }}
               >
                 Total Spent
               </Typography>
-              <Typography 
-                variant="h5" 
-                fontWeight={600} 
+              <Typography
+                variant="h5"
+                fontWeight={600}
                 color="primary.main"
                 sx={{
                   fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
@@ -530,8 +530,8 @@ export default function BudgetPage() {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-              <Typography 
-                variant="body2" 
+              <Typography
+                variant="body2"
                 color="text.secondary"
                 sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, mb: 1 }}
               >
@@ -555,16 +555,16 @@ export default function BudgetPage() {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
-              <Typography 
-                variant="body2" 
+              <Typography
+                variant="body2"
                 color="text.secondary"
                 sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' }, mb: 1 }}
               >
                 Budget Usage
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography 
-                  variant="h5" 
+                <Typography
+                  variant="h5"
                   fontWeight={600}
                   sx={{
                     fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
@@ -593,16 +593,16 @@ export default function BudgetPage() {
       {/* Budgets List */}
       <Card>
         <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center', 
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             mb: { xs: 2, sm: 2.5 },
             flexDirection: { xs: 'column', sm: 'row' },
             gap: { xs: 2, sm: 0 },
           }}>
-            <Typography 
-              variant="h6" 
+            <Typography
+              variant="h6"
               fontWeight={600}
               sx={{
                 fontSize: { xs: '1rem', sm: '1.125rem', md: '1.25rem' },
@@ -612,16 +612,27 @@ export default function BudgetPage() {
             </Typography>
             <Button
               variant="contained"
-              size="small"
-              startIcon={<FiPlus />}
               onClick={() => handleOpenModal()}
+              startIcon={<FiPlus />}
               fullWidth
               sx={{
                 textTransform: 'none',
-                fontWeight: 600,
-                px: { xs: 2, sm: 3 },
-                display: { xs: 'block', sm: 'inline-block' },
+                fontWeight: 700,
+                borderRadius: 2,
+                px: { xs: 3, sm: 4 },
+                height: 40,
                 width: { sm: 'auto' },
+                boxShadow: (theme) => theme.palette.mode === 'dark'
+                  ? '0 4px 12px rgba(0, 0, 0, 0.4)'
+                  : '0 4px 12px rgba(99, 102, 241, 0.2)',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: (theme) => theme.palette.mode === 'dark'
+                    ? '0 6px 16px rgba(0, 0, 0, 0.6)'
+                    : '0 6px 16px rgba(99, 102, 241, 0.3)',
+                  bgcolor: 'primary.dark',
+                },
+                transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
               Add Budget
@@ -637,8 +648,8 @@ export default function BudgetPage() {
                 bgcolor: 'background.default',
               }}
             >
-              <Typography 
-                variant="body2" 
+              <Typography
+                variant="body2"
                 color="text.secondary"
                 sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}
               >
@@ -666,7 +677,7 @@ export default function BudgetPage() {
                     >
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography 
+                          <Typography
                             fontWeight={600}
                             sx={{
                               fontSize: { xs: '0.9375rem', sm: '1rem' },
@@ -733,8 +744,8 @@ export default function BudgetPage() {
                         </Grid>
                         <Grid size={6}>
                           <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>Remaining</Typography>
-                          <Typography 
-                            fontWeight={600} 
+                          <Typography
+                            fontWeight={600}
                             color={remaining >= 0 ? 'success.main' : 'error.main'}
                             sx={{ fontSize: { xs: '0.875rem', sm: '0.9375rem' } }}
                           >
@@ -899,8 +910,8 @@ export default function BudgetPage() {
           display: { sm: 'block' },
         }}
       >
-        <DialogTitle sx={{ 
-          p: { xs: 2, sm: 2.5 }, 
+        <DialogTitle sx={{
+          p: { xs: 2, sm: 2.5 },
           fontSize: { xs: '1.125rem', sm: '1.25rem' },
           fontWeight: 600,
         }}>
@@ -925,7 +936,7 @@ export default function BudgetPage() {
                     setSelectedCategory('');
                   }}
                   label="Budget Type"
-                  sx={{ 
+                  sx={{
                     '& .MuiSelect-select': {
                       fontSize: { xs: '0.9375rem', sm: '1rem' },
                     },
@@ -945,7 +956,7 @@ export default function BudgetPage() {
                   value={selectedBook}
                   onChange={(e) => setSelectedBook(e.target.value)}
                   label="Select Book"
-                  sx={{ 
+                  sx={{
                     '& .MuiSelect-select': {
                       fontSize: { xs: '0.9375rem', sm: '1rem' },
                     },
@@ -983,7 +994,7 @@ export default function BudgetPage() {
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   label="Select Category"
-                  sx={{ 
+                  sx={{
                     '& .MuiSelect-select': {
                       fontSize: { xs: '0.9375rem', sm: '1rem' },
                     },
@@ -1018,7 +1029,7 @@ export default function BudgetPage() {
                 value={budgetPeriod}
                 onChange={(e) => setBudgetPeriod(e.target.value as 'monthly' | 'weekly' | 'yearly')}
                 label="Budget Period"
-                sx={{ 
+                sx={{
                   '& .MuiSelect-select': {
                     fontSize: { xs: '0.9375rem', sm: '1rem' },
                   },
@@ -1078,7 +1089,7 @@ export default function BudgetPage() {
           display: { sm: 'block' },
         }}
       >
-        <DialogTitle sx={{ 
+        <DialogTitle sx={{
           p: { xs: 2, sm: 2.5 },
           fontSize: { xs: '1.125rem', sm: '1.25rem' },
           fontWeight: 600,
@@ -1086,7 +1097,7 @@ export default function BudgetPage() {
           Confirm Deletion
         </DialogTitle>
         <DialogContent sx={{ p: { xs: 2, sm: 2.5 }, pt: { xs: 1, sm: 2 } }}>
-          <Typography sx={{ 
+          <Typography sx={{
             fontSize: { xs: '0.9375rem', sm: '1rem' },
             lineHeight: 1.6,
           }}>

@@ -21,8 +21,6 @@ import {
   Grid,
   Typography,
   Button,
-  Card,
-  CardContent,
   LinearProgress,
 } from '@mui/material';
 import AddBookModal from './AddBookModal';
@@ -87,7 +85,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <Box>
+    <Box className="fade-in">
       <PageHeader
         title={`Hello, ${user?.displayName?.split(' ')[0] || 'User'}!`}
         subtitle="Here is your financial health overview at a glance."
@@ -105,7 +103,7 @@ export default function Dashboard() {
       )}
 
       {/* Primary Stats Grid */}
-      <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 4 }}>
+      <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 4 }} className="rise-in" style={{ animationDelay: '100ms' }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <StatCard
             title="Net Worth"
@@ -136,38 +134,41 @@ export default function Dashboard() {
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              {loading ? (
-                <LinearProgress sx={{ mt: 2 }} />
-              ) : (
-                <>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 }, mb: 1 }}>
-                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: 'info.main', color: 'white', display: 'flex', flexShrink: 0 }}>
-                      <FiTarget size={16} />
-                    </Box>
-                    <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, lineHeight: 1.4 }}>Budget Usage</Typography>
-                  </Box>
-                  <Typography variant="h4" fontWeight={600} sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem', md: '1.75rem' }, lineHeight: 1.2 }}>{budgetProgress}%</Typography>
-                  <LinearProgress
-                    variant="determinate"
-                    value={budgetProgress}
-                    color={budgetProgress > 90 ? 'error' : budgetProgress > 70 ? 'warning' : 'primary'}
-                    sx={{ mt: 1, height: { xs: 5, sm: 6 }, borderRadius: 3 }}
-                  />
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: { xs: '0.7rem', sm: '0.75rem' } }}>
-                    {formatCurrency(overview.totalSpent)} of {formatCurrency(overview.totalBudget)}
-                  </Typography>
-                </>
-              )}
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Budget Usage"
+            value={`${budgetProgress}%`}
+            icon={<FiTarget size={16} />}
+            iconBgColor="info.main"
+            loading={loading}
+            footer={
+              <>
+                <LinearProgress
+                  variant="determinate"
+                  value={budgetProgress}
+                  color={budgetProgress > 90 ? 'error' : budgetProgress > 70 ? 'warning' : 'primary'}
+                  sx={{ height: 6, borderRadius: 3 }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  {formatCurrency(overview.totalSpent)} of {formatCurrency(overview.totalBudget)}
+                </Typography>
+              </>
+            }
+          />
         </Grid>
       </Grid>
 
       {/* Quick Actions */}
-      <Box sx={{ mb: 6 }}>
-        <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Quick Actions</Typography>
+      <Box sx={{ mb: 6 }} className="rise-in" style={{ animationDelay: '200ms' }}>
+        <Typography 
+          variant="h5" 
+          fontWeight={600} 
+          sx={{ 
+            mb: 2.5,
+            fontSize: { xs: '1.125rem', sm: '1.25rem' } 
+          }}
+        >
+          Quick Actions
+        </Typography>
         <Grid container spacing={2}>
           {quickActions.map((action) => (
             <Grid size={{ xs: 12, sm: 4 }} key={action.label}>
@@ -180,15 +181,18 @@ export default function Dashboard() {
                 endIcon={<FiArrowRight />}
                 sx={{ 
                   justifyContent: 'space-between', 
-                  py: 2, 
-                  px: 3, 
-                  borderRadius: 3,
+                  py: 1.75, 
+                  px: 2.5, 
+                  borderRadius: 2.5,
                   borderColor: 'divider',
                   color: 'text.primary',
+                  transition: 'all 200ms ease',
                   '&:hover': {
                     borderColor: action.color,
-                    bgcolor: 'transparent',
-                    color: action.color
+                    bgcolor: 'rgba(99, 102, 241, 0.04)',
+                    color: action.color,
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
                   }
                 }}
               >
@@ -200,7 +204,7 @@ export default function Dashboard() {
       </Box>
 
       {/* Books Section */}
-      <Box>
+      <Box className="rise-in" style={{ animationDelay: '300ms' }}>
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -209,7 +213,13 @@ export default function Dashboard() {
           flexWrap: 'wrap', 
           gap: 2 
         }}>
-          <Typography variant="h5" fontWeight={600}>Your Expense Books</Typography>
+          <Typography 
+            variant="h5" 
+            fontWeight={600}
+            sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}
+          >
+            Your Expense Books
+          </Typography>
           {hasBooks && (
             <SearchInput
               value={searchQuery}

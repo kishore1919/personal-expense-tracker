@@ -11,6 +11,7 @@ interface StatCardProps {
   iconBgColor?: string;
   valueColor?: string;
   loading?: boolean;
+  footer?: ReactNode;
 }
 
 export function StatCard({
@@ -20,6 +21,7 @@ export function StatCard({
   iconBgColor = 'primary.main',
   valueColor = 'text.primary',
   loading = false,
+  footer,
 }: StatCardProps) {
   if (loading) {
     return (
@@ -27,6 +29,7 @@ export function StatCard({
         <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Skeleton variant="text" width="40%" height={20} />
           <Skeleton variant="text" width="60%" height={40} />
+          {footer && <Skeleton variant="text" width="80%" height={16} sx={{ mt: 1 }} />}
         </CardContent>
       </Card>
     );
@@ -76,6 +79,11 @@ export function StatCard({
         >
           {value}
         </Typography>
+        {footer && (
+          <Box sx={{ mt: 1.5 }}>
+            {footer}
+          </Box>
+        )}
       </CardContent>
     </Card>
   );
