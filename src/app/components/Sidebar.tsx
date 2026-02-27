@@ -9,7 +9,7 @@
  */
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -26,6 +26,7 @@ import {
   Paper,
   IconButton,
   Tooltip,
+  Divider,
 } from '@mui/material';
 import {
   FiGrid,
@@ -37,6 +38,9 @@ import {
   FiTarget,
   FiTrendingUp,
   FiCreditCard,
+  FiClock,
+  FiMenu,
+  FiX,
 } from 'react-icons/fi';
 import { FaBook } from 'react-icons/fa';
 import { useSidebar } from '../context/SidebarContext';
@@ -54,13 +58,24 @@ const menuItems = [
   { icon: FiTarget, name: 'Budget', path: '/budget' },
   { icon: FiTrendingUp, name: 'Investments', path: '/investments' },
   { icon: FiCreditCard, name: 'Loans', path: '/loans' },
+  { icon: FiClock, name: 'Subscriptions', path: '/subscriptions' },
   { icon: FiSettings, name: 'Settings', path: '/settings' },
+];
+
+/**
+ * Mobile navigation menu items - simplified for mobile view
+ * Only shows Dashboard and Books for easier mobile navigation
+ */
+const mobileMenuItems = [
+  { icon: FiGrid, name: 'Dashboard', path: '/' },
+  { icon: FiBookOpen, name: 'Books', path: '/books' },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { isCollapsed, setIsCollapsed, sidebarWidth } = useSidebar();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -70,11 +85,10 @@ export default function Sidebar() {
       console.error('Error logging out:', error);
     }
   };
-  
-  // Calculate active index based on pathname
-  const activeIndex = useMemo(() => {
-    return menuItems.findIndex(item => item.path === pathname);
-  }, [pathname]);
+
+  const handleMobileNavClick = () => {
+    setMobileMenuOpen(false);
+  };
 
   const drawerContent = (
     <>
@@ -278,10 +292,10 @@ export default function Sidebar() {
         {drawerContent}
       </Drawer>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation - Shows on mobile and tablet (xs and sm) */}
       <Paper
         sx={{
-          display: { xs: 'block', md: 'none' },
+          display: { xs: 'block', sm: 'block', md: 'none' },
           position: 'fixed',
           bottom: 0,
           left: 0,
@@ -295,35 +309,191 @@ export default function Sidebar() {
         elevation={0}
       >
         <BottomNavigation
-          value={activeIndex}
+          value={pathname === '/' ? 1 : mobileMenuItems.findIndex(item => item.path === pathname)}
           showLabels
           sx={{
             bgcolor: 'background.paper',
             height: 64,
             '& .MuiBottomNavigationAction-root': {
-              minWidth: 'auto',
+              minWidth: 0,
+              flex: 1,
               py: 1,
               transition: 'all 150ms ease',
               '&.Mui-selected': {
                 color: 'primary.main',
+                bgcolor: 'rgba(99, 102, 241, 0.08)',
                 '& .MuiBottomNavigationAction-label': {
-                  fontWeight: 600,
+                  fontWeight: 700,
                 },
               },
             },
           }}
         >
-          {menuItems.map((item) => (
-            <BottomNavigationAction
-              key={item.name}
-              label={item.name}
-              icon={<item.icon size={22} />}
-              component={Link}
-              href={item.path}
-            />
-          ))}
+          {/* Hamburger Menu - Opens Full Navigation */}
+          <BottomNavigationAction
+            label="Menu"
+            icon={<FiMenu size={24} />}
+            onClick={() => setMobileMenuOpen(true)}
+            sx={{
+              color: 'text.secondary',
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+            }}
+          />
+          {mobileMenuItems.map((item) => {
+            const isActive = item.path === pathname;
+            return (
+              <BottomNavigationAction
+                key={item.name}
+                label={item.name}
+                icon={
+                  <Box sx={{ position: 'relative' }}>
+                    <item.icon size={24} />
+                    {isActive && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: -4,
+                          right: -4,
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          bgcolor: 'primary.main',
+                          border: '2px solid',
+                          borderColor: 'background.paper',
+                        }}
+                      />
+                    )}
+                  </Box>
+                }
+                component={Link}
+                href={item.path}
+                sx={{
+                  color: isActive ? 'primary.main' : 'text.secondary',
+                }}
+              />
+            );
+          })}
         </BottomNavigation>
       </Paper>
+
+      {/* Mobile Menu Drawer (Hamburger Menu) - Shows on mobile and tablet */}
+      <Drawer
+        anchor="left"
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        sx={{
+          display: { xs: 'block', sm: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            width: 280,
+            boxSizing: 'border-box',
+            bgcolor: 'background.paper',
+          },
+        }}
+      >
+        {/* Drawer Header */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 2,
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <FaBook size={20} />
+            </Box>
+            <Typography variant="h6" fontWeight={600}>
+              Expense Pilot
+            </Typography>
+          </Box>
+          <IconButton onClick={() => setMobileMenuOpen(false)} size="small">
+            <FiX size={20} />
+          </IconButton>
+        </Box>
+
+        {/* Menu Items */}
+        <List sx={{ py: 2 }}>
+          {menuItems.map((item) => {
+            const isActive = pathname === item.path;
+            return (
+              <ListItem key={item.name} disablePadding>
+                <ListItemButton
+                  component={Link}
+                  href={item.path}
+                  onClick={handleMobileNavClick}
+                  selected={isActive}
+                  sx={{
+                    py: 2,
+                    px: 2,
+                    '&.Mui-selected': {
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText',
+                      '&:hover': {
+                        bgcolor: 'primary.dark',
+                      },
+                      '& .MuiListItemIcon-root': {
+                        color: 'primary.contrastText',
+                      },
+                    },
+                    '&:hover': {
+                      bgcolor: isActive ? 'primary.dark' : 'action.hover',
+                    },
+                  }}
+                >
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 40,
+                      color: isActive ? 'inherit' : 'text.secondary',
+                    }}
+                  >
+                    <item.icon size={22} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.name}
+                    primaryTypographyProps={{
+                      fontWeight: isActive ? 600 : 500,
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+        </List>
+
+        <Divider />
+
+        {/* Logout in Drawer */}
+        <List sx={{ py: 1 }}>
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={handleLogout}
+              sx={{
+                py: 2,
+                px: 2,
+                color: 'error.main',
+                '&:hover': {
+                  bgcolor: 'error.lighter',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 40, color: 'inherit' }}>
+                <FiLogOut size={22} />
+              </ListItemIcon>
+              <ListItemText
+                primary="Logout"
+                primaryTypographyProps={{ fontWeight: 500 }}
+              />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </Drawer>
     </>
   );
 }

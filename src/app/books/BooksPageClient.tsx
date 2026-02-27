@@ -10,13 +10,14 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiArchive } from 'react-icons/fi';
 import {
   Button,
   Box,
   Alert,
   Container,
   Checkbox,
+  Badge,
 } from '@mui/material';
 import AddBookModal from '@/app/components/AddBookModal';
 import { SearchInput } from '@/app/components/ui';
@@ -47,22 +48,27 @@ export default function BooksPage() {
   const [addError, setAddError] = useState<string | null>(null);
 
   const {
+    books,
     displayedBooks,
     loading,
     error,
-    totalFiltered,
     totalPages,
     startIndex,
     endIndex,
     addBook,
     deleteBooks,
     isDeleting,
+    toggleArchive,
   } = useBooksWithPagination({
     searchQuery,
     sortBy,
     page,
     pageSize,
+    showArchived: false, // By default, hide archived books
   });
+
+  // Count archived books for the badge
+  const archivedCount = books.filter((b) => b.archived).length;
 
   // Keep pagination/selection consistent whenever list controls change.
   const resetListState = useCallback(() => {
@@ -131,11 +137,11 @@ export default function BooksPage() {
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1, sm: 2 } }}>
       {/* Header Controls */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: { xs: 'column', sm: 'row' }, 
-          gap: 2, 
-          alignItems: { xs: 'stretch', sm: 'center' } 
+        <Box sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: 2,
+          alignItems: { xs: 'stretch', sm: 'center' }
         }}>
           {/* Search */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
@@ -154,14 +160,34 @@ export default function BooksPage() {
           </Box>
 
           {/* Controls */}
-          <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' } }}>
+          <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' }, flexWrap: 'wrap' }}>
             <BooksPagination.SortSelect value={sortBy} onChange={handleSortChange} />
+            <Button
+              variant="outlined"
+              onClick={() => router.push('/books/archived')}
+              startIcon={<FiArchive />}
+              disabled={archivedCount === 0}
+              sx={{
+                height: 40,
+                px: 2,
+                textTransform: 'none',
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                minWidth: 'auto',
+              }}
+            >
+              <Badge badgeContent={archivedCount} color="warning" overlap="circular">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  Archived
+                </Box>
+              </Badge>
+            </Button>
             <Button
               variant="contained"
               onClick={() => setIsModalOpen(true)}
               startIcon={<FiPlus />}
-              sx={{ 
-                height: 40, 
+              sx={{
+                height: 40,
                 px: { xs: 1, sm: 3 },
                 flex: { xs: 1, sm: 'none' },
                 textTransform: 'none',
@@ -182,7 +208,7 @@ export default function BooksPage() {
       <BooksPagination.Header
         startIndex={startIndex}
         endIndex={endIndex}
-        totalFiltered={totalFiltered}
+        totalFiltered={displayedBooks.length}
         page={page}
         totalPages={totalPages}
         pageSize={pageSize}
@@ -198,6 +224,7 @@ export default function BooksPage() {
         onSelectBook={handleSelectBook}
         onBookClick={handleBookClick}
         formatCurrency={formatCurrency}
+        onToggleArchive={toggleArchive}
       />
 
       {/* Selection Toolbar */}

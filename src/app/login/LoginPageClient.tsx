@@ -54,66 +54,112 @@ export default function LoginPage() {
   }
 
   return (
-    <Card sx={{ borderRadius: 3 }}>
-      <CardContent sx={{ p: 4 }}>
-        {/* Logo and Title */}
-        <Box sx={{ mb: 4, textAlign: 'center' }}>
-          <Box
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: { xs: 2, sm: 3, md: 4 },
+      }}
+    >
+      <Card 
+        sx={{ 
+          width: '100%', 
+          maxWidth: 440,
+          borderRadius: 3,
+          boxShadow: { xs: '0 2px 8px rgba(0,0,0,0.1)', sm: '0 4px 16px rgba(0,0,0,0.12)' },
+        }}
+      >
+        <CardContent sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
+          {/* Logo and Title */}
+          <Box sx={{ mb: { xs: 3, sm: 4 }, textAlign: 'center' }}>
+            <Box
+              sx={{
+                mx: 'auto',
+                mb: { xs: 2, sm: 3 },
+                width: { xs: 56, sm: 64 },
+                height: { xs: 56, sm: 64 },
+                borderRadius: 3,
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <FaBook size={24} />
+            </Box>
+            <Typography 
+              variant="h4" 
+              fontWeight={600} 
+              sx={{ 
+                mb: { xs: 1, sm: 1.5 },
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+              }}
+            >
+              Expense Pilot
+            </Typography>
+            <Typography 
+              variant="body1" 
+              color="text.secondary"
+              sx={{
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                lineHeight: 1.5,
+              }}
+            >
+              Sign in to manage your expenses.
+            </Typography>
+          </Box>
+
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: { xs: 2, sm: 3 },
+                fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+              }}
+            >
+              {error}
+            </Alert>
+          )}
+
+          <Button
+            variant="outlined"
+            fullWidth
+            size="large"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            startIcon={<FcGoogle size={24} />}
             sx={{
-              mx: 'auto',
-              mb: 2,
-              width: 64,
-              height: 64,
-              borderRadius: 3,
-              bgcolor: 'primary.main',
-              color: 'primary.contrastText',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              py: { xs: 1.25, sm: 1.5 },
+              borderColor: 'divider',
+              color: 'text.primary',
+              fontSize: { xs: '0.9375rem', sm: '1rem' },
+              fontWeight: 600,
+              '&:hover': {
+                borderColor: 'text.primary',
+                bgcolor: 'action.hover',
+              },
             }}
           >
-            <FaBook size={28} />
+            {isLoading ? 'Connecting...' : 'Continue with Google'}
+          </Button>
+
+          <Box sx={{ mt: { xs: 3, sm: 4 }, textAlign: 'center' }}>
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              sx={{
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                lineHeight: 1.5,
+              }}
+            >
+              By signing in, you agree to our Terms of Service.
+            </Typography>
           </Box>
-          <Typography variant="h4" fontWeight={600} sx={{ mb: 1 }}>
-            Expense Pilot
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Sign in to manage your expenses.
-          </Typography>
-        </Box>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        <Button
-          variant="outlined"
-          fullWidth
-          size="large"
-          onClick={handleGoogleLogin}
-          disabled={isLoading}
-          startIcon={<FcGoogle />}
-          sx={{
-            py: 1.5,
-            borderColor: 'divider',
-            color: 'text.primary',
-            '&:hover': {
-              borderColor: 'text.primary',
-              bgcolor: 'action.hover',
-            },
-          }}
-        >
-          {isLoading ? 'Connecting...' : 'Continue with Google'}
-        </Button>
-
-        <Box sx={{ mt: 4, textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary">
-            By signing in, you agree to our Terms of Service.
-          </Typography>
-        </Box>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Box>
   );
 }

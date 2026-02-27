@@ -60,31 +60,47 @@ export default function InvestmentsOverviewPage() {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
       {/* Header */}
-      <Box sx={{ mb: 6 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+      <Box sx={{ mb: { xs: 4, sm: 6 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 } }}>
           <Box
             sx={{
-              width: 56,
-              height: 56,
+              width: { xs: 48, sm: 56 },
+              height: { xs: 48, sm: 56 },
               borderRadius: 2,
               bgcolor: 'primary.main',
               color: 'primary.contrastText',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1.75rem',
+              fontSize: { xs: '1.5rem', sm: '1.75rem' },
               fontWeight: 600,
+              flexShrink: 0,
             }}
           >
             {currencySymbol}
           </Box>
-          <Box>
-            <Typography variant="h4" fontWeight={700}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography 
+              variant="h4" 
+              fontWeight={700}
+              sx={{
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2.125rem' },
+                lineHeight: 1.2,
+                wordBreak: 'break-word',
+              }}
+            >
               Investments
             </Typography>
-            <Typography variant="body1" color="text.secondary">
+            <Typography 
+              variant="body1" 
+              color="text.secondary"
+              sx={{
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                lineHeight: 1.5,
+              }}
+            >
               Manage all your investments in one place
             </Typography>
           </Box>
@@ -92,9 +108,9 @@ export default function InvestmentsOverviewPage() {
       </Box>
 
       {/* Investment Options Grid */}
-      <Grid container spacing={3}>
+      <Grid container spacing={{ xs: 2, sm: 3 }}>
         {investmentOptions.map((option) => (
-          <Grid size={{ xs: 12, md: 4 }} key={option.title}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={option.title}>
             <Card
               sx={{
                 height: '100%',
@@ -110,28 +126,45 @@ export default function InvestmentsOverviewPage() {
               component={Link}
               href={option.path}
             >
-              <CardContent sx={{ p: 4, flexGrow: 1 }}>
+              <CardContent sx={{ p: { xs: 3, sm: 4 }, flexGrow: 1 }}>
                 <Box
                   sx={{
-                    width: 64,
-                    height: 64,
+                    width: { xs: 56, sm: 64 },
+                    height: { xs: 56, sm: 64 },
                     borderRadius: 3,
                     bgcolor: option.bgColor,
                     color: option.color,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    mb: 3,
+                    mb: { xs: 2, sm: 3 },
+                    flexShrink: 0,
                   }}
                 >
                   {option.icon}
                 </Box>
 
-                <Typography variant="h5" fontWeight={600} gutterBottom>
+                <Typography 
+                  variant="h5" 
+                  fontWeight={600} 
+                  gutterBottom
+                  sx={{
+                    fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
+                    lineHeight: 1.3,
+                  }}
+                >
                   {option.title}
                 </Typography>
 
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                <Typography 
+                  variant="body1" 
+                  color="text.secondary" 
+                  sx={{ 
+                    mb: { xs: 2, sm: 3 },
+                    fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+                    lineHeight: 1.6,
+                  }}
+                >
                   {option.description}
                 </Typography>
 
@@ -143,11 +176,16 @@ export default function InvestmentsOverviewPage() {
                     textTransform: 'none',
                     borderColor: option.color,
                     color: option.color,
+                    fontWeight: 600,
+                    py: { xs: 1, sm: 1.25 },
                     '&:hover': {
                       borderColor: option.color,
                       bgcolor: option.bgColor,
                     },
+                    display: { sm: 'inline-block' },
+                    width: { sm: 'auto' },
                   }}
+                  fullWidth
                 >
                   View {option.title}
                 </Button>
@@ -158,14 +196,29 @@ export default function InvestmentsOverviewPage() {
       </Grid>
 
       {/* Quick Stats Section */}
-      <Card sx={{ mt: 6 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h5" fontWeight={600} gutterBottom>
+      <Card sx={{ mt: { xs: 4, sm: 6 } }}>
+        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+          <Typography 
+            variant="h5" 
+            fontWeight={600} 
+            gutterBottom
+            sx={{
+              fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' },
+              lineHeight: 1.3,
+            }}
+          >
             Investment Overview
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Select an investment type above to view detailed information, track your portfolio, 
-            and monitor returns. You can manage Fixed Deposits, Mutual Funds, and Stocks separately 
+          <Typography 
+            variant="body1" 
+            color="text.secondary"
+            sx={{
+              fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+              lineHeight: 1.6,
+            }}
+          >
+            Select an investment type above to view detailed information, track your portfolio,
+            and monitor returns. You can manage Fixed Deposits, Mutual Funds, and Stocks separately
             to get a complete picture of your investment portfolio.
           </Typography>
         </CardContent>

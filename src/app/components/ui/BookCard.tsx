@@ -24,40 +24,65 @@ export function BookCard({ book, onClick, formatCurrency }: BookCardProps) {
           transform: 'translateY(-2px)',
           boxShadow: 3,
         },
+        height: '100%',
       }}
       onClick={() => onClick(book.id)}
     >
-      <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 }, mb: 2 }}>
           <Box
             sx={{
-              width: 48,
-              height: 48,
+              width: { xs: 40, sm: 48 },
+              height: { xs: 40, sm: 48 },
               borderRadius: 2,
               bgcolor: 'primary.main',
               color: 'primary.contrastText',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
-            <FaBook size={20} />
+            <FaBook size={18} />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" noWrap fontWeight={600}>
+            <Typography 
+              variant="h6" 
+              noWrap 
+              fontWeight={600}
+              sx={{ 
+                fontSize: { xs: '1rem', sm: '1.125rem' },
+                lineHeight: 1.3,
+              }}
+            >
               {book.name}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              sx={{ 
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                mt: 0.5,
+              }}
+            >
               Created {book.createdAt}
             </Typography>
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 1,
+        }}>
           <Typography
             variant="h6"
             fontWeight={600}
             sx={{
               color: isPositive ? 'success.main' : 'error.main',
+              fontSize: { xs: '1rem', sm: '1.125rem' },
+              wordBreak: 'break-word',
             }}
           >
             {netValue}
@@ -65,7 +90,14 @@ export function BookCard({ book, onClick, formatCurrency }: BookCardProps) {
           <Typography
             variant="button"
             color="primary"
-            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 0.5,
+              fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+              fontWeight: 600,
+              whiteSpace: 'nowrap',
+            }}
           >
             View Details
           </Typography>
@@ -78,9 +110,9 @@ export function BookCard({ book, onClick, formatCurrency }: BookCardProps) {
 export function BookCardSkeleton() {
   return (
     <Card>
-      <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-          <Skeleton variant="rounded" width={48} height={48} />
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 }, mb: 2 }}>
+          <Skeleton variant="rounded" width={40} height={40} />
           <Box sx={{ flex: 1 }}>
             <Skeleton variant="text" width="70%" height={24} />
             <Skeleton variant="text" width="50%" height={16} />

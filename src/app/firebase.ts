@@ -22,8 +22,8 @@
 
 // Firebase core imports
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 
 /**
  * Firebase configuration object.
@@ -80,6 +80,21 @@ const db = getFirestore(app);
  * @constant {Object} googleProvider - Google Auth Provider instance
  */
 const googleProvider = new GoogleAuthProvider();
+
+/**
+ * Connect to Firebase Emulators for testing.
+ * This is only enabled when NEXT_PUBLIC_FIREBASE_EMULATOR is set to 'true'.
+ * The emulators provide an isolated testing environment without affecting production data.
+ */
+if (process.env.NEXT_PUBLIC_FIREBASE_EMULATOR === 'true') {
+  // Connect to Auth Emulator
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  
+  // Connect to Firestore Emulator
+  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  
+  console.log('🔧 Connected to Firebase Emulators');
+}
 
 // Export configured Firebase services for use throughout the app
 export { auth, db, googleProvider };

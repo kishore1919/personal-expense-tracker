@@ -30,11 +30,19 @@ export function SearchInput({
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">
-            <FiSearch />
+            <FiSearch size={18} />
           </InputAdornment>
         ),
       }}
-      sx={{ width }}
+      sx={{ 
+        width,
+        '& .MuiInputBase-root': {
+          fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+        },
+        '& .MuiOutlinedInput-root': {
+          borderRadius: 2,
+        },
+      }}
     />
   );
 }

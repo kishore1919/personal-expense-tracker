@@ -13,7 +13,7 @@ import type { Timestamp } from 'firebase/firestore';
 /**
  * Represents an expense book (a collection of expenses).
  * Books are user-created containers for organizing expenses by category, project, or time period.
- * 
+ *
  * @interface Book
  * @property {string} id - Unique Firestore document ID
  * @property {string} name - Display name of the book
@@ -23,6 +23,7 @@ import type { Timestamp } from 'firebase/firestore';
  * @property {number} [net] - Net balance (income - expenses) - alternative naming
  * @property {number} [netBalance] - Net balance (income - expenses) - primary naming
  * @property {string} [userId] - Owner user ID (for Firestore queries)
+ * @property {boolean} [archived] - Whether the book is archived (hidden from default views)
  */
 export interface Book {
   id: string;
@@ -33,6 +34,7 @@ export interface Book {
   net?: number;
   netBalance?: number;
   userId?: string;
+  archived?: boolean;
 }
 
 /**
@@ -120,4 +122,68 @@ export interface PaginationState {
   totalPages: number;
   startIndex: number;
   endIndex: number;
+}
+
+/**
+ * Represents a loan entity.
+ */
+export interface Loan {
+  id: string;
+  name: string;
+  lender: string;
+  amount: number;
+  paidAmount: number;
+  interestRate: number;
+  monthlyPayment: number;
+  isActive: boolean;
+  createdAt?: { toDate?: () => Date } | Date;
+  userId?: string;
+}
+
+/**
+ * Represents a fixed deposit investment.
+ */
+export interface FixedDeposit {
+  id: string;
+  fdNumber: string;
+  bankName: string;
+  principalAmount: number;
+  interestRate: number;
+  tenureMonths: number;
+  startDate: Date;
+  maturityDate: Date;
+  maturityAmount: number;
+  notes?: string;
+  userId?: string;
+}
+
+/**
+ * Represents a budget for a book or category.
+ */
+export interface Budget {
+  id: string;
+  bookId: string;
+  bookName: string;
+  amount: number;
+  spent: number;
+  period: 'monthly' | 'weekly' | 'yearly';
+  budgetType: 'book' | 'category';
+  category?: string;
+  createdAt: Date;
+  userId?: string;
+}
+
+/**
+ * Represents a subscription entity.
+ */
+export interface Subscription {
+  id: string;
+  name: string;
+  amount: number;
+  billingCycle: 'weekly' | 'monthly' | 'yearly';
+  startDate: string;
+  category: string;
+  status: 'active' | 'paused' | 'cancelled';
+  userId?: string;
+  createdAt?: { toDate?: () => Date } | Date;
 }
