@@ -14,7 +14,7 @@ import {
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from '../firebase';
 import Loading from '../components/Loading';
-import { useCurrency } from '../context/CurrencyContext';
+import { useCurrencyStore } from '../stores';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface Expense {
@@ -32,7 +32,7 @@ export default function AnalyticsPage() {
   const [averageExpense, setAverageExpense] = useState(0);
   const [highestExpense, setHighestExpense] = useState(0);
   const [loading, setLoading] = useState(true);
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency } = useCurrencyStore();
 
   const [monthlyBudget, setMonthlyBudget] = useState<number>(() => Math.max(1000, totalBooks * 1000));
 

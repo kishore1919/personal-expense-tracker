@@ -9,10 +9,11 @@
 
 import { usePathname } from 'next/navigation';
 import { Box } from '@mui/material';
-import { useSidebar } from '@/app/context/SidebarContext';
+import { useSidebarStore } from '@/app/stores';
 import { useProtectedRoute } from '@/app/hooks/useAuth';
 import Loading from './Loading';
 import Sidebar from './Sidebar';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface ProtectedLayoutProps {
   children: React.ReactNode;
@@ -21,7 +22,8 @@ interface ProtectedLayoutProps {
 export function ProtectedLayout({ children }: ProtectedLayoutProps) {
   const pathname = usePathname();
   const isAuthPage = pathname === '/login';
-  const { sidebarWidth } = useSidebar();
+  const isCollapsed = useSidebarStore((state) => state.isCollapsed);
+  const sidebarWidth = isCollapsed ? 72 : 260;
   const { loading, isAuthenticated } = useProtectedRoute();
 
   // Show loading while checking auth or redirecting
@@ -81,9 +83,11 @@ export function ProtectedLayout({ children }: ProtectedLayoutProps) {
             p: { xs: 2, sm: 3, md: 4 },
           }}
         >
-          <Box sx={{ width: '100%', maxWidth: '1200px', mx: 'auto' }}>
-            {children}
-          </Box>
+          <ErrorBoundary>
+            <Box sx={{ width: '100%', maxWidth: '1200px', mx: 'auto' }}>
+              {children}
+            </Box>
+          </ErrorBoundary>
         </Box>
       </Box>
     </>

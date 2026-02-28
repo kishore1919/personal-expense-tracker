@@ -1,6 +1,6 @@
-# Personal Expense Tracker
+# Expense Pilot 📊
 
-A modern, full-featured expense tracking application built with Next.js, Material UI, and Firebase. Track your expenses across multiple books, visualize spending patterns, and export data for analysis.
+A modern, intelligent personal expense tracking application built with Next.js 16, Material UI, and Firebase. Organize expenses across multiple books, track loans and subscriptions, manage budgets, and gain insights into your financial health.
 
 ![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=flat&logo=next.js)
 ![React](https://img.shields.io/badge/React-19.2-blue?style=flat&logo=react)
@@ -8,175 +8,317 @@ A modern, full-featured expense tracking application built with Next.js, Materia
 ![Firebase](https://img.shields.io/badge/Firebase-12.9-orange?style=flat&logo=firebase)
 ![MUI](https://img.shields.io/badge/MUI-7.3-blue?style=flat&logo=mui)
 
-## Features
+## ✨ Features
 
-### Core Functionality
-- **Multi-Book Management** - Organize expenses into separate books (e.g., Personal, Business, Travel)
-- **Expense Tracking** - Add, edit, and delete expenses with detailed information
-- **Smart Filtering** - Filter by date range, transaction type, payment mode, and category
-- **Search & Sort** - Full-text search with sorting by date, amount, or running balance
-- **Running Balance** - Real-time balance calculation as you browse expenses
-- **CSV Export** - Export filtered expense data for spreadsheet analysis
+### 📚 Multi-Book Expense Management
+- **Unlimited Books** - Create separate books for different purposes (Personal, Business, Travel, Projects)
+- **Smart Organization** - Categorize expenses with custom categories
+- **Advanced Filtering** - Filter by date range, type, payment mode, category
+- **Real-time Search** - Full-text search across descriptions and amounts
+- **Running Balance** - Track balance after each transaction
+- **CSV Export** - Export filtered data for spreadsheet analysis
 
-### Analytics & Insights
-- **Dashboard Overview** - Visual summary of total expenses, book count, and spending trends
-- **Analytics Page** - Detailed statistics including average expense and highest transactions
-- **Visual Charts** - Spending breakdowns and trend visualizations
+### 💰 Financial Dashboard
+- **Net Worth Overview** - See total assets, liabilities, and investments at a glance
+- **Budget Tracking** - Monitor spending against monthly/weekly/yearly budgets
+- **Expense Analytics** - Visual charts showing spending patterns and trends
+- **Quick Actions** - Fast access to add expenses, loans, and investments
 
-### User Experience
-- **Dark Mode** - Full dark mode support with persistent preference
-- **Responsive Design** - Works seamlessly on desktop and mobile devices
-- **Real-time Updates** - Firebase-powered live data synchronization
-- **Bulk Operations** - Efficient batch delete operations (handles 500+ items)
-- **Hydration-Safe** - Careful client/server rendering to prevent hydration mismatches
+### 💳 Loan Management
+- **Track Multiple Loans** - Monitor personal and institutional loans
+- **Amortization Calculator** - Automatic calculation of remaining interest and payoff timeline
+- **Payment Tracking** - Record payments and track progress
+- **Interest Calculations** - Accurate monthly interest and EMI calculations
 
-### Authentication & Security
-- **User Authentication** - Secure login and signup with Firebase Auth
-- **Firestore Security** - Configurable security rules for data protection
-- **Category Management** - Customizable expense categories in settings
+### 🔄 Subscription Tracker
+- **Recurring Expenses** - Track all your subscriptions (Netflix, Spotify, utilities)
+- **Billing Cycle Support** - Weekly, monthly, and yearly billing
+- **Next Payment Date** - Never miss a payment with automatic date calculations
+- **Cost Estimates** - See monthly and yearly subscription costs
 
-## Tech Stack
+### 📈 Investment Tracking
+- **Fixed Deposits** - Track FD principal, interest rates, and maturity dates
+- **Multiple Asset Types** - Support for stocks, mutual funds (expandable)
+- **Investment Overview** - Total investment value at a glance
 
-- **Framework:** Next.js 16 (App Router)
-- **UI Library:** Material UI (MUI) 7 with Emotion styling
-- **Backend:** Firebase Firestore (NoSQL database)
-- **Authentication:** Firebase Auth
-- **Language:** TypeScript 5
-- **Styling:** Tailwind CSS 4 + CSS Variables for theme sync
-- **Icons:** React Icons + MUI Icons
+### 🎨 User Experience
+- **Dark Mode** - Full dark mode support with system preference detection
+- **Responsive Design** - Optimized for desktop, tablet, and mobile
+- **Real-time Sync** - Firebase-powered live data updates across tabs
+- **Smart Pagination** - Efficient handling of large datasets
+- **Collapsible Sidebar** - Maximize screen space when needed
+- **Mobile Navigation** - Bottom nav bar for easy mobile access
 
-## Getting Started
+### 🔒 Security & Performance
+- **Firebase Auth** - Secure authentication with Google Sign-In support
+- **Firestore Security Rules** - User-level data isolation
+- **Optimized Queries** - Parallel fetching to minimize load times
+- **Zustand State Management** - Fast, lightweight global state
+- **TypeScript** - Full type safety throughout the application
+
+## 🛠️ Tech Stack
+
+| Category | Technology |
+|----------|-----------|
+| **Framework** | Next.js 16 (App Router) |
+| **UI Library** | React 19.2 + Material UI 7 |
+| **Language** | TypeScript 5 |
+| **Backend** | Firebase Firestore |
+| **Authentication** | Firebase Auth |
+| **State Management** | Zustand |
+| **Styling** | Tailwind CSS 4 + MUI Sx Prop |
+| **Charts** | Recharts |
+| **Icons** | React Icons + MUI Icons |
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ or Bun
+
+- Node.js 18+ or Bun 1.0+
 - A Firebase project with Firestore enabled
+- Git (for cloning)
 
 ### Installation
 
-1. Clone the repository
+1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd personal-expense-tracker
+cd expense-pilot
 ```
 
-2. Install dependencies
+2. **Install dependencies**
 ```bash
+bun install
+# or
 npm install
 # or
 pnpm install
-# or
-bun install
 ```
 
-3. Configure Firebase
-   - Create a Firebase project at [firebase.google.com](https://firebase.google.com)
-   - Enable Firestore Database
-   - Enable Authentication (if using auth features)
-   - Add your Firebase configuration to `src/app/firebase.ts`
-   - Deploy Firestore rules: `firestore.rules`
-   - Deploy indexes: `firestore.indexes.json`
+3. **Set up Firebase**
+   - Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
+   - Enable **Firestore Database**
+   - Enable **Authentication** (Email/Password and/or Google Sign-In)
+   - Copy your Firebase config to `.env.local`:
 
-4. Run the development server
-```bash
-npm run dev
-```
-
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
-
-### Environment Variables (Optional)
-
-Create a `.env.local` file for additional configuration:
 ```env
-NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key_here
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
+NEXT_PUBLIC_FIREBASE_APP_ID=1:123456:web:abcdef
 ```
 
-## Scripts
-
-- `npm run dev` - Start development server with Turbopack
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── books/page.tsx              # Book management (list, search, pagination)
-│   ├── book/[bookId]/page.tsx      # Book detail (expenses, filters, CSV export)
-│   ├── analytics/page.tsx          # Analytics dashboard
-│   ├── settings/page.tsx           # Settings & category management
-│   ├── login/page.tsx              # Authentication login
-│   ├── signup/page.tsx             # Authentication signup
-│   ├── admin/page.tsx              # Admin panel
-│   ├── components/                 # Reusable components
-│   │   ├── Dashboard.tsx           # Main dashboard
-│   │   ├── AddExpenseModal.tsx     # Add expense dialog
-│   │   ├── AddBookModal.tsx        # Add book dialog
-│   │   ├── Sidebar.tsx             # Navigation sidebar
-│   │   ├── MUIProvider.tsx         # Theme provider with CSS sync
-│   │   └── Loading.tsx             # Loading states
-│   ├── context/                    # React contexts
-│   │   ├── ThemeContext.tsx        # Dark mode state
-│   │   ├── SidebarContext.tsx      # Sidebar collapsed state
-│   │   └── CurrencyContext.tsx     # Currency formatting
-│   ├── firebase.ts                 # Firebase configuration
-│   ├── layout.tsx                  # Root layout
-│   └── page.tsx                    # Home page (Dashboard)
-├── public/
-│   └── service-worker.js           # Minimal SW to prevent 404s
-├── firestore.rules                 # Firestore security rules
-└── firestore.indexes.json          # Firestore indexes
+4. **Deploy Firestore rules and indexes**
+```bash
+firebase deploy --only firestore:rules
+firebase deploy --only firestore:indexes
 ```
 
-## Key Features Explained
+5. **Start development server**
+```bash
+bun run dev
+```
 
-### Book Management
-Books are containers for related expenses. Each book tracks its own running balance and can be searched, sorted, and paginated. Books support bulk deletion with automatic chunking to handle Firestore's 500-operation batch limit.
+6. **Open [http://localhost:3000](http://localhost:3000)** 🎉
 
-### Expense Tracking
-Expenses support:
-- Description and amount
-- Transaction type (Income/Expense)
-- Payment mode (Cash, Card, Digital Wallet, etc.)
-- Category (customizable in settings)
-- Date tracking with automatic timestamp
+## 📖 Usage Guide
 
-### Running Balance
-The running balance is calculated dynamically based on the transaction type and amount, showing the current balance for each book in real-time.
+### Creating Your First Book
+1. Click **"New Book"** from the Dashboard
+2. Enter a name (e.g., "Personal Expenses", "Business 2024")
+3. Start adding expenses with categories and amounts
 
-### CSV Export
-Export filtered and sorted expense data to CSV format for use in Excel, Google Sheets, or other analytics tools.
+### Adding Expenses
+1. Navigate to a book
+2. Click **"+ Add Expense"**
+3. Fill in details:
+   - **Description**: What was the expense for?
+   - **Amount**: Enter value (supports expressions like `100+50`)
+   - **Type**: Income or Expense
+   - **Category**: Select or create custom category
+   - **Payment Mode**: Cash, Card, Digital Wallet, etc.
+   - **Date**: Can be backdated for historical entries
+4. Click **Save**
 
-## Troubleshooting
+### Managing Loans
+1. Go to **Loans** from sidebar
+2. Click **"Add Loan"**
+3. Enter loan details:
+   - Lender name and loan purpose
+   - Principal amount and paid amount
+   - Interest rate (%) and monthly EMI
+4. View automatic calculations for:
+   - Remaining balance
+   - Interest remaining
+   - Months to payoff
+   - Total due amount
+
+### Tracking Subscriptions
+1. Go to **Subscriptions** from sidebar
+2. Click **"Add Subscription"**
+3. Enter subscription details:
+   - Name, amount, billing cycle
+   - Category and start date
+   - Status (active/paused/cancelled)
+4. View monthly and yearly cost estimates
+
+### Setting Budgets
+1. Go to **Budget** from sidebar
+2. Select a book or category
+3. Set budget amount and period (weekly/monthly/yearly)
+4. Monitor spending progress in real-time
+
+## 📁 Project Structure
+
+```
+expense-pilot/
+├── src/app/
+│   ├── (routes)/
+│   │   ├── page.tsx              # Dashboard - Financial overview
+│   │   ├── books/
+│   │   │   ├── page.tsx          # Books list with search & pagination
+│   │   │   └── archived/page.tsx # Archived books
+│   │   ├── book/[bookId]/
+│   │   │   ├── page.tsx          # Book detail - Expenses list
+│   │   │   └── analytics/page.tsx # Book-specific analytics
+│   │   ├── loans/page.tsx        # Loan management
+│   │   ├── subscriptions/page.tsx # Subscription tracker
+│   │   ├── budget/page.tsx       # Budget management
+│   │   ├── investments/
+│   │   │   ├── page.tsx          # Investments overview
+│   │   │   └── fd/page.tsx       # Fixed deposits
+│   │   ├── analytics/page.tsx    # Global analytics
+│   │   ├── settings/page.tsx     # Settings & categories
+│   │   └── login/page.tsx        # Authentication
+│   │
+│   ├── components/               # Shared components
+│   │   ├── ui/                   # Reusable UI components
+│   │   │   ├── TableSkeleton.tsx
+│   │   │   ├── SummaryCard.tsx
+│   │   │   ├── Pagination.tsx
+│   │   │   ├── EmptyState.tsx
+│   │   │   └── ErrorState.tsx
+│   │   ├── books/                # Book-specific components
+│   │   ├── Dashboard.tsx
+│   │   ├── Sidebar.tsx
+│   │   ├── AddExpenseModal.tsx
+│   │   ├── MUIProvider.tsx
+│   │   └── ErrorBoundary.tsx
+│   │
+│   ├── hooks/                    # Custom React hooks
+│   │   ├── useBooks.ts
+│   │   ├── useLoans.ts
+│   │   ├── useSubscriptions.ts
+│   │   ├── useFinancialOverview.ts
+│   │   └── useAuth.ts
+│   │
+│   ├── stores/                   # Zustand state stores
+│   │   ├── useCurrencyStore.ts
+│   │   ├── useSidebarStore.ts
+│   │   └── useThemeStore.ts
+│   │
+│   ├── lib/
+│   │   └── firestore/            # Firestore service layer
+│   │       ├── books.ts
+│   │       ├── loans.ts
+│   │       └── subscriptions.ts
+│   │
+│   ├── types/                    # TypeScript types
+│   ├── firebase.ts               # Firebase configuration
+│   └── layout.tsx                # Root layout
+│
+├── public/                       # Static assets
+├── firestore.rules               # Security rules
+├── firestore.indexes.json        # Database indexes
+├── firebase.json                 # Firebase config
+└── package.json
+```
+
+## 🎯 Key Architecture Decisions
+
+### State Management
+- **Zustand** for global state (theme, sidebar, currency)
+- **React Query patterns** for server state (custom hooks with caching)
+- **LocalStorage** for user preferences persistence
+
+### Data Flow
+```
+Component → Custom Hook → Service Layer → Firestore
+     ↓
+  Zustand Store (UI state)
+     ↓
+  Component (render)
+```
+
+### Performance Optimizations
+- **Parallel fetching** for independent data sources
+- **Memoized calculations** for expensive operations
+- **Virtual scrolling** ready for large lists
+- **Debounced search** to reduce queries
+- **Optimistic updates** for better UX
+
+## 🔧 Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `bun run dev` | Start development server (Turbopack) |
+| `bun run build` | Build for production |
+| `bun run start` | Start production server |
+| `bun run lint` | Run ESLint |
+| `bun run test:e2e` | Run E2E tests with Playwright |
+| `bun run test:ci` | Run tests in CI environment |
+
+## 🐛 Troubleshooting
 
 ### Hydration Mismatches
-The app uses `useEffect` for client-only operations like reading `localStorage` and `window.matchMedia`. The root layout includes `suppressHydrationWarning` to reduce noise during development.
-
-### Turbopack Root Warning
-If you see root inference warnings, the project already includes `turbopack.root` configuration in `next.config.ts`.
+The app uses `useEffect` for client-only operations. Root layout includes `suppressHydrationWarning` to reduce noise.
 
 ### Service Worker 404
-A minimal service worker is included at `public/service-worker.js` to prevent 404 errors from stale registrations. To unregister all service workers:
-
+A minimal service worker prevents 404 errors. To clear stale registrations:
 ```javascript
-navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+navigator.serviceWorker.getRegistrations()
+  .then(rs => rs.forEach(r => r.unregister()));
 ```
 
 ### Firestore Batch Limits
-Bulk operations automatically chunk deletions into batches of 499 operations to stay within Firestore's 500-operation limit.
+Bulk operations auto-chunk to 499 operations to stay within Firestore's 500-operation limit.
 
-## Contributing
+### Cross-Tab Sync
+Data syncs across tabs automatically via Firebase real-time listeners + localStorage events.
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Make your changes with clear, focused commits
-4. Push to your fork: `git push origin feature/my-feature`
-5. Open a Pull Request with a detailed description
+## 🤝 Contributing
 
+Contributions are welcome! Here's how you can help:
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **Commit** changes: `git commit -m 'Add amazing feature'`
+4. **Push** to branch: `git push origin feature/amazing-feature`
+5. **Open** a Pull Request
+
+### Development Guidelines
+- Use TypeScript for all new code
+- Follow existing code style and conventions
+- Add tests for new features
+- Update documentation as needed
+- Keep components small and focused
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) - The React Framework
+- [Material UI](https://mui.com/) - Component library
+- [Firebase](https://firebase.google.com/) - Backend infrastructure
+- [Zustand](https://zustand-demo.pmnd.rs/) - State management
+- [Recharts](https://recharts.org/) - Chart library
 
 ---
 
-Built with Next.js, MUI, and Firebase.
+**Built with ❤️ using Next.js, MUI, and Firebase**
+
+[Report Bug](../../issues) · [Request Feature](../../issues) · [Documentation](../../wiki)

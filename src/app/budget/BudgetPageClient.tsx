@@ -50,7 +50,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { useCurrency } from '../context/CurrencyContext';
+import { useCurrencyStore } from '../stores';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import Loading from '../components/Loading';
 
@@ -100,7 +100,7 @@ export default function BudgetPage() {
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Budget | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { formatCurrency, currency } = useCurrency();
+  const { formatCurrency, currency } = useCurrencyStore();
 
   // Form state
   const [selectedBook, setSelectedBook] = useState('');

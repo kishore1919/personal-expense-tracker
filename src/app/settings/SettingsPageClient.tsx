@@ -44,8 +44,7 @@ import {
 } from 'react-icons/fi';
 import { collection, getDocs, addDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { useCurrency } from '../context/CurrencyContext';
-import { useTheme } from '../context/ThemeContext';
+import { useCurrencyStore, useThemeStore } from '../stores';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 const CORE_CATEGORIES = ['Food', 'Travel', 'Medical', 'Shopping', 'Bills', 'Misc'];
@@ -352,8 +351,8 @@ export default function SettingsPage() {
     }
   });
   const [loading, setLoading] = useState(true);
-  const { currency, setCurrency, currencyOptions } = useCurrency();
-  const { isDarkMode, toggleDarkMode } = useTheme();
+  const { currency, setCurrency, currencyOptions } = useCurrencyStore();
+  const { isDarkMode, toggleDarkMode } = useThemeStore();
 
   useEffect(() => {
     // Simulate loading

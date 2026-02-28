@@ -6,11 +6,9 @@
 import type { Metadata } from 'next';
 import { Manrope, Space_Grotesk } from 'next/font/google';
 import { Box } from '@mui/material';
-import { CurrencyProvider } from './context/CurrencyContext';
-import { ThemeProvider } from './context/ThemeContext';
-import { SidebarProvider } from './context/SidebarContext';
 import MUIProvider from './components/MUIProvider';
 import { ProtectedLayout } from './components/ProtectedLayout';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './globals.css';
 
 const bodyFont = Manrope({
@@ -39,28 +37,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body 
-        suppressHydrationWarning 
+      <body
+        suppressHydrationWarning
         className={`${bodyFont.variable} ${headingFont.variable} antialiased`}
       >
-        <ThemeProvider>
+        <ErrorBoundary>
           <MUIProvider>
-            <CurrencyProvider>
-              <SidebarProvider>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    minHeight: '100vh',
-                    backgroundColor: 'background.default',
-                    transition: 'background-color 200ms ease',
-                  }}
-                >
-                  <ProtectedLayout>{children}</ProtectedLayout>
-                </Box>
-              </SidebarProvider>
-            </CurrencyProvider>
+            <Box
+              sx={{
+                display: 'flex',
+                minHeight: '100vh',
+                backgroundColor: 'background.default',
+                transition: 'background-color 200ms ease',
+              }}
+            >
+              <ProtectedLayout>{children}</ProtectedLayout>
+            </Box>
           </MUIProvider>
-        </ThemeProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

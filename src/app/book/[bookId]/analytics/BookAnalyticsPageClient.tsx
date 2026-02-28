@@ -44,7 +44,7 @@ import {
 import { doc, getDoc, collection, getDocs, query } from "firebase/firestore";
 import { auth, db } from '../../../firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCurrency } from '../../../context/CurrencyContext';
+import { useCurrencyStore } from '../../../stores';
 
 interface Expense {
   id: string;
@@ -63,7 +63,7 @@ export default function BookAnalyticsPage() {
   const router = useRouter();
   const [user] = useAuthState(auth);
   const theme = useTheme();
-  const { formatCurrency, currency } = useCurrency();
+  const { formatCurrency, currency } = useCurrencyStore();
 
   const [bookName, setBookName] = useState('');
   const [expenses, setExpenses] = useState<Expense[]>([]);

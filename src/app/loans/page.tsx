@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React from 'react';
 import {
   FiPlus,
   FiSearch,
@@ -45,333 +45,43 @@ import {
   LinearProgress,
   Tooltip,
 } from '@mui/material';
-import { collection, getDocs, addDoc, deleteDoc, doc, query, where, updateDoc } from "firebase/firestore";
-import { auth, db } from '../firebase';
-import { useCurrency } from '../context/CurrencyContext';
-import { useAuthState } from 'react-firebase-hooks/auth';
-
-/**
- * Loan interface representing a loan entity in the system
- */
-interface Loan {
-  id: string;                    // Unique Firestore document ID
-  name: string;                  // Loan name/purpose
-  lender: string;                // Name of the lender/institution
-  amount: number;                // Original principal amount
-  paidAmount: number;            // Amount already paid
-  interestRate: number;          // Annual interest rate as percentage
-  monthlyPayment: number;        // Monthly EMI payment
-  isActive: boolean;             // Whether loan is currently active
-  createdAt?: { toDate?: () => Date } | Date | undefined;  // Creation timestamp
-}
-
-/**
- * Skeleton loader component for table rows during data loading
- * Displays placeholder shapes that mimic the actual table row structure
- */
-const TableRowSkeleton = () => (
-  <TableRow>
-    <TableCell><Skeleton variant="text" width="80%" /></TableCell>
-    <TableCell><Skeleton variant="text" width="60%" /></TableCell>
-    <TableCell><Skeleton variant="text" width="80%" /></TableCell>
-    <TableCell><Skeleton variant="text" width="80%" /></TableCell>
-    <TableCell><Skeleton variant="text" width="80%" /></TableCell>
-    <TableCell><Skeleton variant="text" width="80%" /></TableCell>
-    <TableCell><Skeleton variant="text" width="80%" /></TableCell>
-    <TableCell><Skeleton variant="text" width="80%" /></TableCell>
-    <TableCell><Skeleton variant="text" width="80%" /></TableCell>
-    <TableCell><Skeleton variant="text" width="80%" /></TableCell>
-    <TableCell><Skeleton variant="rectangular" width={80} height={30} /></TableCell>
-  </TableRow>
-);
+import { useCurrencyStore } from '../stores';
+import { useLoans } from '../hooks/useLoans';
+import { TableRowSkeleton } from '../components/ui/TableSkeleton';
 
 export default function LoansPage() {
-  // Authentication state from Firebase
-  const [user] = useAuthState(auth);
+  const {
+    loading,
+    error,
+    searchQuery,
+    setSearchQuery,
+    sortBy,
+    setSortBy,
+    page,
+    setPage,
+    totalPages,
+    displayedLoans,
+    totalPrincipal,
+    totalPaid,
+    totalRemainingInterest,
+    totalLiability,
+    isModalOpen,
+    setIsModalOpen,
+    editingLoan,
+    formData,
+    setFormData,
+    deleteTarget,
+    setDeleteTarget,
+    isDeleting,
+    openAddModal,
+    openEditModal,
+    handleSaveLoan,
+    handleDelete,
+    calculateLoanDetails,
+  } = useLoans();
 
-  // Loan data state
-  const [loans, setLoans] = useState<Loan[]>([]);
-
-  // Modal and editing state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
-
-  // Search and filter state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'monthsLeft' | 'totalRemaining' | 'remaining' | 'name' | 'interestRate'>('monthsLeft');
-
-  // UI state
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // Pagination state
-  const [page, setPage] = useState<number>(1);
-  const pageSize = 10;
-
-  // Form state for add/edit modal
-  const [formData, setFormData] = useState({
-    name: '',
-    lender: '',
-    amount: '',
-    paidAmount: '',
-    interestRate: '',
-    monthlyPayment: '',
-  });
-
-  // Currency formatting from context
-  const { formatCurrency, getCurrencySymbol } = useCurrency();
+  const { formatCurrency, getCurrencySymbol } = useCurrencyStore();
   const currencySymbol = getCurrencySymbol();
-
-  // Reset to page 1 when search, sort, or page size changes
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery, sortBy, pageSize]);
-
-  // Fetch loans from Firestore when user is authenticated
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchLoans = async () => {
-      try {
-        setLoading(true);
-        // Query loans collection filtered by current user's ID
-        const q = query(collection(db, 'loans'), where('userId', '==', user.uid));
-        const querySnapshot = await getDocs(q);
-
-        // Transform Firestore documents to Loan objects
-        const loansData = querySnapshot.docs.map((loanDoc) => {
-          const data = loanDoc.data();
-          return {
-            id: loanDoc.id,
-            name: data.name || 'Unnamed Loan',
-            lender: data.lender || 'Unknown',
-            amount: Number(data.amount) || 0,
-            paidAmount: Number(data.paidAmount) || 0,
-            interestRate: Number(data.interestRate) || 0,
-            monthlyPayment: Number(data.monthlyPayment) || 0,
-            isActive: data.isActive !== undefined ? data.isActive : true,
-            createdAt: data.createdAt,
-          };
-        });
-
-        setLoans(loansData);
-        setError(null);
-      } catch (e) {
-        console.error("Error loading loans:", e);
-        setError('Failed to load loans.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLoans();
-  }, [user]);
-
-  /**
-   * Calculate loan details including remaining balance, interest, and payoff timeline
-   * Uses standard loan amortization formula for accurate calculations
-   */
-  const calculateLoanDetails = (loan: Loan) => {
-    const remaining = Math.max(0, loan.amount - (loan.paidAmount || 0));
-    const monthlyRate = loan.interestRate ? loan.interestRate / 100 / 12 : 0;
-    const monthly = loan.monthlyPayment || 0;
-
-    let monthsLeft: number | '∞' = 0;
-    let remainingInterest = 0;
-    let totalRemainingPayments = remaining;
-
-    const isPaidOff = remaining <= 0;
-
-    if (!isPaidOff && monthly > 0) {
-      if (monthlyRate === 0) {
-        // Simple loan with no interest
-        monthsLeft = Math.ceil(remaining / monthly);
-        remainingInterest = 0;
-        totalRemainingPayments = remaining;
-      } else {
-        // Standard amortization formula: P * r / (1 - (1 + r)^-n)
-        // Solving for n (number of payments)
-        const denominator = monthly - remaining * monthlyRate;
-        if (denominator > 0) {
-          const exact = Math.log(monthly / denominator) / Math.log(1 + monthlyRate);
-          monthsLeft = Math.ceil(exact);
-          totalRemainingPayments = monthsLeft * monthly;
-          remainingInterest = totalRemainingPayments - remaining;
-        } else {
-          // EMI is too low to cover interest - loan will never be paid off
-          monthsLeft = '∞';
-          remainingInterest = Infinity;
-          totalRemainingPayments = Infinity;
-        }
-      }
-    } else if (!isPaidOff) {
-      // No monthly payment specified - calculate simple interest
-      remainingInterest = remaining * (loan.interestRate / 100);
-      totalRemainingPayments = remaining + remainingInterest;
-    }
-
-    return { remaining, remainingInterest, totalRemainingPayments, monthsLeft, isPaidOff };
-  };
-
-  /**
-   * Save loan to Firestore (create new or update existing)
-   */
-  const handleSaveLoan = async () => {
-    if (!user) return;
-    if (!formData.name || !formData.lender || !formData.amount) {
-      setError('Please fill in all required fields.');
-      return;
-    }
-
-    try {
-      const loanData = {
-        name: formData.name,
-        lender: formData.lender,
-        amount: Number(formData.amount),
-        paidAmount: Number(formData.paidAmount) || 0,
-        interestRate: Number(formData.interestRate) || 0,
-        monthlyPayment: Number(formData.monthlyPayment) || 0,
-        isActive: true,
-        createdAt: new Date(),
-        userId: user.uid,
-      };
-
-      if (editingLoan) {
-        // Update existing loan
-        const loanRef = doc(db, 'loans', editingLoan.id);
-        await updateDoc(loanRef, loanData);
-        setLoans(prev => prev.map(l => l.id === editingLoan.id ? { ...l, ...loanData } : l));
-      } else {
-        // Create new loan
-        const docRef = await addDoc(collection(db, 'loans'), loanData);
-        setLoans(prev => [{ ...loanData, id: docRef.id }, ...prev]);
-      }
-
-      // Close modal and reset form
-      setIsModalOpen(false);
-      setEditingLoan(null);
-      setFormData({ name: '', lender: '', amount: '', paidAmount: '', interestRate: '', monthlyPayment: '' });
-      setError(null);
-    } catch (e) {
-      console.error("Error saving loan: ", e);
-      setError("Failed to save loan.");
-    }
-  };
-
-  /**
-   * Delete a loan from Firestore
-   */
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setIsDeleting(true);
-
-    try {
-      await deleteDoc(doc(db, 'loans', deleteTarget));
-      setLoans(prev => prev.filter(l => l.id !== deleteTarget));
-      setError(null);
-    } catch (e) {
-      console.error('Error deleting loan:', e);
-      setError('Failed to delete loan.');
-    } finally {
-      setIsDeleting(false);
-      setDeleteTarget(null);
-    }
-  };
-
-  /**
-   * Open modal for adding a new loan
-   * Resets form data to empty values
-   */
-  const openAddModal = () => {
-    setEditingLoan(null);
-    setFormData({ name: '', lender: '', amount: '', paidAmount: '', interestRate: '', monthlyPayment: '' });
-    setIsModalOpen(true);
-  };
-
-  /**
-   * Open modal for editing an existing loan
-   * Pre-fills form with current loan data
-   */
-  const openEditModal = (loan: Loan) => {
-    setEditingLoan(loan);
-    setFormData({
-      name: loan.name,
-      lender: loan.lender,
-      amount: loan.amount.toString(),
-      paidAmount: loan.paidAmount.toString(),
-      interestRate: loan.interestRate.toString(),
-      monthlyPayment: loan.monthlyPayment.toString(),
-    });
-    setIsModalOpen(true);
-  };
-
-  /**
-   * Filter and sort loans based on search query and sort criteria
-   * Memoized to prevent unnecessary recalculations
-   */
-  const filteredAndSortedLoans = useMemo(() => {
-    // Filter by name or lender
-    let result = loans.filter(loan =>
-      loan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loan.lender.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    // Sort according to selected criteria
-    result = [...result].sort((a, b) => {
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
-      if (sortBy === 'remaining') {
-        // Sort by remaining principal using calculated values for accuracy
-        const aRemaining = a.amount - (a.paidAmount || 0);
-        const bRemaining = b.amount - (b.paidAmount || 0);
-        return bRemaining - aRemaining;
-      }
-
-      const aCalc = calculateLoanDetails(a);
-      const bCalc = calculateLoanDetails(b);
-
-      if (sortBy === 'monthsLeft') {
-        const aVal = Number.isFinite(aCalc.monthsLeft) ? (aCalc.monthsLeft as number) : Infinity;
-        const bVal = Number.isFinite(bCalc.monthsLeft) ? (bCalc.monthsLeft as number) : Infinity;
-        return bVal - aVal;
-      }
-      if (sortBy === 'totalRemaining') {
-        const aVal = Number.isFinite(aCalc.totalRemainingPayments) ? aCalc.totalRemainingPayments : Infinity;
-        const bVal = Number.isFinite(bCalc.totalRemainingPayments) ? bCalc.totalRemainingPayments : Infinity;
-        return bVal - aVal;
-      }
-      if (sortBy === 'interestRate') return b.interestRate - a.interestRate;
-
-      return 0;
-    });
-
-    return result;
-  }, [loans, searchQuery, sortBy]);
-
-  // Calculate aggregate statistics for summary cards
-  const totalPrincipal = loans.reduce((sum, loan) => sum + loan.amount, 0);
-  const totalPaid = loans.reduce((sum, loan) => sum + (loan.paidAmount || 0), 0);
-
-  const totalRemainingInterest = loans.reduce((sum, loan) => {
-    const { remainingInterest } = calculateLoanDetails(loan);
-    return sum + (Number.isFinite(remainingInterest) ? remainingInterest : 0);
-  }, 0);
-
-  const totalLiability = loans.reduce((sum, loan) => {
-    const { totalRemainingPayments } = calculateLoanDetails(loan);
-    return sum + (Number.isFinite(totalRemainingPayments) ? totalRemainingPayments : loan.amount - (loan.paidAmount || 0));
-  }, 0);
-
-  // Pagination calculations
-  const totalFiltered = filteredAndSortedLoans.length;
-  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
-  const displayedLoans = filteredAndSortedLoans.slice((page - 1) * pageSize, page * pageSize);
-
-  // Reset to page 1 if current page exceeds total pages
-  useEffect(() => {
-    if (page > totalPages) setPage(1);
-  }, [page, totalPages]);
 
   return (
     <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1, sm: 2 } }}>
@@ -458,7 +168,7 @@ export default function LoansPage() {
             <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 }, flex: { xs: 1, sm: 'none' } }}>
               <Select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => setSortBy(e.target.value as any)}
                 sx={{
                   '& .MuiSelect-select': {
                     fontSize: { xs: '0.9375rem', sm: '1rem' },
@@ -753,13 +463,13 @@ export default function LoansPage() {
       {/* Pagination controls */}
       {totalPages > 1 && (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: { xs: 1.5, sm: 2 }, mt: { xs: 2, sm: 3 } }}>
-          <IconButton onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} size="small">
+          <IconButton onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} size="small">
             <FiChevronLeft />
           </IconButton>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '0.9375rem' } }}>
             Page <strong>{page}</strong> of {totalPages}
           </Typography>
-          <IconButton onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} size="small">
+          <IconButton onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} size="small">
             <FiChevronRight />
           </IconButton>
         </Box>

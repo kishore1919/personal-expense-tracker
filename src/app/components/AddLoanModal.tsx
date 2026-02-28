@@ -14,7 +14,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { FiX } from 'react-icons/fi';
-import { useCurrency } from '../context/CurrencyContext';
+import { useCurrencyStore } from '../stores';
 
 interface AddLoanModalProps {
   isOpen: boolean;
@@ -30,7 +30,7 @@ interface AddLoanModalProps {
 }
 
 export default function AddLoanModal({ isOpen, onClose, onAddLoan }: AddLoanModalProps) {
-  const { getCurrencySymbol } = useCurrency();
+  const { getCurrencySymbol } = useCurrencyStore();
   const currencySymbol = getCurrencySymbol();
   
   const [name, setName] = useState('');

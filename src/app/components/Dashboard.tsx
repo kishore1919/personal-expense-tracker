@@ -27,7 +27,7 @@ import AddBookModal from './AddBookModal';
 import { StatCard, BookCard, BookCardSkeleton, EmptyState, NoResultsState, PageHeader, SearchInput } from './ui';
 import { useBooks } from '@/app/hooks/useBooks';
 import { useFinancialOverview } from '@/app/hooks/useFinancialOverview';
-import { useCurrency } from '@/app/context/CurrencyContext';
+import { useCurrencyStore } from '@/app/stores';
 import { useProtectedRoute } from '@/app/hooks/useAuth';
 
 /**
@@ -35,7 +35,7 @@ import { useProtectedRoute } from '@/app/hooks/useAuth';
  */
 export default function Dashboard() {
   const router = useRouter();
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency } = useCurrencyStore();
   const { user, loading: authLoading } = useProtectedRoute();
   
   const { books, loading: booksLoading, error: booksError, addBook } = useBooks({ calculateNet: true });
@@ -204,7 +204,7 @@ export default function Dashboard() {
       </Box>
 
       {/* Books Section */}
-      <Box className="rise-in" style={{ animationDelay: '300ms' }}>
+      {/* <Box className="rise-in" style={{ animationDelay: '300ms' }}>
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -256,7 +256,7 @@ export default function Dashboard() {
         ) : (
           <EmptyState onCreate={() => setIsModalOpen(true)} />
         )}
-      </Box>
+      </Box> */}
 
       <AddBookModal
         isOpen={isModalOpen}

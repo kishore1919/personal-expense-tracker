@@ -8,7 +8,7 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { ThemeProvider, createTheme, Shadows } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { useTheme as useAppTheme } from '../context/ThemeContext';
+import { useThemeStore } from '../stores/useThemeStore';
 
 const createShadows = (isDark: boolean): Shadows => {
   const shadowColor = isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.1)';
@@ -42,7 +42,7 @@ const createShadows = (isDark: boolean): Shadows => {
 };
 
 export default function MUIProvider({ children }: { children: React.ReactNode }) {
-  const { isDarkMode } = useAppTheme();
+  const { isDarkMode } = useThemeStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

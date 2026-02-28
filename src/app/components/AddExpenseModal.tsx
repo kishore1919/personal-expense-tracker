@@ -44,7 +44,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { FiX, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
-import { useCurrency } from '../context/CurrencyContext';
+import { useCurrencyStore } from '../stores';
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from '../firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -337,7 +337,7 @@ export default function AddExpenseModal({
   const [user] = useAuthState(auth);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { currency, formatCurrency } = useCurrency();
+  const { currency, formatCurrency } = useCurrencyStore();
   
   // Computed values
   const parsedAmount = React.useMemo(() => evaluateAmountExpression(amount), [amount]);

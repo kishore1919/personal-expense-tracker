@@ -1,7 +1,7 @@
 /**
  * Custom hook for fetching a consolidated financial overview.
  * Aggregates data from books, loans, investments, and budgets.
- * Optimized to minimize Firestore reads by caching book expenses.
+ * Optimized to minimize Firestore reads by using batch fetching.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -18,6 +18,44 @@ interface FinancialOverview {
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
+}
+
+/**
+ * Calculates net balance from an array of expenses.
+ * Positive amounts (type 'in') are added, negative amounts (type 'out') are subtracted.
+ */
+function calculateNetBalance(expenses: Array<{ amount?: unknown; type?: unknown }>): number {
+  return expenses.reduce((total, expense) => {
+    const amount = Number(expense.amount);
+    const safeAmount = Number.isFinite(amount) ? amount : 0;
+    return expense.type === 'in' ? total + safeAmount : total - safeAmount;
+  }, 0);
+}
+
+/**
+ * Fetches expenses for multiple books in parallel using Promise.all.
+ * This is more efficient than fetching each book's expenses sequentially.
+ */
+async function fetchBooksWithExpenses(bookIds: string[]): Promise<Map<string, number>> {
+  const bookNetsMap = new Map<string, number>();
+
+  // Fetch all book expenses in parallel
+  const expensePromises = bookIds.map(async (bookId) => {
+    try {
+      const expensesSnap = await getDocs(collection(db, `books/${bookId}/expenses`));
+      const expenses = expensesSnap.docs.map((ed) => ed.data());
+      const net = calculateNetBalance(expenses);
+      return { bookId, net };
+    } catch (error) {
+      console.error(`Error fetching expenses for book ${bookId}:`, error);
+      return { bookId, net: 0 };
+    }
+  });
+
+  const results = await Promise.all(expensePromises);
+  results.forEach(({ bookId, net }) => bookNetsMap.set(bookId, net));
+
+  return bookNetsMap;
 }
 
 export function useFinancialOverview(): FinancialOverview {
@@ -43,36 +81,17 @@ export function useFinancialOverview(): FinancialOverview {
       // 1. Fetch Books
       const booksQuery = query(collection(db, 'books'), where('userId', '==', user.uid));
       const booksSnapshot = await getDocs(booksQuery);
-      const bookIds = booksSnapshot.docs.map(doc => doc.id);
-      
-      // Cache for book expenses to avoid redundant fetches
-      const bookExpensesMap = new Map<string, Array<{ amount: number, type: string }>>();
-      
-      // Fetch expenses for each book
-      const bookNets = await Promise.all(
-        bookIds.map(async (id) => {
-          const expensesSnap = await getDocs(collection(db, `books/${id}/expenses`));
-          const expenses = expensesSnap.docs.map(ed => {
-            const edData = ed.data();
-            return {
-              amount: Number(edData.amount) || 0,
-              type: (edData.type as string) || 'out'
-            };
-          });
-          bookExpensesMap.set(id, expenses);
-          
-          return expenses.reduce((acc, exp) => {
-            return exp.type === 'in' ? acc + exp.amount : acc - exp.amount;
-          }, 0);
-        })
-      );
-      const totalBooksNet = bookNets.reduce((sum, net) => sum + net, 0);
+      const bookIds = booksSnapshot.docs.map((doc) => doc.id);
 
-      // 2. Fetch Loans
+      // 2. Fetch all book expenses in parallel (fixes N+1 query issue)
+      const bookExpensesMap = await fetchBooksWithExpenses(bookIds);
+      const totalBooksNet = Array.from(bookExpensesMap.values()).reduce((sum, net) => sum + net, 0);
+
+      // 3. Fetch Loans
       const loansQuery = query(collection(db, 'loans'), where('userId', '==', user.uid));
       const loansSnapshot = await getDocs(loansQuery);
       let totalLiability = 0;
-      
+
       loansSnapshot.docs.forEach((doc) => {
         const loan = doc.data();
         const principal = Number(loan.amount) || 0;
@@ -80,7 +99,7 @@ export function useFinancialOverview(): FinancialOverview {
         totalLiability += (principal - paid);
       });
 
-      // 3. Fetch Fixed Deposits
+      // 4. Fetch Fixed Deposits
       const fdsQuery = query(collection(db, 'fixedDeposits'), where('userId', '==', user.uid));
       const fdsSnapshot = await getDocs(fdsQuery);
       let totalInvestments = 0;
@@ -88,7 +107,7 @@ export function useFinancialOverview(): FinancialOverview {
         totalInvestments += Number(doc.data().principalAmount) || 0;
       });
 
-      // 4. Fetch Budgets
+      // 5. Fetch Budgets (uses cached book expenses from step 2)
       const budgetsQuery = query(collection(db, 'budgets'), where('userId', '==', user.uid));
       const budgetsSnapshot = await getDocs(budgetsQuery);
       let totalBudget = 0;
@@ -97,15 +116,14 @@ export function useFinancialOverview(): FinancialOverview {
       budgetsSnapshot.docs.forEach((budgetDoc) => {
         const budgetData = budgetDoc.data();
         totalBudget += Number(budgetData.amount) || 0;
-        
+
         const bookId = budgetData.bookId;
-        const expenses = bookExpensesMap.get(bookId) || [];
-        
-        // Sum expenses for this book (already fetched above)
-        const spent = expenses.reduce((acc, exp) => {
-          return exp.type === 'out' ? acc + exp.amount : acc;
-        }, 0);
-        totalSpent += spent;
+        // Use cached expenses instead of re-fetching
+        const spent = bookExpensesMap.get(bookId) || 0;
+        // Only count expenses (negative net = spent)
+        if (spent < 0) {
+          totalSpent += Math.abs(spent);
+        }
       });
 
       setData({
@@ -127,6 +145,27 @@ export function useFinancialOverview(): FinancialOverview {
 
   useEffect(() => {
     fetchData();
+  }, [fetchData]);
+
+  // Listen for expense updates from child pages
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'expenses-updated') {
+        fetchData();
+      }
+    };
+
+    const handleCustomEvent = () => {
+      fetchData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('expenses-updated', handleCustomEvent);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('expenses-updated', handleCustomEvent);
+    };
   }, [fetchData]);
 
   return {

@@ -53,7 +53,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { doc, getDoc, collection, getDocs, addDoc, updateDoc, writeBatch, query } from "firebase/firestore";
 import { auth, db } from '../../../app/firebase'; 
 import AddExpenseModal from '../../components/AddExpenseModal'; 
-import { useCurrency } from '../../context/CurrencyContext'; 
+import { useCurrencyStore } from '@/app/stores'; 
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 interface Expense {
@@ -134,7 +134,7 @@ export default function BookDetailPage() {
   const handleTypeClick = (e: React.MouseEvent<HTMLButtonElement>) => setTypeAnchorEl(e.currentTarget);
   const handleTypeClose = () => setTypeAnchorEl(null);
 
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency } = useCurrencyStore();
 
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -209,6 +209,11 @@ export default function BookDetailPage() {
         createdAt,
       });
       setExpenses((prev) => [{ id: docRef.id, ...expense, createdAt }, ...prev]);
+      
+      // Trigger refresh for parent pages (Dashboard, Books list)
+      localStorage.setItem('expenses-updated', Date.now().toString());
+      window.dispatchEvent(new Event('expenses-updated'));
+      
       if (!keepOpen) handleModalClose();
     } catch (e) {
       console.error("Error adding:", e);
@@ -236,6 +241,11 @@ export default function BookDetailPage() {
             : entry
         )
       );
+      
+      // Trigger refresh for parent pages
+      localStorage.setItem('expenses-updated', Date.now().toString());
+      window.dispatchEvent(new Event('expenses-updated'));
+      
       handleModalClose();
     } catch (e) {
       console.error("Error updating:", e);
@@ -256,6 +266,10 @@ export default function BookDetailPage() {
       setExpenses(prev => prev.filter(e => !ids.includes(e.id)));
       setSelectedIds(prev => prev.filter(id => !ids.includes(id)));
       setError(null);
+      
+      // Trigger refresh for parent pages
+      localStorage.setItem('expenses-updated', Date.now().toString());
+      window.dispatchEvent(new Event('expenses-updated'));
     } catch (e) {
       console.error('Failed to delete items:', e);
       setError(`Failed to delete selected items.`);

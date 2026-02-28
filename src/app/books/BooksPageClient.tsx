@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import AddBookModal from '@/app/components/AddBookModal';
 import { SearchInput } from '@/app/components/ui';
-import { useCurrency } from '@/app/context/CurrencyContext';
+import { useCurrencyStore } from '@/app/stores';
 import { useProtectedRoute } from '@/app/hooks/useAuth';
 import { useBooksWithPagination } from '@/app/hooks/useBooksWithPagination';
 import { BooksList } from '@/app/components/books/BooksList';
@@ -35,7 +35,7 @@ const SUGGESTIONS = ['February Expenses', 'Home Expense', 'Project Book', 'Accou
 
 export default function BooksPage() {
   const router = useRouter();
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency } = useCurrencyStore();
   const { loading: authLoading } = useProtectedRoute();
   
   const [isModalOpen, setIsModalOpen] = useState(false);

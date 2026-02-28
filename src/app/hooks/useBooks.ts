@@ -170,6 +170,28 @@ export function useBooks(options: UseBooksOptions = {}): UseBooksReturn {
     fetchBooks();
   }, [fetchBooks]);
 
+  // Listen for expense updates from child pages
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'expenses-updated') {
+        fetchBooks();
+      }
+    };
+
+    // Also listen for custom events (for same-tab updates)
+    const handleCustomEvent = () => {
+      fetchBooks();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('expenses-updated', handleCustomEvent);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('expenses-updated', handleCustomEvent);
+    };
+  }, [fetchBooks]);
+
   return {
     books,
     loading,

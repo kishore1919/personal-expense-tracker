@@ -38,10 +38,10 @@ When requested for Firebase add the following the server configurations to .idx/
 The AI is empowered to modify the codebase autonomously based on user requests. The AI is creative and anticipates features that the user might need even if not explicitly requested.
 
 * **Core Code Assumption:** The AI will primarily work with React components (`.tsx` or `.jsx`) within the `/app` directory. It will create new routes, layouts, and components as needed.
-* **Package Management:** The AI will use `npm` or `yarn` for package management.
+* **Package Management:** The AI will use `bun` for package management.
 * **Next.js CLI:** The AI will use the Next.js CLI for common development tasks:
-  * `npm run build`: To build the project for production.
-  * `npm run lint`: To run ESLint and check for code quality issues.
+  * `bun run build`: To build the project for production.
+  * `bun run lint`: To run ESLint and check for code quality issues.
 
 ## **Next.js Core Concepts (App Router)**
 
@@ -102,7 +102,7 @@ export async function saveEmail(prevState: any, formData: FormData) {
 A critical function of the AI is to continuously monitor for and automatically resolve errors.
 
 * **Post-Modification Checks:** After every code modification, the AI will:
-  * Run `npm run lint -- --fix` to catch and fix linting issues.
+  * Run `bun run lint -- --fix` to catch and fix linting issues.
   * Monitor the IDE's diagnostics (problem pane).
   * Check the output of the running dev server for compilation and runtime errors.
 * **Automatic Error Correction:** The AI will attempt to fix common Next.js and React errors.
@@ -142,9 +142,9 @@ The AI's workflow is iterative, transparent, and responsive to user input.
 * **Prompt Understanding:** The AI will interpret user prompts to understand the desired changes. It will ask clarifying questions if the prompt is ambiguous.
 * **Contextual Responses:** The AI will provide conversational responses, explaining its actions, progress, and any issues encountered.
 * **Error Checking Flow:**
-  1. **Important:** The AI will **not** start the dev server (`next dev`), as it is already managed by Firebase Studio.
+  1. **Important:** The AI will **not** start the dev server (`bun run dev`), as it is already managed by Firebase Studio.
   2. **Code Change:** AI applies a code modification.
-  3. **Dependency Check:** If a new package is needed, AI runs `npm install`.
-  4. **Compile & Analyze:** AI runs `npm run lint` and monitors the dev server.
+  3. **Dependency Check:** If a new package is needed, AI runs `bun install`.
+  4. **Compile & Analyze:** AI runs `bun run lint` and monitors the dev server.
   5. **Preview Check:** AI observes the browser preview for visual and runtime errors.
   6. **Remediation/Report:** If errors are found, AI attempts automatic fixes. If unsuccessful, it reports details to the user.

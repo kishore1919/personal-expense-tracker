@@ -17,7 +17,7 @@ import {
   FiArrowRight,
 } from 'react-icons/fi';
 import Link from 'next/link';
-import { useCurrency } from '../context/CurrencyContext';
+import { useCurrencyStore } from '../stores';
 
 interface InvestmentOption {
   title: string;
@@ -29,7 +29,7 @@ interface InvestmentOption {
 }
 
 export default function InvestmentsOverviewPage() {
-  const { getCurrencySymbol } = useCurrency();
+  const { getCurrencySymbol } = useCurrencyStore();
   const currencySymbol = getCurrencySymbol();
 
   const investmentOptions: InvestmentOption[] = [

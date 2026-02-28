@@ -22,7 +22,7 @@ import {
   Checkbox,
 } from '@mui/material';
 import { SearchInput } from '@/app/components/ui';
-import { useCurrency } from '@/app/context/CurrencyContext';
+import { useCurrencyStore } from '@/app/stores';
 import { useProtectedRoute } from '@/app/hooks/useAuth';
 import { useBooksWithPagination } from '@/app/hooks/useBooksWithPagination';
 import { BooksList } from '@/app/components/books/BooksList';
@@ -31,7 +31,7 @@ import type { SortOption, PageSize } from '@/app/types';
 
 export default function ArchivedBooksPage() {
   const router = useRouter();
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency } = useCurrencyStore();
   const { loading: authLoading } = useProtectedRoute();
 
   const [searchQuery, setSearchQuery] = useState('');

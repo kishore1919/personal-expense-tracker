@@ -1,13 +1,17 @@
 'use client';
 
 import React from 'react';
-import { Typography, Button, Card, CardContent } from '@mui/material';
+import { Typography, Button, Card, CardContent, Alert, AlertTitle, Box } from '@mui/material';
 
-interface ErrorStateProps {
+export interface ErrorStateProps {
   message?: string;
   onRetry?: () => void;
 }
 
+/**
+ * Standard error state component for full-page errors.
+ * Displays an error message with an optional retry button.
+ */
 export function ErrorState({
   message = 'Something went wrong. Please try again.',
   onRetry,
@@ -15,8 +19,8 @@ export function ErrorState({
   return (
     <Card sx={{ textAlign: 'center', py: { xs: 4, sm: 6 } }}>
       <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-        <Typography 
-          color="text.secondary" 
+        <Typography
+          color="text.secondary"
           gutterBottom
           sx={{
             fontSize: { xs: '0.875rem', sm: '1rem' },
@@ -46,23 +50,30 @@ export function ErrorState({
   );
 }
 
-interface NoResultsStateProps {
+export interface NoResultsStateProps {
   onClear: () => void;
+  message?: string;
 }
 
-export function NoResultsState({ onClear }: NoResultsStateProps) {
+/**
+ * No results state component for empty search results.
+ */
+export function NoResultsState({
+  onClear,
+  message = 'No books match your search.',
+}: NoResultsStateProps) {
   return (
     <Card sx={{ textAlign: 'center', py: { xs: 4, sm: 6 } }}>
       <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-        <Typography 
-          color="text.secondary" 
+        <Typography
+          color="text.secondary"
           gutterBottom
           sx={{
             fontSize: { xs: '0.875rem', sm: '1rem' },
             px: { xs: 1, sm: 0 },
           }}
         >
-          No books match your search.
+          {message}
         </Typography>
         <Button
           onClick={onClear}
@@ -81,4 +92,57 @@ export function NoResultsState({ onClear }: NoResultsStateProps) {
       </CardContent>
     </Card>
   );
+}
+
+export interface ErrorDisplayProps {
+  error: string | null;
+  onRetry?: () => void;
+  variant?: 'inline' | 'banner' | 'card';
+  title?: string;
+}
+
+/**
+ * Flexible error display component with multiple variants.
+ * Use 'inline' for form errors, 'banner' for page-level errors, 'card' for isolated errors.
+ */
+export function ErrorDisplay({
+  error,
+  onRetry,
+  variant = 'inline',
+  title,
+}: ErrorDisplayProps) {
+  if (!error) return null;
+
+  if (variant === 'inline') {
+    return (
+      <Alert severity="error" action={onRetry && (
+        <Button color="inherit" size="small" onClick={onRetry}>
+          Retry
+        </Button>
+      )}>
+        {error}
+      </Alert>
+    );
+  }
+
+  if (variant === 'banner') {
+    return (
+      <Alert
+        severity="error"
+        variant="filled"
+        sx={{ mb: 3 }}
+        action={onRetry && (
+          <Button color="inherit" size="small" onClick={onRetry}>
+            Retry
+          </Button>
+        )}
+      >
+        {title && <AlertTitle>{title}</AlertTitle>}
+        {error}
+      </Alert>
+    );
+  }
+
+  // Card variant
+  return <ErrorState message={error} onRetry={onRetry} />;
 }
