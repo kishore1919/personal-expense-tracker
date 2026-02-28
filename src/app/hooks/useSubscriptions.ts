@@ -245,6 +245,9 @@ export function useSubscriptions(): UseSubscriptionsReturn {
    */
   const calculateNextBillingDate = useCallback((startDate: string, cycle: 'weekly' | 'monthly' | 'yearly'): Date => {
     const start = new Date(startDate);
+    if (isNaN(start.getTime())) {
+      start.setTime(new Date().getTime());
+    }
     const now = new Date();
     const next = new Date(start);
 

@@ -27,11 +27,15 @@ export interface UseSubscriptionsReturn {
 
   // Statistics
   stats: ReturnType<typeof calculateSubscriptionStats>;
+  activeSubscriptions: Subscription[];
+  monthlyTotal: number;
+  yearlyTotal: number;
 
   // Modal state
   isModalOpen: boolean;
   editingSubscription: Subscription | null;
   formData: SubscriptionFormData;
+  setIsModalOpen: (open: boolean) => void;
 
   // Search and sort
   searchQuery: string;
@@ -52,6 +56,7 @@ export interface UseSubscriptionsReturn {
   saveSubscription: () => Promise<void>;
   deleteSubscription: () => Promise<void>;
   cancelDelete: () => void;
+  setDeleteTarget: (target: string | null) => void;
   refreshSubscriptions: () => Promise<void>;
   toggleStatus: (subscriptionId: string, newStatus: Subscription['status']) => Promise<void>;
 }
@@ -169,6 +174,18 @@ export function useSubscriptions(user: User | null): UseSubscriptionsReturn {
   // Calculate statistics
   const stats = useMemo(() => calculateSubscriptionStats(subscriptions), [subscriptions]);
 
+  const activeSubscriptions = useMemo(() => subscriptions.filter(s => s.status === 'active'), [subscriptions]);
+  const monthlyTotal = useMemo(() => activeSubscriptions.reduce((sum, s) => {
+    if (s.billingCycle === 'yearly') return sum + (s.amount / 12);
+    if (s.billingCycle === 'weekly') return sum + (s.amount * 4.33);
+    return sum + s.amount;
+  }, 0), [activeSubscriptions]);
+  const yearlyTotal = useMemo(() => activeSubscriptions.reduce((sum, s) => {
+    if (s.billingCycle === 'monthly') return sum + (s.amount * 12);
+    if (s.billingCycle === 'weekly') return sum + (s.amount * 52);
+    return sum + s.amount;
+  }, 0), [activeSubscriptions]);
+
   // Actions
   const openAddModal = useCallback(() => {
     setEditingSubscription(null);
@@ -225,7 +242,7 @@ export function useSubscriptions(user: User | null): UseSubscriptionsReturn {
         );
       } else {
         const newId = await createSubscriptionService(user.uid, subData);
-        setSubscriptions((prev) => [{ ...subData, id: newId }, ...prev]);
+        setSubscriptions((prev) => [{ ...subData, userId: user.uid, id: newId }, ...prev]);
       }
 
       closeModal();
@@ -290,11 +307,15 @@ export function useSubscriptions(user: User | null): UseSubscriptionsReturn {
 
     // Statistics
     stats,
+    activeSubscriptions,
+    monthlyTotal,
+    yearlyTotal,
 
     // Modal state
     isModalOpen,
     editingSubscription,
     formData,
+    setIsModalOpen,
 
     // Search and sort
     searchQuery,
@@ -315,6 +336,7 @@ export function useSubscriptions(user: User | null): UseSubscriptionsReturn {
     saveSubscription,
     deleteSubscription,
     cancelDelete,
+    setDeleteTarget,
     refreshSubscriptions,
     toggleStatus,
   };

@@ -16,6 +16,7 @@ import {
   serverTimestamp,
   Timestamp,
   DocumentData,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '@/app/firebase';
 import type { Book, BookWithExpenses } from '@/app/types';
@@ -97,6 +98,12 @@ export async function updateBook(
  * Delete a book.
  */
 export async function deleteBook(bookId: string): Promise<void> {
+  const expensesRef = collection(db, BOOKS_COLLECTION, bookId, 'expenses');
+  const expensesSnap = await getDocs(expensesRef);
+  const batch = writeBatch(db);
+  expensesSnap.forEach((doc) => batch.delete(doc.ref));
+  await batch.commit();
+
   const docRef = doc(db, BOOKS_COLLECTION, bookId);
   await deleteDoc(docRef);
 }

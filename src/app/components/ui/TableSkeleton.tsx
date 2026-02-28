@@ -36,14 +36,16 @@ export function TableSkeleton({ columns = 8, rows = 5 }: TableSkeletonProps) {
 /**
  * Table skeleton with action column (for tables with edit/delete buttons).
  * Last column shows a rectangular skeleton to represent action buttons.
+ * Ensures at least one data cell is rendered even when columns is 1.
  */
 export function TableSkeletonWithActions({
   columns = 8,
   rows = 5,
 }: TableSkeletonProps) {
+  const dataCellsCount = Math.max(1, columns - 1);
   const skeletonRows = Array.from({ length: rows }, (_, i) => (
     <TableRow key={i}>
-      {Array.from({ length: columns - 1 }, (_, j) => (
+      {Array.from({ length: dataCellsCount }, (_, j) => (
         <TableCell key={j}>
           <Skeleton variant="text" width="80%" />
         </TableCell>

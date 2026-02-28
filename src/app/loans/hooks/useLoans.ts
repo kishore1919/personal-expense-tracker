@@ -50,6 +50,7 @@ export interface UseLoansReturn {
   saveLoan: () => Promise<void>;
   deleteLoan: () => Promise<void>;
   cancelDelete: () => void;
+  confirmDelete: (loanId: string) => void;
   refreshLoans: () => Promise<void>;
 }
 
@@ -80,7 +81,8 @@ const PAGE_SIZE = 10;
  */
 export function calculateLoanDetails(loan: Loan) {
   const remaining = Math.max(0, loan.amount - (loan.paidAmount || 0));
-  const monthlyRate = loan.interestRate ? loan.interestRate / 100 / 12 : 0;
+  const interestRate = loan.interestRate ?? 0;
+  const monthlyRate = interestRate ? interestRate / 100 / 12 : 0;
   const monthly = loan.monthlyPayment || 0;
 
   let monthsLeft: number | '∞' = 0;
@@ -108,7 +110,7 @@ export function calculateLoanDetails(loan: Loan) {
       }
     }
   } else if (!isPaidOff) {
-    remainingInterest = remaining * (loan.interestRate / 100);
+    remainingInterest = remaining * (interestRate / 100);
     totalRemainingPayments = remaining + remainingInterest;
   }
 
@@ -238,9 +240,9 @@ export function useLoans(user: User | null): UseLoansReturn {
       name: loan.name,
       lender: loan.lender,
       amount: loan.amount.toString(),
-      paidAmount: loan.paidAmount.toString(),
-      interestRate: loan.interestRate.toString(),
-      monthlyPayment: loan.monthlyPayment.toString(),
+      paidAmount: (loan.paidAmount ?? 0).toString(),
+      interestRate: (loan.interestRate ?? 0).toString(),
+      monthlyPayment: (loan.monthlyPayment ?? 0).toString(),
     });
     setIsModalOpen(true);
   }, []);
@@ -280,7 +282,7 @@ export function useLoans(user: User | null): UseLoansReturn {
         );
       } else {
         const newId = await createLoanService(user.uid, loanData);
-        setLoans((prev) => [{ ...loanData, id: newId }, ...prev]);
+        await refreshLoans();
       }
 
       closeModal();
@@ -310,6 +312,10 @@ export function useLoans(user: User | null): UseLoansReturn {
 
   const cancelDelete = useCallback(() => {
     setDeleteTarget(null);
+  }, []);
+
+  const confirmDelete = useCallback((loanId: string) => {
+    setDeleteTarget(loanId);
   }, []);
 
   const refreshLoans = useCallback(async () => {
@@ -355,6 +361,7 @@ export function useLoans(user: User | null): UseLoansReturn {
     saveLoan,
     deleteLoan,
     cancelDelete,
+    confirmDelete,
     refreshLoans,
   };
 }

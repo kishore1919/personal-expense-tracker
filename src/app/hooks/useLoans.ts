@@ -222,19 +222,19 @@ export function useLoans(): UseLoansReturn {
         interestRate: Number(formData.interestRate) || 0,
         monthlyPayment: Number(formData.monthlyPayment) || 0,
         isActive: true,
-        createdAt: new Date(),
         userId: user.uid,
       };
 
       if (editingLoan) {
         // Update existing loan
         const loanRef = doc(db, 'loans', editingLoan.id);
-        await updateDoc(loanRef, loanData);
+        await updateDoc(loanRef, { ...loanData, createdAt: editingLoan.createdAt });
         setLoans((prev) => prev.map((l) => l.id === editingLoan.id ? { ...l, ...loanData } : l));
       } else {
         // Create new loan
-        const docRef = await addDoc(collection(db, 'loans'), loanData);
-        setLoans((prev) => [{ ...loanData, id: docRef.id }, ...prev]);
+        const loanDataWithTimestamp = { ...loanData, createdAt: new Date() };
+        const docRef = await addDoc(collection(db, 'loans'), loanDataWithTimestamp);
+        setLoans((prev) => [{ ...loanDataWithTimestamp, id: docRef.id }, ...prev]);
       }
 
       // Close modal and reset form
