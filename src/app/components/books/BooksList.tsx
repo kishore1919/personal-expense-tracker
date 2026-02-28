@@ -1,6 +1,6 @@
 'use client';
 
-import { Paper, Box, Typography, Checkbox, Skeleton, IconButton, Tooltip } from '@mui/material';
+import { Paper, Box, Typography, Checkbox, Skeleton, IconButton, Tooltip, useTheme } from '@mui/material';
 import { FiArrowRight } from 'react-icons/fi';
 import { FaBook, FaArchive, FaBoxOpen } from 'react-icons/fa';
 import type { Book } from '@/app/types';
@@ -55,6 +55,9 @@ function BookListItem({
   formatCurrency: (amount: number) => string;
   onToggleArchive?: (bookId: string, archived: boolean) => void;
 }) {
+  const theme = useTheme(); // Hook to access theme mode
+  const isDarkMode = theme.palette.mode === 'dark';
+
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
     onSelect(e.target.checked);
@@ -89,10 +92,10 @@ function BookListItem({
         gap: { xs: 1, sm: 2 },
         cursor: 'pointer',
         transition: 'all 0.2s',
-        '&:hover': (theme) => ({
-          bgcolor: theme.palette.mode === 'dark' ? 'background.default' : 'action.hover',
+        '&:hover': {
+          bgcolor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'action.hover',
           boxShadow: 1
-        })
+        }
       }}
       onClick={onClick}
     >
@@ -144,7 +147,7 @@ function BookListItem({
           {formatCurrency(Math.abs(book.netBalance ?? 0))}
         </Typography>
         {isArchived && (
-          <Typography variant="caption" color="text.secondary" display="block">
+          <Typography variant="caption" color="warning.main" display="block">
             Archived
           </Typography>
         )}
@@ -155,12 +158,16 @@ function BookListItem({
           <Tooltip title={isArchived ? 'Unarchive' : 'Archive'}>
             <IconButton
               size="small"
-              color="default"
               onClick={handleArchiveClick}
               sx={{
-                bgcolor: isArchived ? 'warning.light' : 'grey.100',
+                // Explicit background adjustment for dark mode visibility
+                bgcolor: isArchived 
+                  ? (isDarkMode ? 'rgba(255, 167, 38, 0.2)' : 'warning.light') 
+                  : (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'grey.100'),
+                color: isDarkMode ? '#FFD700' : 'inherit', // Force yellow in dark mode
                 '&:hover': {
                   bgcolor: isArchived ? 'warning.main' : 'grey.200',
+                  color: isArchived && isDarkMode ? '#000' : 'inherit'
                 },
               }}
             >

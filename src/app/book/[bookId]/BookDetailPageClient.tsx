@@ -450,7 +450,7 @@ export default function BookDetailPage() {
         <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' } }}>
            <Button
              variant="outlined"
-             startIcon={<FiArchive />}
+             startIcon={<FiArchive color="inherit" />}
              onClick={handleToggleArchive}
              color={isArchived ? 'warning' : 'inherit'}
              fullWidth={isMobile}

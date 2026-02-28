@@ -1,11 +1,3 @@
-/**
- * BooksPage Component - Full page for managing expense books.
- * Provides advanced features including:
- * - Pagination for large book lists
- * - Search and sort functionality
- * - Multi-select with bulk delete
- * - Quick add suggestions
- */
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -18,6 +10,7 @@ import {
   Container,
   Checkbox,
   Badge,
+  useTheme,
 } from '@mui/material';
 import AddBookModal from '@/app/components/AddBookModal';
 import { SearchInput } from '@/app/components/ui';
@@ -35,6 +28,7 @@ const SUGGESTIONS = ['February Expenses', 'Home Expense', 'Project Book', 'Accou
 
 export default function BooksPage() {
   const router = useRouter();
+  const theme = useTheme(); // Access the theme to check for dark mode
   const { formatCurrency } = useCurrencyStore();
   const { loading: authLoading } = useProtectedRoute();
   
@@ -64,13 +58,11 @@ export default function BooksPage() {
     sortBy,
     page,
     pageSize,
-    showArchived: false, // By default, hide archived books
+    showArchived: false,
   });
 
-  // Count archived books for the badge
   const archivedCount = books.filter((b) => b.archived).length;
 
-  // Keep pagination/selection consistent whenever list controls change.
   const resetListState = useCallback(() => {
     setPage(1);
     setSelectedIds([]);
@@ -135,7 +127,6 @@ export default function BooksPage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 }, px: { xs: 1, sm: 2 } }}>
-      {/* Header Controls */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
         <Box sx={{
           display: 'flex',
@@ -143,7 +134,6 @@ export default function BooksPage() {
           gap: 2,
           alignItems: { xs: 'stretch', sm: 'center' }
         }}>
-          {/* Search */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
             <Checkbox
               size="small"
@@ -159,13 +149,13 @@ export default function BooksPage() {
             />
           </Box>
 
-          {/* Controls */}
           <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' }, flexWrap: 'wrap' }}>
             <BooksPagination.SortSelect value={sortBy} onChange={handleSortChange} />
+            
+            {/* ARCHIVE BUTTON START */}
             <Button
               variant="outlined"
               onClick={() => router.push('/books/archived')}
-              startIcon={<FiArchive />}
               disabled={archivedCount === 0}
               sx={{
                 height: 40,
@@ -174,14 +164,25 @@ export default function BooksPage() {
                 fontWeight: 600,
                 whiteSpace: 'nowrap',
                 minWidth: 'auto',
+                // Conditional styling for the whole button if needed
+                borderColor: theme.palette.mode === 'dark' ? 'warning.dark' : 'divider',
               }}
             >
               <Badge badgeContent={archivedCount} color="warning" overlap="circular">
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  Archived
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <FiArchive 
+                    style={{ 
+                      fontSize: '1.2rem',
+                      // TARGET: Yellow color only in dark mode
+                      color: theme.palette.mode === 'dark' ? '#FFD700' : 'inherit' 
+                    }} 
+                  />
+                  <Box component="span" sx={{ color: 'text.primary' }}>Archived</Box>
                 </Box>
               </Badge>
             </Button>
+            {/* ARCHIVE BUTTON END */}
+
             <Button
               variant="contained"
               onClick={() => setIsModalOpen(true)}
@@ -204,7 +205,6 @@ export default function BooksPage() {
       {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
       {addError && <Alert severity="error" sx={{ mb: 3 }}>{addError}</Alert>}
 
-      {/* Pagination Header */}
       <BooksPagination.Header
         startIndex={startIndex}
         endIndex={endIndex}
@@ -216,7 +216,6 @@ export default function BooksPage() {
         onPageSizeChange={handlePageSizeChange}
       />
 
-      {/* Books List */}
       <BooksList
         books={displayedBooks}
         loading={loading || authLoading}
@@ -227,14 +226,12 @@ export default function BooksPage() {
         onToggleArchive={toggleArchive}
       />
 
-      {/* Selection Toolbar */}
       <SelectionToolbar
         selectedCount={selectedIds.length}
         onDelete={() => setDeleteTarget(selectedIds)}
         onCancel={() => setSelectedIds([])}
       />
 
-      {/* Quick Add Section */}
       <QuickAddSuggestions
         suggestions={SUGGESTIONS}
         onSelect={handleAddBook}

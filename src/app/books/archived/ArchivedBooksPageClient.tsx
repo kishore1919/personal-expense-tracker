@@ -1,15 +1,8 @@
-/**
- * ArchivedBooksPage Component - Page for viewing and managing archived books.
- * Provides features to:
- * - View all archived books
- * - Unarchive books to restore them to the main list
- * - Search and sort archived books
- */
 'use client';
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FiArchive, FiBook } from 'react-icons/fi';
+import { FiArchive, FiBook, FiArrowLeft, FiEye, FiRefreshCw } from 'react-icons/fi';
 import {
   Button,
   Box,
@@ -17,20 +10,31 @@ import {
   Container,
   Typography,
   Paper,
-  Divider,
   Chip,
   Checkbox,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Tooltip,
+  useTheme,
+  Avatar,
+  Alpha,
 } from '@mui/material';
 import { SearchInput } from '@/app/components/ui';
 import { useCurrencyStore } from '@/app/stores';
 import { useProtectedRoute } from '@/app/hooks/useAuth';
 import { useBooksWithPagination } from '@/app/hooks/useBooksWithPagination';
-import { BooksList } from '@/app/components/books/BooksList';
 import { BooksPagination } from '@/app/components/books/BooksPagination';
 import type { SortOption, PageSize } from '@/app/types';
 
 export default function ArchivedBooksPage() {
   const router = useRouter();
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const { formatCurrency } = useCurrencyStore();
   const { loading: authLoading } = useProtectedRoute();
 
@@ -56,228 +60,162 @@ export default function ArchivedBooksPage() {
     showArchived: true,
   });
 
-  // Filter to show only archived books
   const archivedBooks = displayedBooks.filter((book) => book.archived);
   const totalArchived = archivedBooks.length;
 
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchQuery(value);
-    setPage(1);
-    setSelectedIds([]);
-  }, []);
-
-  const handleSortChange = useCallback((value: SortOption) => {
-    setSortBy(value);
-    setPage(1);
-    setSelectedIds([]);
-  }, []);
-
-  const handlePageSizeChange = useCallback((value: PageSize) => {
-    setPageSize(value);
-    setPage(1);
-    setSelectedIds([]);
-  }, []);
-
-  const handleBookClick = useCallback((bookId: string) => {
-    router.push(`/book/${bookId}`);
-  }, [router]);
-
-  const handleUnarchive = useCallback(async (bookId: string) => {
+  const handleUnarchive = useCallback(async (e: React.MouseEvent, bookId: string) => {
+    e.stopPropagation(); // Prevent navigating to book details
     await toggleArchive(bookId, false);
     setSelectedIds([]);
   }, [toggleArchive]);
 
-  const handleSelectAll = useCallback((checked: boolean) => {
-    if (checked) {
-      setSelectedIds(archivedBooks.map((b) => b.id));
-    } else {
-      setSelectedIds([]);
-    }
-  }, [archivedBooks]);
-
-  const handleSelectBook = useCallback((bookId: string, checked: boolean) => {
-    setSelectedIds((prev) =>
-      checked ? [...prev, bookId] : prev.filter((id) => id !== bookId)
-    );
-  }, []);
-
-  const areAllSelected = archivedBooks.length > 0 && selectedIds.length === archivedBooks.length;
-  const isIndeterminate = selectedIds.length > 0 && selectedIds.length < archivedBooks.length;
+  const handleBookClick = (bookId: string) => {
+    // Navigate to view data even though it's archived
+    router.push(`/book/${bookId}`);
+  };
 
   return (
-    <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 5 }, px: { xs: 2, sm: 3 } }}>
-      {/* Page Header */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-              borderRadius: 2,
-              bgcolor: 'warning.main',
-              color: 'warning.contrastText',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <FiArchive size={24} />
-          </Box>
-          <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-              <Typography variant="h4" fontWeight={700}>
-                Archived Books
-              </Typography>
-              <Chip
-                label={`${totalArchived} archived`}
-                color="warning"
-                size="small"
-                sx={{ fontWeight: 600 }}
-              />
-            </Box>
-            <Typography variant="body2" color="text.secondary">
-              Manage your archived books and restore them when needed
-            </Typography>
-          </Box>
-        </Box>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, sm: 4 } }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Button
+          startIcon={<FiArrowLeft />}
+          onClick={() => router.push('/books')}
+          sx={{ textTransform: 'none', color: 'text.secondary', fontWeight: 600 }}
+        >
+          Back to Active Books
+        </Button>
+        
+        {selectedIds.length > 0 && (
+            <Button 
+                variant="contained" 
+                color="warning" 
+                startIcon={<FiRefreshCw />}
+                sx={{ borderRadius: 2, textTransform: 'none' }}
+            >
+                Restore Selected ({selectedIds.length})
+            </Button>
+        )}
       </Box>
 
-      {/* Main Controls Card */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" fontWeight={800} sx={{ color: 'text.primary', mb: 0.5 }}>
+          Reference Archive
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Review historical data. Books here are <strong>read-only</strong> until restored.
+        </Typography>
+      </Box>
+
       <Paper
         elevation={0}
         sx={{
-          p: { xs: 2, sm: 2.5 },
-          mb: 3,
           borderRadius: 3,
           border: '1px solid',
           borderColor: 'divider',
-          bgcolor: 'background.paper',
+          bgcolor: isDarkMode ? 'background.paper' : '#ffffff',
+          overflow: 'hidden'
         }}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          {/* Search and Select All Row */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Checkbox
-              checked={areAllSelected}
-              indeterminate={isIndeterminate}
-              onChange={(e) => handleSelectAll(e.target.checked)}
-              sx={{ flexShrink: 0 }}
-            />
-            <Box sx={{ flex: 1 }}>
-              <SearchInput
-                value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder="Search archived books..."
-                fullWidth
-              />
-            </Box>
-          </Box>
+        <Box sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+          <SearchInput
+            value={searchQuery}
+            onChange={(val) => setSearchQuery(val)}
+            placeholder="Search archive..."
+            sx={{ flex: 1 }}
+          />
+          <BooksPagination.SortSelect value={sortBy} onChange={(val) => setSortBy(val as SortOption)} />
+        </Box>
 
-          <Divider />
+        <TableContainer>
+          <Table>
+            <TableHead sx={{ bgcolor: isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
+              <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox 
+                    checked={selectedIds.length === archivedBooks.length && archivedBooks.length > 0}
+                    onChange={(e) => setSelectedIds(e.target.checked ? archivedBooks.map(b => b.id) : [])}
+                  />
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Book Details</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Archive Date</TableCell>
+                <TableCell sx={{ fontWeight: 600 }} align="right">Final Balance</TableCell>
+                <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {archivedBooks.map((book) => (
+                <TableRow 
+                  key={book.id} 
+                  hover 
+                  onClick={() => handleBookClick(book.id)}
+                  sx={{ cursor: 'pointer', '&:last-child td, &:last-child th': { border: 0 } }}
+                >
+                  <TableCell padding="checkbox">
+                    <Checkbox 
+                        checked={selectedIds.includes(book.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                            const checked = e.target.checked;
+                            setSelectedIds(prev => checked ? [...prev, book.id] : prev.filter(id => id !== book.id));
+                        }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Avatar sx={{ bgcolor: isDarkMode ? 'grey.800' : 'grey.100', width: 40, height: 40 }}>
+                        <FiArchive size={20} color={theme.palette.text.secondary} />
+                      </Avatar>
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ lineHeight: 1.2 }}>{book.name}</Typography>
+                        <Chip label="Read-Only" size="small" sx={{ height: 18, fontSize: '0.65rem', mt: 0.5, bgcolor: 'action.disabledBackground' }} />
+                      </Box>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">{book.updatedAtString}</Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="body2" fontWeight={700} color="text.primary">
+                      {formatCurrency(book.netBalance ?? 0)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                      <Tooltip title="View Data">
+                        <IconButton size="small" sx={{ color: 'primary.main' }}>
+                          <FiEye size={18} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Restore Book">
+                        <IconButton 
+                          size="small" 
+                          onClick={(e) => handleUnarchive(e, book.id)}
+                          sx={{ color: isDarkMode ? '#FFD700' : 'warning.main' }}
+                        >
+                          <FiRefreshCw size={18} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-          {/* Action Buttons Row */}
-          <Box sx={{
-            display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
-            gap: 2,
-            alignItems: { xs: 'stretch', sm: 'center' },
-            justifyContent: 'space-between'
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <BooksPagination.SortSelect value={sortBy} onChange={handleSortChange} />
-            </Box>
-            <Button
-              variant="outlined"
-              onClick={() => router.push('/books')}
-              startIcon={<FiBook />}
-              sx={{
-                height: 42,
-                px: 3,
-                textTransform: 'none',
-                fontWeight: 600,
-                borderRadius: 2,
-              }}
-            >
-              Back to Books
-            </Button>
-          </Box>
+        <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+           <BooksPagination.Header
+            startIndex={startIndex}
+            endIndex={endIndex}
+            totalFiltered={totalArchived}
+            page={page}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+          />
         </Box>
       </Paper>
-
-      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
-
-      {/* Empty State */}
-      {!loading && archivedBooks.length === 0 && (
-        <Paper
-          elevation={0}
-          sx={{
-            p: 6,
-            textAlign: 'center',
-            borderRadius: 3,
-            border: '1px dashed',
-            borderColor: 'divider',
-            bgcolor: 'background.paper',
-          }}
-        >
-          <Box sx={{ mb: 2 }}>
-            <FiArchive size={48} color="#999" />
-          </Box>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            No archived books
-          </Typography>
-          <Typography variant="body2" color="text.secondary" mb={3}>
-            {searchQuery ? 'No archived books match your search' : 'Books you archive will appear here'}
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => router.push('/books')}
-            startIcon={<FiBook />}
-            sx={{ textTransform: 'none', fontWeight: 600 }}
-          >
-            Go to Books
-          </Button>
-        </Paper>
-      )}
-
-      {/* Pagination Header */}
-      {archivedBooks.length > 0 && (
-        <>
-          <Box sx={{ mb: 2 }}>
-            <BooksPagination.Header
-              startIndex={startIndex}
-              endIndex={endIndex}
-              totalFiltered={totalArchived}
-              page={page}
-              totalPages={totalPages}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              onPageSizeChange={handlePageSizeChange}
-            />
-          </Box>
-
-          {/* Books List */}
-          <Paper
-            elevation={0}
-            sx={{
-              borderRadius: 3,
-              border: '1px solid',
-              borderColor: 'divider',
-              bgcolor: 'background.paper',
-              overflow: 'hidden',
-            }}
-          >
-            <BooksList
-              books={archivedBooks}
-              loading={loading || authLoading}
-              selectedIds={selectedIds}
-              onSelectBook={handleSelectBook}
-              onBookClick={handleBookClick}
-              formatCurrency={formatCurrency}
-              onToggleArchive={handleUnarchive}
-            />
-          </Paper>
-        </>
-      )}
     </Container>
   );
 }
