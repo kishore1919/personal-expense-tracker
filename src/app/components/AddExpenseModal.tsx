@@ -64,25 +64,29 @@ interface AddExpenseModalProps {
   onClose: () => void;
   initialType?: 'in' | 'out';
   currentBalance?: number;
-  initialExpense?: {
-    description: string;
-    amount: number;
-    type?: 'in' | 'out';
-    createdAt?: Date;
-    remarks?: string;
-    category?: string;
-    paymentMode?: string;
-  };
-  onAddExpense: (expense: {
-    description: string;
-    amount: number;
-    type: 'in' | 'out';
-    createdAt: Date;
-    remarks?: string;
-    category?: string;
-    paymentMode?: string;
-    attachments?: string[];
-  }, keepOpen?: boolean) => Promise<void> | void;
+  initialExpense?: InitialExpense;
+  onAddExpense: (expense: ExpensePayload, keepOpen?: boolean) => Promise<void> | void;
+}
+
+interface InitialExpense {
+  description: string;
+  amount: number;
+  type?: 'in' | 'out';
+  createdAt?: Date;
+  remarks?: string;
+  category?: string;
+  paymentMode?: string;
+}
+
+interface ExpensePayload {
+  description: string;
+  amount: number;
+  type: 'in' | 'out';
+  createdAt: Date;
+  remarks?: string;
+  category?: string;
+  paymentMode?: string;
+  attachments?: string[];
 }
 
 /**
@@ -90,6 +94,8 @@ interface AddExpenseModalProps {
  * @constant {string[]}
  */
 const CORE_CATEGORIES = ['Food', 'Travel', 'Medical', 'Shopping', 'Bills', 'Misc'];
+const DEFAULT_CATEGORY = 'Misc';
+const DEFAULT_PAYMENT_MODE = 'Online';
 
 /**
  * Maximum allowed amount (99,99,99,999)
@@ -303,6 +309,63 @@ function exceedsDecimalPrecision(input: string): boolean {
   });
 }
 
+function buildAmountHelperText(params: {
+  amount: string;
+  exceedsDecimalLimit: boolean;
+  parsedAmount: number | null;
+  exceedsMaxAmount: boolean;
+  formatCurrency: (amount: number) => string;
+}): string {
+  const { amount, exceedsDecimalLimit, parsedAmount, exceedsMaxAmount, formatCurrency } = params;
+
+  if (!amount) {
+    return 'You can type formulas like 10+3, 10+4-7, 10+6/9+10-3, or 10%.';
+  }
+  if (exceedsDecimalLimit) {
+    return 'Only up to 2 decimal places are allowed.';
+  }
+  if (parsedAmount === null) {
+    return 'Invalid expression. Use +, -, *, /, %, and parentheses.';
+  }
+  if (exceedsMaxAmount) {
+    return `Max allowed is ${formatCurrency(MAX_AMOUNT)}.`;
+  }
+
+  return `Calculated: ${formatCurrency(parsedAmount)}`;
+}
+
+function normalizeInitialExpense(initialExpense: InitialExpense) {
+  const initialDate = initialExpense.createdAt instanceof Date
+    ? initialExpense.createdAt
+    : new Date();
+  const local = getLocalDateTime(initialDate);
+
+  return {
+    description: initialExpense.description || '',
+    amount: String(initialExpense.amount ?? ''),
+    type: initialExpense.type ?? 'out',
+    date: local.date,
+    time: local.time,
+    remarks: initialExpense.remarks || '',
+    category: initialExpense.category || DEFAULT_CATEGORY,
+    paymentMode: initialExpense.paymentMode || DEFAULT_PAYMENT_MODE,
+  };
+}
+
+function buildDefaultFormState(initialType?: 'in' | 'out') {
+  const { date, time } = getLocalDateTime();
+  return {
+    description: '',
+    amount: '',
+    type: initialType ?? 'out',
+    date,
+    time,
+    remarks: '',
+    category: DEFAULT_CATEGORY,
+    paymentMode: DEFAULT_PAYMENT_MODE,
+  };
+}
+
 /**
  * Main component for adding or editing expense entries.
  * Provides a comprehensive form with real-time validation and balance preview.
@@ -318,15 +381,17 @@ export default function AddExpenseModal({
   currentBalance = 0,
   initialExpense,
 }: AddExpenseModalProps) {
+  const defaultFormState = React.useMemo(() => buildDefaultFormState(initialType), [initialType]);
+
   // Form state
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [type, setType] = useState<'in' | 'out'>(initialType ?? 'out');
-  const [date, setDate] = useState(() => getLocalDateTime().date);
-  const [time, setTime] = useState(() => getLocalDateTime().time);
-  const [remarks, setRemarks] = useState('');
-  const [category, setCategory] = useState('Misc');
-  const [paymentMode, setPaymentMode] = useState('Online');
+  const [description, setDescription] = useState(defaultFormState.description);
+  const [amount, setAmount] = useState(defaultFormState.amount);
+  const [type, setType] = useState<'in' | 'out'>(defaultFormState.type);
+  const [date, setDate] = useState(defaultFormState.date);
+  const [time, setTime] = useState(defaultFormState.time);
+  const [remarks, setRemarks] = useState(defaultFormState.remarks);
+  const [category, setCategory] = useState(defaultFormState.category);
+  const [paymentMode, setPaymentMode] = useState(defaultFormState.paymentMode);
   
   // Data state
   const [availableCategories, setAvailableCategories] = useState<string[]>(CORE_CATEGORIES);
@@ -367,7 +432,21 @@ export default function AddExpenseModal({
     }
   }, [balanceBeforeEntry, parsedAmount, type]);
 
-  // Fetch user-defined categories from Firestore
+  const resetForm = React.useCallback((nextInitialType?: 'in' | 'out') => {
+    const defaults = buildDefaultFormState(nextInitialType);
+    setDescription(defaults.description);
+    setAmount(defaults.amount);
+    setType(defaults.type);
+    setDate(defaults.date);
+    setTime(defaults.time);
+    setRemarks(defaults.remarks);
+    setCategory(defaults.category);
+    setPaymentMode(defaults.paymentMode);
+    setErrorMessage(null);
+  }, []);
+
+  // Fetch user-defined categories from Firestore.
+  // This runs only while the modal is open to avoid unnecessary reads.
   useEffect(() => {
     const fetchCategories = async () => {
       if (!user) return;
@@ -383,10 +462,10 @@ export default function AddExpenseModal({
         const merged = Array.from(new Set([...CORE_CATEGORIES, ...userCategories])).sort();
         setAvailableCategories(merged);
 
-        // If current category is not in the merged list, reset it to 'Misc' or the first item
+        // Keep selected category if still valid; otherwise fall back safely.
         setCategory((prev) => {
           if (merged.includes(prev)) return prev;
-          return merged.includes('Misc') ? 'Misc' : merged[0];
+          return merged.includes(DEFAULT_CATEGORY) ? DEFAULT_CATEGORY : merged[0];
         });
       } catch (err) {
         console.error("Error fetching categories:", err);
@@ -404,35 +483,21 @@ export default function AddExpenseModal({
     if (!isOpen) return;
 
     if (initialExpense) {
-      const initialDate = initialExpense.createdAt instanceof Date
-        ? initialExpense.createdAt
-        : new Date();
-      setDescription(initialExpense.description || '');
-      setAmount(String(initialExpense.amount ?? ''));
-      setType(initialExpense.type ?? 'out');
-      
-      const local = getLocalDateTime(initialDate);
-      setDate(local.date);
-      setTime(local.time);
-      
-      setRemarks(initialExpense.remarks || '');
-      setCategory(initialExpense.category || 'Misc');
-      setPaymentMode(initialExpense.paymentMode || 'Online');
+      const normalized = normalizeInitialExpense(initialExpense);
+      setDescription(normalized.description);
+      setAmount(normalized.amount);
+      setType(normalized.type);
+      setDate(normalized.date);
+      setTime(normalized.time);
+      setRemarks(normalized.remarks);
+      setCategory(normalized.category);
+      setPaymentMode(normalized.paymentMode);
       setErrorMessage(null);
       return;
     }
 
-    const { date: localDate, time: localTime } = getLocalDateTime();
-    setDescription('');
-    setAmount('');
-    setType(initialType ?? 'out');
-    setDate(localDate);
-    setTime(localTime);
-    setRemarks('');
-    setCategory('Misc');
-    setPaymentMode('Online');
-    setErrorMessage(null);
-  }, [isOpen, initialType, initialExpense]);
+    resetForm(initialType);
+  }, [isOpen, initialType, initialExpense, resetForm]);
 
   /**
    * Handles form submission and saves the expense entry.
@@ -463,15 +528,7 @@ export default function AddExpenseModal({
 
     setIsSaving(true);
     try {
-      const payload: {
-        description: string;
-        amount: number;
-        type: 'in' | 'out';
-        createdAt: Date;
-        category: string;
-        paymentMode: string;
-        remarks?: string;
-      } = {
+      const payload: ExpensePayload = {
         description,
         amount: parsedAmount,
         type,
@@ -487,7 +544,7 @@ export default function AddExpenseModal({
       await onAddExpense(payload, keepOpen);
 
       if (keepOpen && !isEditMode) {
-        // Prepare form for next entry without closing modal
+        // Keep type/date/time to speed up repetitive entry, clear content fields.
         setDescription('');
         setAmount('');
         setRemarks('');
@@ -530,17 +587,25 @@ export default function AddExpenseModal({
    * Resets form state and closes the modal.
    */
   const handleClose = () => {
-    setDescription('');
-    setAmount('');
-    setType('out');
-    const { date: localDate } = getLocalDateTime();
-    setDate(localDate);
-    setRemarks('');
-    setCategory('Misc');
-    setPaymentMode('Online');
-    setErrorMessage(null);
+    resetForm(initialType);
     onClose();
   };
+
+  const isSaveDisabled =
+    isSaving ||
+    !description ||
+    !amount ||
+    exceedsDecimalLimit ||
+    parsedAmount === null ||
+    exceedsMaxAmount;
+
+  const amountHelperText = buildAmountHelperText({
+    amount,
+    exceedsDecimalLimit,
+    parsedAmount,
+    exceedsMaxAmount,
+    formatCurrency,
+  });
 
   return (
     <Dialog 
@@ -669,17 +734,7 @@ export default function AddExpenseModal({
               onChange={(e) => handleAmountChange(e.target.value)}
               placeholder="e.g. 10+3 or 50*10%"
               error={Boolean(amount) && (exceedsDecimalLimit || parsedAmount === null || exceedsMaxAmount)}
-              helperText={
-                amount
-                  ? exceedsDecimalLimit
-                    ? 'Only up to 2 decimal places are allowed.'
-                    : parsedAmount === null
-                    ? 'Invalid expression. Use +, -, *, /, %, and parentheses.'
-                    : exceedsMaxAmount
-                      ? `Max allowed is ${formatCurrency(MAX_AMOUNT)}.`
-                      : `Calculated: ${formatCurrency(parsedAmount)}`
-                  : 'You can type formulas like 10+3, 10+4-7, 10+6/9+10-3, or 10%.'
-              }
+              helperText={amountHelperText}
               inputProps={{
                 inputMode: 'decimal',
               }}
@@ -804,7 +859,7 @@ export default function AddExpenseModal({
               variant="outlined"
               disableElevation
               fullWidth={isMobile}
-              disabled={isSaving || !description || !amount || exceedsDecimalLimit || parsedAmount === null || exceedsMaxAmount}
+              disabled={isSaveDisabled}
               onClick={() => handleSave(true)}
               color={type === 'in' ? 'success' : 'error'}
             >
@@ -816,7 +871,7 @@ export default function AddExpenseModal({
             variant="contained" 
             disableElevation 
             fullWidth={isMobile}
-            disabled={isSaving || !description || !amount || exceedsDecimalLimit || parsedAmount === null || exceedsMaxAmount}
+            disabled={isSaveDisabled}
             color={type === 'in' ? 'success' : 'error'}
           >
             {isSaving ? (isEditMode ? 'Updating...' : 'Saving...') : (isEditMode ? 'Update Entry' : 'Save Entry')}

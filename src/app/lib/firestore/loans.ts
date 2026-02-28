@@ -17,7 +17,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/app/firebase';
 import type { Loan } from '@/app/types';
-import { toDate, toNumber } from '@/app/lib/firestore';
+import { toNumber } from '@/app/lib/firestore';
 
 const LOANS_COLLECTION = 'loans';
 

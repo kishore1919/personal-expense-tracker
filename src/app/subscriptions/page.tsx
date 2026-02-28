@@ -46,6 +46,10 @@ import { useCurrencyStore } from '../stores';
 import { useSubscriptions } from '../hooks/useSubscriptions';
 import { TableSkeletonWithActions } from '../components/ui/TableSkeleton';
 
+type SubscriptionSortOption = 'name' | 'amount' | 'nextBillingDate';
+type BillingCycle = 'weekly' | 'monthly' | 'yearly';
+type SubscriptionStatus = 'active' | 'paused' | 'cancelled';
+
 export default function SubscriptionsPage() {
   const {
     loading,
@@ -143,7 +147,7 @@ export default function SubscriptionsPage() {
           </Box>
           <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1.5 }, width: { xs: '100%', sm: 'auto' }, flexDirection: { xs: 'column', sm: 'row' } }}>
             <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 }, flex: { xs: 1, sm: 'none' } }}>
-              <Select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}>
+              <Select value={sortBy} onChange={(e) => setSortBy(e.target.value as SubscriptionSortOption)}>
                 <MenuItem value="nextBillingDate">Sort By: Next Billing Date</MenuItem>
                 <MenuItem value="amount">Sort By: Amount</MenuItem>
                 <MenuItem value="name">Sort By: Name</MenuItem>
@@ -301,7 +305,7 @@ export default function SubscriptionsPage() {
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth>
-                  <Select value={formData.billingCycle} onChange={(e) => setFormData({ ...formData, billingCycle: e.target.value as any })}>
+                  <Select value={formData.billingCycle} onChange={(e) => setFormData({ ...formData, billingCycle: e.target.value as BillingCycle })}>
                     <MenuItem value="weekly">Weekly</MenuItem>
                     <MenuItem value="monthly">Monthly</MenuItem>
                     <MenuItem value="yearly">Yearly</MenuItem>
@@ -318,7 +322,7 @@ export default function SubscriptionsPage() {
               </Grid>
             </Grid>
             <FormControl fullWidth>
-              <Select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}>
+              <Select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value as SubscriptionStatus })}>
                 <MenuItem value="active">Active</MenuItem>
                 <MenuItem value="paused">Paused</MenuItem>
                 <MenuItem value="cancelled">Cancelled</MenuItem>

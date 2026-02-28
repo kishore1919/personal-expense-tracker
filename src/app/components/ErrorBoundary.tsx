@@ -1,8 +1,8 @@
 'use client';
 
 import React, { Component, ReactNode, useState, useEffect } from 'react';
-import { Card, CardContent, Typography, Button, Box, IconButton } from '@mui/material';
-import { FiAlertTriangle, FiX } from 'react-icons/fi';
+import { Card, CardContent, Typography, Button, Box } from '@mui/material';
+import { FiAlertTriangle } from 'react-icons/fi';
 
 interface ErrorBoundaryProps {
   children: ReactNode;

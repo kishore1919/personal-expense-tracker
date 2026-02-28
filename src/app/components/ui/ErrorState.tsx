@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Typography, Button, Card, CardContent, Alert, AlertTitle, Box } from '@mui/material';
+import { Typography, Button, Card, CardContent, Alert, AlertTitle } from '@mui/material';
 
 export interface ErrorStateProps {
   message?: string;

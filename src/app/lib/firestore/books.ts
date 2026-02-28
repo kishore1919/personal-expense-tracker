@@ -14,7 +14,6 @@ import {
   query,
   where,
   serverTimestamp,
-  Timestamp,
   DocumentData,
   writeBatch,
 } from 'firebase/firestore';

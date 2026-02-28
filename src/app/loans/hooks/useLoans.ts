@@ -257,6 +257,10 @@ export function useLoans(user: User | null): UseLoansReturn {
     setFormDataState(data);
   }, []);
 
+  const refreshLoans = useCallback(async () => {
+    await fetchLoans();
+  }, [fetchLoans]);
+
   const saveLoan = useCallback(async () => {
     if (!user) return;
     if (!formData.name || !formData.lender || !formData.amount) {
@@ -281,7 +285,7 @@ export function useLoans(user: User | null): UseLoansReturn {
           prev.map((l) => (l.id === editingLoan.id ? { ...l, ...loanData } : l))
         );
       } else {
-        const newId = await createLoanService(user.uid, loanData);
+        await createLoanService(user.uid, loanData);
         await refreshLoans();
       }
 
@@ -291,7 +295,7 @@ export function useLoans(user: User | null): UseLoansReturn {
       console.error('Error saving loan:', err);
       setError('Failed to save loan. Please try again.');
     }
-  }, [user, formData, editingLoan, closeModal]);
+  }, [user, formData, editingLoan, closeModal, refreshLoans]);
 
   const deleteLoan = useCallback(async () => {
     if (!deleteTarget) return;
@@ -317,10 +321,6 @@ export function useLoans(user: User | null): UseLoansReturn {
   const confirmDelete = useCallback((loanId: string) => {
     setDeleteTarget(loanId);
   }, []);
-
-  const refreshLoans = useCallback(async () => {
-    await fetchLoans();
-  }, [fetchLoans]);
 
   return {
     // Data state

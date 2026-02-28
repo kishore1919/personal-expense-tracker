@@ -72,7 +72,7 @@ function PaginationHeader({
         justifyContent: 'space-between' 
       }}>
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <Select 
+          {/* <Select 
             size="small" 
             value={page} 
             onChange={(e) => onPageChange(Number(e.target.value))} 
@@ -81,8 +81,8 @@ function PaginationHeader({
             {Array.from({ length: totalPages }).map((_, i) => (
               <MenuItem key={i} value={i + 1}>{i + 1}</MenuItem>
             ))}
-          </Select>
-          <Typography variant="body2">of {totalPages}</Typography>
+          </Select> */}
+          {/* <Typography variant="body2">of {totalPages}</Typography> */}
           <IconButton 
             size="small" 
             onClick={() => onPageChange(Math.max(1, page - 1))} 

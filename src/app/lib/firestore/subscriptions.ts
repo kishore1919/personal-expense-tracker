@@ -156,7 +156,7 @@ export function getNextBillingDate(subscription: Subscription): Date {
   const start = new Date(subscription.startDate);
   const now = new Date();
 
-  let nextDate = new Date(start);
+  const nextDate = new Date(start);
   while (nextDate < now) {
     switch (subscription.billingCycle) {
       case 'weekly':

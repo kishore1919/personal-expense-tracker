@@ -49,6 +49,8 @@ import { useCurrencyStore } from '../stores';
 import { useLoans } from '../hooks/useLoans';
 import { TableRowSkeleton } from '../components/ui/TableSkeleton';
 
+type LoanSortOption = 'monthsLeft' | 'totalRemaining' | 'remaining' | 'name' | 'interestRate';
+
 export default function LoansPage() {
   const {
     loading,
@@ -168,7 +170,7 @@ export default function LoansPage() {
             <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 }, flex: { xs: 1, sm: 'none' } }}>
               <Select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as LoanSortOption)}
                 sx={{
                   '& .MuiSelect-select': {
                     fontSize: { xs: '0.9375rem', sm: '1rem' },

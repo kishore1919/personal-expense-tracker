@@ -69,6 +69,13 @@ interface UseBooksWithPaginationReturn {
   toggleArchive: (bookId: string, archived: boolean) => Promise<boolean>;
 }
 
+interface PaginationMeta {
+  totalFiltered: number;
+  totalPages: number;
+  startIndex: number;
+  endIndex: number;
+}
+
 /**
  * Extracts creation timestamp in milliseconds from various date formats.
  * Handles Firestore Timestamp, Date objects, and numbers.
@@ -99,6 +106,45 @@ function calculateNetBalance(expenses: Array<{ amount?: unknown; type?: unknown 
     const safeAmount = Number.isFinite(amount) ? amount : 0;
     return expense.type === 'in' ? total + safeAmount : total - safeAmount;
   }, 0);
+}
+
+function applyBookFiltersAndSort(
+  books: Book[],
+  searchQuery: string,
+  sortBy: SortOption,
+  showArchived: boolean
+): Book[] {
+  const normalizedQuery = searchQuery.toLowerCase();
+
+  let result = books.filter((book) => {
+    if (!showArchived && book.archived) return false;
+    return book.name.toLowerCase().includes(normalizedQuery);
+  });
+
+  if (sortBy === 'name') {
+    result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+  } else if (sortBy === 'last-updated') {
+    result = [...result].sort((a, b) => getCreatedAtMillis(b.createdAt) - getCreatedAtMillis(a.createdAt));
+  }
+
+  return result;
+}
+
+function getPaginationMeta(totalItems: number, page: number, pageSize: number): PaginationMeta {
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const startIndex = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endIndex = Math.min(page * pageSize, totalItems);
+
+  return {
+    totalFiltered: totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+  };
+}
+
+function getPaginatedBooks(books: Book[], page: number, pageSize: number): Book[] {
+  return books.slice((page - 1) * pageSize, page * pageSize);
 }
 
 /**
@@ -155,6 +201,7 @@ export function useBooksWithPagination(
       
       const querySnapshot = await getDocs(q);
 
+      // Fetch each book's expenses to compute live net balance.
       const booksData = await Promise.all(
         querySnapshot.docs.map(async (bookDoc) => {
           const bookData = bookDoc.data();
@@ -177,11 +224,7 @@ export function useBooksWithPagination(
         })
       );
 
-      booksData.sort((a, b) => {
-        const dateA = getCreatedAtMillis(a.createdAt);
-        const dateB = getCreatedAtMillis(b.createdAt);
-        return dateB - dateA;
-      });
+      booksData.sort((a, b) => getCreatedAtMillis(b.createdAt) - getCreatedAtMillis(a.createdAt));
 
       setBooks(booksData);
     } catch (err) {
@@ -323,34 +366,19 @@ export function useBooksWithPagination(
    * Uses memoization to avoid recalculating on every render.
    * By default, filters out archived books unless showArchived is true.
    */
-  const filteredAndSortedBooks = useMemo(() => {
-    let result = books.filter((book) => {
-      // Filter out archived books by default
-      if (!showArchived && book.archived) {
-        return false;
-      }
-      return book.name.toLowerCase().includes(searchQuery.toLowerCase());
-    });
+  const filteredAndSortedBooks = useMemo(
+    () => applyBookFiltersAndSort(books, searchQuery, sortBy, showArchived),
+    [books, searchQuery, sortBy, showArchived]
+  );
 
-    if (sortBy === 'name') {
-      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortBy === 'last-updated') {
-      result = [...result].sort((a, b) => getCreatedAtMillis(b.createdAt) - getCreatedAtMillis(a.createdAt));
-    }
+  const paginationMeta = useMemo(
+    () => getPaginationMeta(filteredAndSortedBooks.length, page, pageSize),
+    [filteredAndSortedBooks.length, page, pageSize]
+  );
 
-    return result;
-  }, [books, searchQuery, sortBy, showArchived]);
-
-  // Calculate pagination values
-  const totalFiltered = filteredAndSortedBooks.length;
-  const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
-  const startIndex = totalFiltered === 0 ? 0 : (page - 1) * pageSize + 1;
-  const endIndex = Math.min(page * pageSize, totalFiltered);
-  
-  // Slice books for current page display
-  const displayedBooks = filteredAndSortedBooks.slice(
-    (page - 1) * pageSize, 
-    page * pageSize
+  const displayedBooks = useMemo(
+    () => getPaginatedBooks(filteredAndSortedBooks, page, pageSize),
+    [filteredAndSortedBooks, page, pageSize]
   );
 
   return {
@@ -358,10 +386,10 @@ export function useBooksWithPagination(
     displayedBooks,
     loading,
     error,
-    totalFiltered,
-    totalPages,
-    startIndex,
-    endIndex,
+    totalFiltered: paginationMeta.totalFiltered,
+    totalPages: paginationMeta.totalPages,
+    startIndex: paginationMeta.startIndex,
+    endIndex: paginationMeta.endIndex,
     addBook,
     deleteBooks,
     isDeleting,

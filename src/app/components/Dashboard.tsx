@@ -4,8 +4,7 @@
  */
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { 
   FiPlus, 
@@ -24,7 +23,7 @@ import {
   LinearProgress,
 } from '@mui/material';
 import AddBookModal from './AddBookModal';
-import { StatCard, BookCard, BookCardSkeleton, EmptyState, NoResultsState, PageHeader, SearchInput } from './ui';
+import { StatCard, PageHeader } from './ui';
 import { useBooks } from '@/app/hooks/useBooks';
 import { useFinancialOverview } from '@/app/hooks/useFinancialOverview';
 import { useCurrencyStore } from '@/app/stores';
@@ -34,26 +33,14 @@ import { useProtectedRoute } from '@/app/hooks/useAuth';
  * Main Dashboard component displaying financial overview and management.
  */
 export default function Dashboard() {
-  const router = useRouter();
   const { formatCurrency } = useCurrencyStore();
   const { user, loading: authLoading } = useProtectedRoute();
   
-  const { books, loading: booksLoading, error: booksError, addBook } = useBooks({ calculateNet: true });
+  const { loading: booksLoading, error: booksError, addBook } = useBooks({ calculateNet: true });
   const overview = useFinancialOverview();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
-
-  const filteredBooks = useMemo(() => {
-    if (!searchQuery.trim()) return books;
-    const query = searchQuery.toLowerCase();
-    return books.filter((book) => book.name.toLowerCase().includes(query));
-  }, [books, searchQuery]);
-
-  const handleBookClick = useCallback((bookId: string) => {
-    router.push(`/book/${bookId}`);
-  }, [router]);
 
   const handleAddBook = useCallback(async (bookName: string) => {
     try {
@@ -66,13 +53,7 @@ export default function Dashboard() {
     }
   }, [addBook, overview]);
 
-  const clearSearch = useCallback(() => {
-    setSearchQuery('');
-  }, []);
-
   const loading = authLoading || booksLoading || overview.loading;
-  const hasBooks = books.length > 0;
-  const hasFilteredBooks = filteredBooks.length > 0;
   
   const budgetProgress = overview.totalBudget > 0 
     ? Math.min(Math.round((overview.totalSpent / overview.totalBudget) * 100), 100) 
@@ -204,60 +185,6 @@ export default function Dashboard() {
       </Box>
 
       {/* Books Section */}
-      {/* <Box className="rise-in" style={{ animationDelay: '300ms' }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 3, 
-          flexWrap: 'wrap', 
-          gap: 2 
-        }}>
-          <Typography 
-            variant="h5" 
-            fontWeight={600}
-            sx={{ fontSize: { xs: '1.125rem', sm: '1.25rem' } }}
-          >
-            Your Expense Books
-          </Typography>
-          {hasBooks && (
-            <SearchInput
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Search books..."
-            />
-          )}
-        </Box>
-
-        {loading ? (
-          <Grid container spacing={2}>
-            {[1, 2, 3, 4].map((i) => (
-              <Grid size={{ xs: 12, md: 6 }} key={i}>
-                <BookCardSkeleton />
-              </Grid>
-            ))}
-          </Grid>
-        ) : hasBooks ? (
-          hasFilteredBooks ? (
-            <Grid container spacing={2}>
-              {filteredBooks.map((book) => (
-                <Grid size={{ xs: 12, md: 6 }} key={book.id}>
-                  <BookCard
-                    book={book}
-                    onClick={handleBookClick}
-                    formatCurrency={formatCurrency}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          ) : (
-            <NoResultsState onClear={clearSearch} />
-          )
-        ) : (
-          <EmptyState onCreate={() => setIsModalOpen(true)} />
-        )}
-      </Box> */}
-
       <AddBookModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
