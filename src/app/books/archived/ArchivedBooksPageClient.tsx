@@ -22,7 +22,6 @@ import {
   Tooltip,
   useTheme,
   Avatar,
-  Alpha,
 } from '@mui/material';
 import { SearchInput } from '@/app/components/ui';
 import { useCurrencyStore } from '@/app/stores';
@@ -121,7 +120,7 @@ export default function ArchivedBooksPage() {
             value={searchQuery}
             onChange={(val) => setSearchQuery(val)}
             placeholder="Search archive..."
-            sx={{ flex: 1 }}
+            fullWidth
           />
           <BooksPagination.SortSelect value={sortBy} onChange={(val) => setSortBy(val as SortOption)} />
         </Box>
