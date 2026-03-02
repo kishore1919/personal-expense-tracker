@@ -116,7 +116,7 @@ tests/
 │   ├── settings.spec.ts           # NEW
 │   ├── loans.spec.ts              # NEW
 │   ├── subscriptions.spec.ts      # NEW
-│   ├── budget.spec.ts             # NEW
+│   └── budget.spec.ts             # NEW
 │   ├── visual/                    # NEW
 │   │   └── homepage.spec.ts       # NEW visual regression
 │   ├── a11y/                      # NEW
@@ -234,6 +234,4 @@ exit $?
 ### **Conclusion**
 This plan brings the E2E suite in line with modern testing practices, ensures comprehensive feature coverage, and lays a solid foundation for future enhancements. Execution begins next week with infrastructure work, followed by iterative improvements as described.
 
---- 
-
-*Prepared by the development team – ready for review.*  
+*Prepared by the development team – ready for review.*

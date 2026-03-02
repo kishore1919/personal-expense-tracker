@@ -6,72 +6,76 @@ import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '.env.test') });
 
 /**
- * Playwright configuration for Expense Tracker E2E tests
- * 
+ * Playwright configuration for Expense Pilot E2E tests
+ *
  * Features:
  * - Firebase Emulator integration
  * - Serial execution (workers: 1) for shared emulator state
  * - Screenshot/video capture on failure
  * - Multiple browser support (Chromium, Firefox, WebKit)
+ * - Visual regression testing support
  * - CI/CD optimized settings
- * 
+ *
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
   // Directory containing test files
   testDir: './tests/specs',
-  
+
   // Run tests in files in parallel, but within file serially (for emulator state)
   fullyParallel: false,
-  
+
   // Fail the build on CI if you accidentally left test.only in the source code
   forbidOnly: !!process.env.CI,
-  
+
   // Retry on CI only (Firebase operations can be flaky)
   retries: process.env.CI ? 2 : 0,
-  
+
   // Opt out of parallel tests on CI (emulator requires serial execution)
   workers: process.env.CI ? 1 : 1,
-  
+
   // Reporter to use
   reporter: [
-    ['html', { open: 'never' }],
+    ['html', { open: 'never', outputFolder: 'playwright-report' }],
     ['list'],
     process.env.CI ? ['github'] : ['null'],
   ],
-  
+
   // Shared settings for all projects
   use: {
     // Base URL to use in actions like `await page.goto('/')`
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
-    
+
     // Collect trace when retrying the failed test
-    trace: 'on-first-retry',
-    
+    trace: 'retain-on-failure',
+
     // Capture screenshot on failure
     screenshot: 'only-on-failure',
-    
+
     // Record video on failure
-    video: 'on-first-retry',
-    
+    video: 'retain-on-failure',
+
     // Action timeout (Firebase operations can be slow)
     actionTimeout: parseInt(process.env.ACTION_TIMEOUT || '15000'),
-    
+
     // Navigation timeout
     navigationTimeout: 30000,
-    
+
     // Viewport size
     viewport: { width: 1280, height: 720 },
-    
+
     // Storage state (for authentication persistence)
     storageState: undefined,
+
+    // Color scheme for consistent screenshots
+    colorScheme: 'light',
   },
-  
+
   // Configure projects for major browsers
   projects: [
     {
       name: 'chromium',
-      use: { 
+      use: {
         ...devices['Desktop Chrome'],
         launchOptions: {
           args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -86,17 +90,30 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-    // Mobile browsers (optional, can be enabled for mobile testing)
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
+
+    // Mobile browsers for responsive testing
+    {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    },
+
+    // Test specifically for visual regression (consistent environment)
+    {
+      name: 'visual-regression',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 720 },
+        launchOptions: {
+          args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        },
+      },
+    },
   ],
-  
+
   // Run local dev server before starting tests
   webServer: {
     command: 'bun run dev',
@@ -104,19 +121,47 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },
-  
+
   // Global setup and teardown
   globalSetup: require.resolve('./tests/global-setup'),
   globalTeardown: require.resolve('./tests/global-teardown'),
-  
+
   // Test timeout (Firebase emulator + app startup takes time)
   timeout: parseInt(process.env.TEST_TIMEOUT || '60000'),
-  
+
   // Expect timeout
   expect: {
     timeout: parseInt(process.env.EXPECT_TIMEOUT || '10000'),
+    // Matcher timeout for toHaveScreenshot
+    toHaveScreenshot: {
+      threshold: {
+        ratio: 0.01, // Allow 1% pixel difference
+      },
+      maxDiffPixels: 50, // Maximum number of pixels that can differ
+    },
   },
-  
+
   // Output directory for test results
   outputDir: 'test-results/',
+
+  // Snapshot directory for visual regression tests
+  snapshotDir: './tests/snapshots',
+
+  // Snapshot path template
+  snapshotPathTemplate: '{testDir}/__snapshots__/{testFilePath}/{arg}{ext}',
+
+  // Update snapshots mode
+  // 'all' - update all snapshots
+  // 'missing' - only update missing snapshots
+  // 'none' - never update (default)
+  updateSnapshots: process.env.UPDATE_SNAPSHOTS ? 'all' : 'missing',
+
+  // Maximum number of failures to report
+  maxFailures: process.env.CI ? 10 : undefined,
+
+  // Print console logs
+  reportSlowTests: {
+    max: 5,
+    threshold: 30000, // Tests slower than 30s are reported
+  },
 });

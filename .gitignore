@@ -34,6 +34,14 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# environment-specific
+.claude/
+firebase-debug.log
+nul
+
+# local test results
+test-results/
+
 # env files (can opt-in for committing if needed)
 .env*
 

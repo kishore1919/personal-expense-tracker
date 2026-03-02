@@ -32,7 +32,7 @@ test.describe('Authentication', () => {
     // Note: Actual behavior may vary based on implementation
   });
 
-  test('should display app branding and terms', async () => {
+  test('should display app branding and terms', async ({ page }) => {
     // Verify app logo is visible
     await expect(page.locator('svg')).toBeVisible();
     

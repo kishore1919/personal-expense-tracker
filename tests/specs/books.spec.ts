@@ -10,7 +10,7 @@ test.describe('Book Management', () => {
     await booksPage.goto();
   });
 
-  test('should display books page with add book button', async () => {
+  test('should display books page with add book button', async ({ page }) => {
     await booksPage.verifyPageLoaded();
     
     // Verify search input is present
@@ -22,7 +22,7 @@ test.describe('Book Management', () => {
     await expect(addButton).toBeEnabled();
   });
 
-  test('should create a new book', async () => {
+  test('should create a new book', async ({ page }) => {
     const testBookName = generateTestBookName('E2E Test');
     const initialCount = await booksPage.getBookCount();
     
@@ -40,7 +40,7 @@ test.describe('Book Management', () => {
     expect(newCount).toBeGreaterThanOrEqual(initialCount);
   });
 
-  test('should search for a book by name', async () => {
+  test('should search for a book by name', async ({ page }) => {
     const testBookName = generateTestBookName('Search Test');
     
     // Create a book first
@@ -74,7 +74,7 @@ test.describe('Book Management', () => {
     await expect(page.locator('button:has-text("Cash Out")')).toBeVisible();
   });
 
-  test('should show empty state when no search results', async () => {
+  test('should show empty state when no search results', async ({ page }) => {
     // Search for non-existent book
     await booksPage.searchBooks('XYZ-NONEXISTENT-BOOK-12345');
     await page.waitForTimeout(500);
@@ -84,7 +84,7 @@ test.describe('Book Management', () => {
     expect(bookCount).toBe(0);
   });
 
-  test('should use quick add suggestions', async () => {
+  test('should use quick add suggestions', async ({ page }) => {
     const suggestion = 'February Expenses';
     
     // Click on quick add suggestion
@@ -109,7 +109,7 @@ test.describe('Book Management', () => {
     expect(paginationInfo).toMatch(/Showing/);
   });
 
-  test('should allow sorting books', async () => {
+  test('should allow sorting books', async ({ page }) => {
     // Verify sort dropdown exists
     const sortDropdown = page.locator('select').first();
     await expect(sortDropdown).toBeVisible();
@@ -122,7 +122,7 @@ test.describe('Book Management', () => {
     await booksPage.verifyPageLoaded();
   });
 
-  test('should cancel adding a book', async () => {
+  test('should cancel adding a book', async ({ page }) => {
     const testBookName = generateTestBookName('Cancelled');
     
     // Open add book modal

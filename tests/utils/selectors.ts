@@ -119,6 +119,164 @@ export const Selectors = {
     confirmButton: 'button:has-text("Delete")',
     cancelButton: 'button:has-text("Cancel")',
   },
+
+  // Analytics Page
+  analytics: {
+    page: '[data-testid="analytics-page"]',
+    expenseChart: '[data-testid="expense-chart"]',
+    incomeChart: '[data-testid="income-chart"]',
+    categoryChart: '[data-testid="category-chart"]',
+    dateRangeFilter: '[data-testid="date-range-filter"]',
+    bookFilter: '[data-testid="book-filter"]',
+    exportButton: 'button:has-text("Export")',
+    refreshButton: 'button:has-text("Refresh")',
+    summaryCards: '[data-testid="summary-card"]',
+    trendIndicator: '[data-testid="trend-indicator"]',
+  },
+
+  // Settings Page
+  settings: {
+    page: '[data-testid="settings-page"]',
+    currencySelect: '[data-testid="currency-select"]',
+    languageSelect: '[data-testid="language-select"]',
+    darkModeToggle: '[data-testid="dark-mode-toggle"]',
+    notificationsToggle: '[data-testid="notifications-toggle"]',
+    changePasswordButton: 'button:has-text("Change Password")',
+    deleteAccountButton: 'button:has-text("Delete Account")',
+    logoutButton: 'button:has-text("Logout")',
+    saveButton: 'button:has-text("Save")',
+    resetButton: 'button:has-text("Reset")',
+    profileSection: '[data-testid="profile-section"]',
+    preferencesSection: '[data-testid="preferences-section"]',
+    securitySection: '[data-testid="security-section"]',
+  },
+
+  // Budget Page
+  budget: {
+    page: '[data-testid="budget-page"]',
+    addBudgetButton: 'button:has-text("Add Budget")',
+    budgetCard: '[data-testid="budget-card"]',
+    budgetName: '[data-testid="budget-name"]',
+    budgetAmount: '[data-testid="budget-amount"]',
+    budgetProgress: '[data-testid="budget-progress"]',
+    budgetCategory: '[data-testid="budget-category"]',
+    searchInput: 'input[placeholder*="Search budgets"]',
+    filterButton: 'button:has-text("Filter")',
+    editButton: 'button[aria-label="edit"]',
+    deleteButton: 'button[aria-label="delete"]',
+    emptyState: 'text=No budgets found',
+  },
+
+  // Add/Edit Budget Modal
+  budgetModal: {
+    modal: '.MuiDialog-root',
+    nameInput: 'input[name="budget-name"], input[placeholder*="Budget name"]',
+    amountInput: 'input[name="amount"]',
+    categorySelect: 'select[name="category"]',
+    periodSelect: 'select[name="period"]',
+    startDateInput: 'input[name="startDate"]',
+    endDateInput: 'input[name="endDate"]',
+    notesInput: 'textarea[name="notes"]',
+    submitButton: 'button[type="submit"]',
+    closeButton: 'button[aria-label="close"]',
+  },
+
+  // Loans Page
+  loans: {
+    page: '[data-testid="loans-page"]',
+    addLoanButton: 'button:has-text("Add Loan")',
+    loanCard: '[data-testid="loan-card"]',
+    loanName: '[data-testid="loan-name"]',
+    loanAmount: '[data-testid="loan-amount"]',
+    loanBalance: '[data-testid="loan-balance"]',
+    loanInterest: '[data-testid="loan-interest"]',
+    loanStatus: '[data-testid="loan-status"]',
+    searchInput: 'input[placeholder*="Search loans"]',
+    filterButton: 'button:has-text("Filter")',
+    sortSelect: 'select',
+    editButton: 'button[aria-label="edit"]',
+    deleteButton: 'button[aria-label="delete"]',
+    payButton: 'button:has-text("Pay")',
+    emptyState: 'text=No loans found',
+  },
+
+  // Add/Edit Loan Modal
+  loanModal: {
+    modal: '.MuiDialog-root',
+    nameInput: 'input[name="loan-name"], input[placeholder*="Loan name"]',
+    amountInput: 'input[name="amount"]',
+    interestRateInput: 'input[name="interestRate"]',
+    termInput: 'input[name="term"]',
+    startDateInput: 'input[name="startDate"]',
+    lenderInput: 'input[name="lender"]',
+    notesInput: 'textarea[name="notes"]',
+    submitButton: 'button[type="submit"]',
+    closeButton: 'button[aria-label="close"]',
+  },
+
+  // Subscriptions Page
+  subscriptions: {
+    page: '[data-testid="subscriptions-page"]',
+    addSubscriptionButton: 'button:has-text("Add Subscription")',
+    subscriptionCard: '[data-testid="subscription-card"]',
+    subscriptionName: '[data-testid="subscription-name"]',
+    subscriptionAmount: '[data-testid="subscription-amount"]',
+    subscriptionCycle: '[data-testid="subscription-cycle"]',
+    subscriptionNextBill: '[data-testid="subscription-next-bill"]',
+    subscriptionStatus: '[data-testid="subscription-status"]',
+    searchInput: 'input[placeholder*="Search subscriptions"]',
+    filterButton: 'button:has-text("Filter")',
+    sortByCycle: 'button:has-text("Cycle")',
+    editButton: 'button[aria-label="edit"]',
+    deleteButton: 'button[aria-label="delete"]',
+    cancelSubscriptionButton: 'button:has-text("Cancel")',
+    emptyState: 'text=No subscriptions found',
+  },
+
+  // Add/Edit Subscription Modal
+  subscriptionModal: {
+    modal: '.MuiDialog-root',
+    nameInput: 'input[name="subscription-name"], input[placeholder*="Subscription name"]',
+    amountInput: 'input[name="amount"]',
+    cycleSelect: 'select[name="cycle"]',
+    categorySelect: 'select[name="category"]',
+    startDateInput: 'input[name="startDate"]',
+    paymentMethodSelect: 'select[name="paymentMethod"]',
+    notesInput: 'textarea[name="notes"]',
+    reminderToggle: '[data-testid="reminder-toggle"]',
+    submitButton: 'button[type="submit"]',
+    closeButton: 'button[aria-label="close"]',
+  },
+
+  // Investments Page
+  investments: {
+    page: '[data-testid="investments-page"]',
+    addInvestmentButton: 'button:has-text("Add Investment")',
+    investmentCard: '[data-testid="investment-card"]',
+    investmentName: '[data-testid="investment-name"]',
+    investmentValue: '[data-testid="investment-value"]',
+    investmentType: '[data-testid="investment-type"]',
+    investmentReturns: '[data-testid="investment-returns"]',
+    searchInput: 'input[placeholder*="Search investments"]',
+    filterButton: 'button:has-text("Filter")',
+    sortByValue: 'button:has-text("Value")',
+    editButton: 'button[aria-label="edit"]',
+    deleteButton: 'button[aria-label="delete"]',
+    emptyState: 'text=No investments found',
+  },
+
+  // Add/Edit Investment Modal
+  investmentModal: {
+    modal: '.MuiDialog-root',
+    nameInput: 'input[name="investment-name"], input[placeholder*="Investment name"]',
+    typeSelect: 'select[name="type"]',
+    valueInput: 'input[name="value"]',
+    sharesInput: 'input[name="shares"]',
+    purchaseDateInput: 'input[name="purchaseDate"]',
+    notesInput: 'textarea[name="notes"]',
+    submitButton: 'button[type="submit"]',
+    closeButton: 'button[aria-label="close"]',
+  },
 } as const;
 
 /**
