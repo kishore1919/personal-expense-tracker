@@ -373,35 +373,6 @@ service cloud.firestore {
 
 ---
 
-## Testing
-
-### E2E Tests (Playwright)
-
-```bash
-# Run all tests
-bun run test:e2e
-
-# Run with UI
-bun run test:e2e:ui
-
-# Run specific browser
-bun run test:e2e:chrome
-```
-
-**Test file example:**
-```typescript
-// tests/example.spec.ts
-import { test, expect } from '@playwright/test';
-
-test('should create a book', async ({ page }) => {
-  await page.goto('/books');
-  await page.click('[data-testid="add-book"]');
-  // ... assertions
-});
-```
-
----
-
 ## Performance
 
 ### Optimizations Implemented

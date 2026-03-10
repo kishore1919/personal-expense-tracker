@@ -24,6 +24,13 @@
 .DS_Store
 *.pem
 
+# IDEs
+.vscode/
+.idea/
+
+# Playwright reports
+playwright-report/
+
 # Docker
 # Dockerfile
 # .dockerignore
